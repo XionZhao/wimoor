@@ -1,0 +1,509 @@
+﻿{
+    "module":  "Amazon利润分析",
+    "description":  "Amazon利润计算详情、利润配置方案、FBA费用、产品尺寸分层、入库费用、手动处理费等利润计算参数管理",
+    "tools":  [
+                  {
+                      "name":  "amz_query_profit_detail",
+                      "description":  "查询单个商品的利润详情，获取完整的利润构成和成本明细（包括利润配置方案列表、商品信息、本地SKU物料信息等）",
+                      "menu_id":  35,
+                      "endpoint":  "/amazon/api/v1/profit/detail/showProfitDetial",
+                      "method":  "GET",
+                      "service":  "wimoor-amazon",
+                      "params":  {
+                                     "pid":  {
+                                                 "type":  "string",
+                                                 "description":  "商品ID"
+                                             },
+                                     "price":  {
+                                                   "type":  "string",
+                                                   "description":  "自定义售价，为空则使用商品原价"
+                                               },
+                                     "productpricetype":  {
+                                                              "type":  "string",
+                                                              "description":  "价格类型，可选"
+                                                          }
+                                 },
+                      "required":  [
+                                       "pid"
+                                   ],
+                      "response_fields":  {
+                                              "pid":  "商品ID",
+                                              "myprice":  "自定义售价",
+                                              "msku":  "主SKU（本地SKU）",
+                                              "productInProfit":  "商品利润信息对象",
+                                              "proopt":  "商品操作信息对象",
+                                              "info":  "商品基础信息对象（含sku、asin、title、price等）",
+                                              "auth":  "Amazon授权信息对象",
+                                              "mskuDim":  "本地SKU物料信息对象",
+                                              "profitCfgList":  "利润计算方案列表（含id、name、isDefault等）"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_profit_calc",
+                      "description":  "计算多站点利润详情，根据产品参数（尺寸、重量、成本等）计算各国家站点的利润构成",
+                      "menu_id":  35,
+                      "endpoint":  "/amazon/api/v1/profit/detail/showProfit",
+                      "method":  "POST",
+                      "service":  "wimoor-amazon",
+                      "body":  {
+                                   "profitCfgId":  {
+                                                       "type":  "string",
+                                                       "description":  "利润计算方案ID，可通过amz_query_profit_detail获取"
+                                                   },
+                                   "typeId":  {
+                                                  "type":  "integer",
+                                                  "description":  "类型ID"
+                                              },
+                                   "cost":  {
+                                                "type":  "string",
+                                                "description":  "采购成本"
+                                            },
+                                   "currency":  {
+                                                    "type":  "string",
+                                                    "description":  "采购成本币种，如RMB、USD、GBP、EUR"
+                                                },
+                                   "weight":  {
+                                                  "type":  "string",
+                                                  "description":  "产品重量"
+                                              },
+                                   "wunit":  {
+                                                 "type":  "string",
+                                                 "description":  "重量单位"
+                                             },
+                                   "length":  {
+                                                  "type":  "string",
+                                                  "description":  "产品长度"
+                                              },
+                                   "lunit":  {
+                                                 "type":  "string",
+                                                 "description":  "长度单位"
+                                             },
+                                   "width":  {
+                                                 "type":  "string",
+                                                 "description":  "产品宽度"
+                                             },
+                                   "height":  {
+                                                  "type":  "string",
+                                                  "description":  "产品高度"
+                                              },
+                                   "shipment":  {
+                                                    "type":  "string",
+                                                    "description":  "物流方式"
+                                                },
+                                   "categories":  {
+                                                      "type":  "string",
+                                                      "description":  "商品分类"
+                                                  },
+                                   "referralrate":  {
+                                                        "type":  "string",
+                                                        "description":  "印度佣金比率"
+                                                    },
+                                   "isSmlAndLightStr":  {
+                                                            "type":  "string",
+                                                            "description":  "是否轻小件，true/false"
+                                                        },
+                                   "sipp":  {
+                                                "type":  "boolean",
+                                                "description":  "是否SIPP"
+                                            },
+                                   "country":  {
+                                                   "type":  "object",
+                                                   "description":  "各国家站点费用详情Map，key为国家代码(如US,UK,DE)，value为CostDetail对象"
+                                               }
+                               },
+                      "required":  [
+                                       "profitCfgId",
+                                       "cost",
+                                       "weight",
+                                       "length",
+                                       "width",
+                                       "height"
+                                   ],
+                      "response_fields":  {
+                                              "US":  "美国站点CostDetail对象（含country、currency、purchase、shipment、referralFee、FBA、storageFee、inPlaceFee、tax、totalCost、profit、margin等）",
+                                              "UK":  "英国站点CostDetail对象",
+                                              "DE":  "德国站点CostDetail对象",
+                                              "CA":  "加拿大站点CostDetail对象",
+                                              "FR":  "法国站点CostDetail对象",
+                                              "IT":  "意大利站点CostDetail对象",
+                                              "ES":  "西班牙站点CostDetail对象",
+                                              "JP":  "日本站点CostDetail对象",
+                                              "AU":  "澳大利亚站点CostDetail对象",
+                                              "IN":  "印度站点CostDetail对象"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_cost_detail",
+                      "description":  "计算产品成本详情，根据产品参数计算各成本项（采购成本、FBA费用、佣金、仓储费等）",
+                      "menu_id":  35,
+                      "endpoint":  "/amazon/api/v1/profit/calculateCost/showCost",
+                      "method":  "POST",
+                      "service":  "wimoor-amazon",
+                      "body":  {
+                                   "profitCfgId":  {
+                                                       "type":  "string",
+                                                       "description":  "利润计算方案ID"
+                                                   },
+                                   "typeId":  {
+                                                  "type":  "integer",
+                                                  "description":  "类型ID"
+                                              },
+                                   "cost":  {
+                                                "type":  "string",
+                                                "description":  "采购成本"
+                                            },
+                                   "currency":  {
+                                                    "type":  "string",
+                                                    "description":  "采购成本币种"
+                                                },
+                                   "weight":  {
+                                                  "type":  "string",
+                                                  "description":  "产品重量"
+                                              },
+                                   "wunit":  {
+                                                 "type":  "string",
+                                                 "description":  "重量单位"
+                                             },
+                                   "length":  {
+                                                  "type":  "string",
+                                                  "description":  "产品长度"
+                                              },
+                                   "lunit":  {
+                                                 "type":  "string",
+                                                 "description":  "长度单位"
+                                             },
+                                   "width":  {
+                                                 "type":  "string",
+                                                 "description":  "产品宽度"
+                                             },
+                                   "height":  {
+                                                  "type":  "string",
+                                                  "description":  "产品高度"
+                                              },
+                                   "shipment":  {
+                                                    "type":  "string",
+                                                    "description":  "物流方式"
+                                                },
+                                   "categories":  {
+                                                      "type":  "string",
+                                                      "description":  "商品分类"
+                                                  },
+                                   "country":  {
+                                                   "type":  "object",
+                                                   "description":  "各国家站点费用详情Map"
+                                               }
+                               },
+                      "required":  [
+                                       "profitCfgId",
+                                       "cost",
+                                       "weight",
+                                       "length",
+                                       "width",
+                                       "height"
+                                   ],
+                      "response_fields":  {
+                                              "profittype":  "利润类型",
+                                              "profitCfgId":  "利润计算方案ID",
+                                              "shipment":  "运费",
+                                              "typeId":  "类型ID",
+                                              "cost":  "采购成本",
+                                              "currency":  "采购成本币种",
+                                              "weight":  "重量",
+                                              "wunit":  "重量单位",
+                                              "length":  "长",
+                                              "lunit":  "长度单位",
+                                              "width":  "宽",
+                                              "height":  "高",
+                                              "categories":  "商品分类",
+                                              "shipmentType":  "发货类型(local/regional/national)",
+                                              "declaredValue":  "申报价值",
+                                              "declaredValueCur":  "申报价值币种",
+                                              "taxrate":  "印度进口税率",
+                                              "gstrate":  "印度进口GST税率",
+                                              "sellingGSTRate":  "印度销售GST税率",
+                                              "referralrate":  "印度佣金比率",
+                                              "isSmlAndLightStr":  "是否轻小件",
+                                              "sipp":  "是否SIPP",
+                                              "country":  "各国家站点费用详情Map，key为国家代码(如US,UK,DE)，value为CostDetail对象（含country、currency、productTier、outboundWeight、purchase、shipment、referralFee、FBA、storageFee、inPlaceFee、manualProcessingFee、labelServiceFee、prepServiceFee、tax、taxRate、vatFee、vatRate、marketing、promotionFee、others、totalCost、sellingPrice、profit、margin等）",
+                                              "profitCfgAll":  "利润计算方案配置对象（含id、name、shopId、issystem、salesChannel、sellerplan、shipmentstyle等）"
+                                          }
+                  },
+                  {
+                      "name":  "amz_refresh_product_data",
+                      "description":  "触发单个商品数据刷新（异步任务），用于更新商品的销量、排名等经营数据。注意：此接口仅触发异步任务，不返回实际数据",
+                      "menu_id":  35,
+                      "endpoint":  "/amazon/api/v1/report/dataAnalysisSingle",
+                      "method":  "GET",
+                      "service":  "wimoor-amazon",
+                      "params":  {
+                                     "pid":  {
+                                                 "type":  "string",
+                                                 "description":  "商品ID"
+                                             }
+                                 },
+                      "required":  [
+                                       "pid"
+                                   ],
+                      "response_fields":  {
+                                              "code":  "响应状态码，200表示成功",
+                                              "message":  "响应消息"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_profit_config",
+                      "description":  "查询利润计算方案详情，获取指定利润配置方案的完整信息",
+                      "menu_id":  35,
+                      "endpoint":  "/amazon/api/v1/profit/profitCfg/findConfig",
+                      "method":  "GET",
+                      "service":  "wimoor-amazon",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "利润计算方案ID，可通过amz_query_profit_detail获取的profitCfgList中获取"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "配置ID",
+                                              "name":  "配置名称",
+                                              "shopId":  "店铺ID",
+                                              "issystem":  "是否系统预置方案",
+                                              "isDefault":  "是否默认方案",
+                                              "isdelete":  "是否已删除",
+                                              "salesChannel":  "销售渠道",
+                                              "sellerplan":  "卖家计划",
+                                              "shipmentstyle":  "物流方式",
+                                              "countryList":  "国家配置列表（含各国家的利润计算参数）",
+                                              "opttime":  "操作时间",
+                                              "createtime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_profit_config_list",
+                      "description":  "查询当前店铺的利润计算方案列表",
+                      "menu_id":  35,
+                      "endpoint":  "/amazon/api/v1/profit/profitCfg/showProfitDetial",
+                      "method":  "GET",
+                      "service":  "wimoor-amazon",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "配置ID",
+                                              "name":  "配置名称",
+                                              "issystem":  "是否系统预置方案",
+                                              "isDefault":  "是否默认方案",
+                                              "salesChannel":  "销售渠道",
+                                              "sellerplan":  "卖家计划",
+                                              "shipmentstyle":  "物流方式"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_fba_format",
+                      "description":  "查询FBA费用格式配置，支持按国家和尺寸分层筛选",
+                      "menu_id":  35,
+                      "endpoint":  "/amazon/api/v1/profit/profitParam/getFBA",
+                      "method":  "POST",
+                      "service":  "wimoor-amazon",
+                      "body":  {
+                                   "country":  {
+                                                   "type":  "string",
+                                                   "description":  "国家代码，如US、UK、DE，模糊匹配"
+                                               },
+                                   "tierid":  {
+                                                  "type":  "string",
+                                                  "description":  "产品尺寸分层ID"
+                                              },
+                                   "isclothing":  {
+                                                      "type":  "boolean",
+                                                      "description":  "是否服装类"
+                                                  },
+                                   "dispatchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "配送类型"
+                                                    },
+                                   "currentpage":  {
+                                                       "type":  "integer",
+                                                       "description":  "页码，默认1"
+                                                   },
+                                   "pagesize":  {
+                                                    "type":  "integer",
+                                                    "description":  "每页记录数，默认1000"
+                                                }
+                               },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：id(配置ID)、country(国家代码)、ismedia(是否中号)、producttierid(产品尺寸分层ID)、fbaFormat(FBA费用格式)、month(适用月份)、weight(重量)、isclothing(是否服装类)、effectiveDate(生效日期)、expiryDate(失效日期)、dispatchType(配送类型)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_tier_format",
+                      "description":  "查询产品尺寸格式配置，支持按国家和尺寸分层筛选",
+                      "menu_id":  35,
+                      "endpoint":  "/amazon/api/v1/profit/profitParam/getTierFormat",
+                      "method":  "POST",
+                      "service":  "wimoor-amazon",
+                      "body":  {
+                                   "country":  {
+                                                   "type":  "string",
+                                                   "description":  "国家代码，模糊匹配"
+                                               },
+                                   "tierid":  {
+                                                  "type":  "string",
+                                                  "description":  "产品尺寸分层ID"
+                                              },
+                                   "currentpage":  {
+                                                       "type":  "integer",
+                                                       "description":  "页码，默认1"
+                                                   },
+                                   "pagesize":  {
+                                                    "type":  "integer",
+                                                    "description":  "每页记录数，默认1000"
+                                                }
+                               },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：id(配置ID)、producttierid(产品尺寸分层ID)、country(国家代码)、format(尺寸格式)、lengthUnit(长度单位)、weightUnit(重量单位)、sort(排序)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_tier_page",
+                      "description":  "分页查询产品尺寸分层列表，支持按国家筛选",
+                      "menu_id":  35,
+                      "endpoint":  "/amazon/api/v1/profit/profitParam/getTierPage",
+                      "method":  "POST",
+                      "service":  "wimoor-amazon",
+                      "body":  {
+                                   "country":  {
+                                                   "type":  "string",
+                                                   "description":  "国家代码，模糊匹配"
+                                               },
+                                   "currentpage":  {
+                                                       "type":  "integer",
+                                                       "description":  "页码，默认1"
+                                                   },
+                                   "pagesize":  {
+                                                    "type":  "integer",
+                                                    "description":  "每页记录数，默认1000"
+                                                }
+                               },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：id(分层ID)、name(分层名称)、isstandard(是否标准尺寸)、country(国家代码)、boxWeight(箱子重量)、amzName(Amazon分层名称)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_tier",
+                      "description":  "查询产品尺寸分层列表，按国家模糊匹配",
+                      "menu_id":  35,
+                      "endpoint":  "/amazon/api/v1/profit/profitParam/getTier",
+                      "method":  "GET",
+                      "service":  "wimoor-amazon",
+                      "params":  {
+                                     "country":  {
+                                                     "type":  "string",
+                                                     "description":  "国家代码，如US、UK，模糊匹配"
+                                                 }
+                                 },
+                      "required":  [
+                                       "country"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "分层ID",
+                                              "name":  "分层名称",
+                                              "isstandard":  "是否标准尺寸",
+                                              "country":  "国家代码",
+                                              "boxWeight":  "箱子重量",
+                                              "amzName":  "Amazon分层名称"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_storage_fee",
+                      "description":  "查询FBA仓储费配置，获取各国家站点的仓储费标准",
+                      "menu_id":  35,
+                      "endpoint":  "/amazon/api/v1/profit/profitParam/storageFee",
+                      "method":  "GET",
+                      "service":  "wimoor-amazon",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "storageFeeMap_UK":  "英国仓储费列表(BigDecimal数组)",
+                                              "storageFeeMap_DE":  "德国仓储费列表(BigDecimal数组)",
+                                              "storageFeeMap_JP":  "日本仓储费列表(BigDecimal数组)",
+                                              "storageFeeMap_CA":  "加拿大仓储费列表(BigDecimal数组)",
+                                              "storageFeeMap_AU":  "澳大利亚仓储费列表(BigDecimal数组)",
+                                              "storageFeeMap_IN":  "印度仓储费列表(BigDecimal数组)",
+                                              "storageFeeMap_MX":  "墨西哥仓储费列表(BigDecimal数组)",
+                                              "storageFeeMap_AE":  "阿联酋仓储费列表(BigDecimal数组)",
+                                              "storageFeeMap_SA":  "沙特仓储费列表(BigDecimal数组)"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_inplace_fee_list",
+                      "description":  "查询入库费用配置列表，按国家获取入库费用方案",
+                      "menu_id":  35,
+                      "endpoint":  "/amazon/api/v1/profit/profitCfg/findInplacefee/{country}",
+                      "method":  "GET",
+                      "service":  "wimoor-amazon",
+                      "params":  {
+                                     "country":  {
+                                                     "type":  "string",
+                                                     "description":  "国家代码，如US、UK、DE，路径参数"
+                                                 }
+                                 },
+                      "required":  [
+                                       "country"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "入库费用ID",
+                                              "name":  "入库费用名称",
+                                              "description":  "费用描述",
+                                              "country":  "国家代码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_manual_processing_fee",
+                      "description":  "查询手动处理费配置列表，获取各国家各月份的人工处理费标准",
+                      "menu_id":  35,
+                      "endpoint":  "/amazon/api/v1/profit/profitCfg/findManualProcessingFee",
+                      "method":  "GET",
+                      "service":  "wimoor-amazon",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "记录ID",
+                                              "month":  "适用月份",
+                                              "manualprocessingfee":  "手动处理费金额",
+                                              "country":  "国家代码"
+                                          }
+                  }
+              ]
+}

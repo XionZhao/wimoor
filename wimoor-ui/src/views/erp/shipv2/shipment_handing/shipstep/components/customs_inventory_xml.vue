@@ -122,7 +122,10 @@
 
             <el-col :span="6">
               <el-form-item label="电商企业名称：" prop="ebcName" required>
-                <el-input v-model="inventoryData.ebcName" placeholder="请输入电商企业名称" />
+                <el-select v-if="companyOptions.length > 1" v-model="inventoryData.ebcName" placeholder="请选择电商企业" @change="handleCompanyChange" style="width: 100%">
+                  <el-option v-for="item in companyOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+                <el-input v-else v-model="inventoryData.ebcName" placeholder="请输入电商企业名称" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -541,6 +544,7 @@ import { ref, reactive, toRefs, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete } from '@element-plus/icons-vue'
 import shipmentCustomsApi from '@/api/erp/shipv2/shipmentCustomsApi.js'
+import groupApi from '@/api/amazon/group/groupApi.js'
 import CustomsSelect from '@/views/erp/shipv2/shipment_handing/shipstep/components/customs_data.vue'
 import {useCustomsDict} from "@/hooks/erp/shipment/custom_data.js";
 const { unit,currency,wrapType,trafMode,pod,country,portCode } = useCustomsDict('unit','currency','wrapType','trafMode','pod','country','portCode')
@@ -554,6 +558,7 @@ let state = reactive({
   shipmentid: null,
   currencyOptions: [],
   unitOptions: [],
+  companyOptions: [],
   inventoryLoading: false,
 
   // 清单表单数据
@@ -616,6 +621,7 @@ let {
   inventoryData,
   currencyOptions,
   unitOptions,
+  companyOptions,
   optType
 } = toRefs(state)
 
@@ -889,7 +895,7 @@ const resetxmlform = () => {
   })
 }
 
-async function show(groupid, shipmentid,guid) {
+async function show(groupid, shipmentid,guid,groupids) {
   state.guid=guid;
   state.groupid = groupid
   state.shipmentid = shipmentid
@@ -900,6 +906,8 @@ async function show(groupid, shipmentid,guid) {
   // 加载下拉选项
   state.currencyOptions = await loadOptions("currency", "code", "encode")
   state.unitOptions = await loadOptions("unit", "code", "name")
+  // 获取店铺信息，构建公司选项列表
+  await loadCompanyOptions(groupids || [groupid])
 
   // 设置默认时间
   const now = new Date()
@@ -909,6 +917,54 @@ async function show(groupid, shipmentid,guid) {
   // 加载现有数据和XML文件
   loadInventoryXml()
   //loadInventoryData()
+}
+
+async function loadCompanyOptions(groupids) {
+  try {
+    const res = await groupApi.getAmazongroupList();
+    if (res.data) {
+      // 过滤出选中的店铺
+      const filteredGroups = res.data.filter(group => groupids.includes(group.id));
+      // 构建公司选项列表（去重）
+      const companyMap = new Map();
+      filteredGroups.forEach(group => {
+        if (group.company && !companyMap.has(group.company)) {
+          companyMap.set(group.company, {
+            value: group.company,
+            label: group.company,
+            taxNumber: group.taxNumber || group.tax_number || '',
+            customNumber: group.customNumber || group.custom_number || '',
+            dxpid: group.dxpid || '',
+            groupId: group.id
+          });
+        }
+      });
+      state.companyOptions = Array.from(companyMap.values());
+      console.log('公司选项列表:', state.companyOptions);
+    }
+  } catch (e) {
+    console.error('获取店铺信息失败', e);
+  }
+}
+
+function handleCompanyChange(companyName) {
+  const selectedCompany = state.companyOptions.find(item => item.value === companyName);
+  if (selectedCompany) {
+    // 海关注册编码
+    state.inventoryData.agentCode = selectedCompany.customNumber || '';
+    state.inventoryData.ownerCode = selectedCompany.customNumber || '';
+    state.inventoryData.ebcCode = selectedCompany.customNumber || selectedCompany.taxNumber || '';
+    // copName与ebcName保持一致
+    state.inventoryData.copName = companyName;
+    state.inventoryData.copCode = selectedCompany.customNumber || selectedCompany.taxNumber || '';
+    // dxpId需要设置到inventoryData中，后端从此处读取
+    state.inventoryData.dxpId = selectedCompany.dxpid || '';
+    state.xmlform.dxpId = selectedCompany.dxpid || '';
+    // 更新groupid，使后端能获取到正确的公司信息生成文件名
+    state.xmlform.groupid = selectedCompany.groupId;
+    // 更新文件名
+    getFileName();
+  }
 }
 
 // 加载选项数据

@@ -747,4 +747,34 @@
 		  and t.purchase_date &lt;=#{endDate,jdbcType=TIMESTAMP}
 		  group by t.purchase_date
 	</select>
+
+	<select id="quantityByDay" resultType="java.util.Map" parameterType="java.util.Map">
+		SELECT
+		<choose>
+			<when test="groupType == 'month'">
+				DATE_FORMAT(o.purchase_date,'%Y/%m') as postdate,
+			</when>
+			<when test="groupType == 'week'">
+				CONCAT(YEAR(o.purchase_date),'/',LPAD(WEEK(o.purchase_date,1)+1,2,'0'),'周') as postdate,
+			</when>
+			<otherwise>
+				DATE_FORMAT(o.purchase_date,'%Y/%m/%d') as postdate,
+			</otherwise>
+		</choose>
+		SUM(o.quantity) as quantity
+		FROM t_orders_summary o
+		LEFT JOIN t_amazon_auth a ON a.id=o.amazonAuthId
+		LEFT JOIN t_amazon_group g ON g.id=a.groupid
+		WHERE o.purchase_date &gt;=#{fromDate,jdbcType=CHAR}
+		AND o.purchase_date &lt;=#{endDate,jdbcType=CHAR}
+		AND g.shopid=#{shopid,jdbcType=CHAR}
+		<if test="groupid != null">
+		AND g.id=#{groupid,jdbcType=CHAR}
+		</if>
+		<if test="marketplaceid != null">
+		AND o.marketplaceid=#{marketplaceid,jdbcType=CHAR}
+		</if>
+		GROUP BY postdate
+		ORDER BY postdate
+	</select>
 </mapper>

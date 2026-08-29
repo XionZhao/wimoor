@@ -3,7 +3,7 @@
 	  <el-row>
 	    <el-space >
 	  <Group @change="groupChange"  />
-	   <el-input  v-model="searchKeywords" clearable @input="searchConfirm" placeholder="请输入" class="input-with-select" >
+	   <el-input  v-model="searchKeywords" clearable @clear="searchConfirm" v-debounce-input="searchConfirm" placeholder="请输入" class="input-with-select" >
 	      <template #append>
 	        <el-button @click="searchConfirm">
 	           <el-icon style="font-size: 16px;align-itmes:center">

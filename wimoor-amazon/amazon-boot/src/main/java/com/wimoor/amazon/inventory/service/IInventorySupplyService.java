@@ -1,16 +1,17 @@
 package com.wimoor.amazon.inventory.service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
 import com.amazon.spapi.model.fbainventory.InventorySummary;
 import com.wimoor.amazon.auth.pojo.entity.AmazonAuthority;
+import com.wimoor.amazon.auth.service.IRunAmazonService;
 import com.wimoor.amazon.inventory.pojo.entity.AmzInventoryCountryReport;
 import com.wimoor.amazon.inventory.pojo.entity.InventoryReport;
 import com.wimoor.amazon.inventory.pojo.vo.ProductInventoryVo;
 
-public interface IInventorySupplyService {
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+public interface IInventorySupplyService extends IRunAmazonService {
 
 	Map<String, InventorySummary> captureInventorySupplyNew(AmazonAuthority amazonAuthority, List<String> list);
 	Map<String, InventorySummary> captureInventorySupplyNew(AmazonAuthority amazonAuthority, Date date);

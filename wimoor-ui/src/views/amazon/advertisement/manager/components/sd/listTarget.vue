@@ -10,7 +10,7 @@
 			      <el-radio-button label="近7天" />
 			      <el-radio-button label="近30天" />
 			    </el-radio-group>
-			<el-input v-model="queryParams.search" @input="handleQuery" placeholder="搜索商品投放">
+			<el-input v-model="queryParams.search" v-debounce-input="handleQuery" placeholder="搜索商品投放">
 					 <template #suffix>
 					  <el-icon @click.stop="handleQuery"><Search /></el-icon>
 					 </template>
@@ -408,6 +408,7 @@
 		}
 	   
 	}
+
 	function getSummaries({columns,data}){
 		var arr = ["合计"];
 				columns.forEach((item,index)=>{

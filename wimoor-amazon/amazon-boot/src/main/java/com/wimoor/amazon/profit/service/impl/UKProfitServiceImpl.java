@@ -138,6 +138,13 @@ public class UKProfitServiceImpl extends ProfitServiceImpl {
 		}
 		
 		FBAFormat fbaFormat = fbaFormatService.findEUfbaFormat(fenpeiType, productTierId, country, outboundWeight);
+		// 当该国家找不到FBA费用数据时，尝试使用仓库站点国家的数据作为回退
+		if (fbaFormat == null && profitConfigX != null) {
+			String warehousesite = profitConfigX.getWarehousesite();
+			if (StrUtil.isNotBlank(warehousesite) && !warehousesite.equalsIgnoreCase(country)) {
+				fbaFormat = fbaFormatService.findEUfbaFormat(fenpeiType, productTierId, warehousesite.toUpperCase(), outboundWeight);
+			}
+		}
 		if (fbaFormat != null) {
 			String format = fbaFormat.getFbaFormat();
 			if (format.contains("?")) {// 如果有逻辑判断

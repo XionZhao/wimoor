@@ -14,7 +14,7 @@
 			> </el-option>
 		  </el-select>	
 		<Datepicker ref="datepickersRef" @changedate="changedate" />
-		<el-input  v-model="queryParams.search" @input="handleQuery" placeholder="请输入" class="input-with-select" >
+		<el-input  v-model="queryParams.search" v-debounce-input="handleQuery" placeholder="请输入" class="input-with-select" >
 		  <template #prepend>
 		    <el-select v-model="queryParams.searchtype" @change='handleQuery' style="width: 110px">
 		     <!-- <el-option label="单据号" value="number"></el-option> -->

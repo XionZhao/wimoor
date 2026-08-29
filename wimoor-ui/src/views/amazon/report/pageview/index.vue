@@ -5,7 +5,7 @@
 	    <el-space >
 		<Group ref="groups" @change="changeGroup" defaultValue="only"/>
 		<Datepicker ref="datepickers" @changedate="changedate" />
-	    <el-input  v-model="searchKeywords" clearable @input="searchConfirm" placeholder="请输入SKU" class="input-with-select" >
+	    <el-input  v-model="searchKeywords" clearable v-debounce-input="searchConfirm" @clear="searchConfirm" placeholder="请输入SKU" class="input-with-select" >
         </el-input>
 	 </el-space>
 	 </el-row>
@@ -110,9 +110,9 @@
 			
 			}
 			function searchConfirm(value){
-				myparams.search=searchKeywords.value;
-				loadData();
-			}
+			myparams.search=searchKeywords.value;
+			loadData();
+		}
 			function loadTableData(params){
 				businessApi.getPageViewsList(params).then((res)=>{
 					tableData.records = res.data.records

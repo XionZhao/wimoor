@@ -1,0 +1,915 @@
+﻿{
+    "module":  "Amazon商品管理",
+    "description":  "Amazon商品信息查询、商品状态、价格记录、FBA费用、排名分析、页面浏览量等商品全维度管理",
+    "tools":  [
+                  {
+                      "name":  "amz_query_product_info_list",
+                      "description":  "查询Amazon商品信息列表，支持多条件筛选商品的SKU、ASIN、价格、状态等信息，返回与本地ERP物料关联的商品数据",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/productInfo/getProductInfoList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "查询内容，模糊搜索"
+                                                },
+                                     "searchType":  {
+                                                        "type":  "string",
+                                                        "description":  "查询类型"
+                                                    },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "查询列表类型，shipment表示货件模式，不传为普通模式"
+                                               },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID，ftype为shipment时需要"
+                                                     },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认1000"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "本地物料ID",
+                                              "sku":  "平台SKU",
+                                              "asin":  "ASIN编码",
+                                              "msku":  "本地SKU(主SKU)",
+                                              "name":  "商品名称",
+                                              "image":  "商品图片URL",
+                                              "brand":  "品牌",
+                                              "price":  "本地采购价格",
+                                              "itemprice":  "平台销售价格",
+                                              "color":  "颜色",
+                                              "upc":  "UPC编码",
+                                              "boxnum":  "单箱数量",
+                                              "fulfillable":  "可用库存(ftype=shipment时)",
+                                              "willfulfillable":  "组装库存(ftype=shipment时)",
+                                              "MOQ":  "最小起订量",
+                                              "supplier":  "供应商名称",
+                                              "issfg":  "是否组装产品",
+                                              "remark":  "备注",
+                                              "operator":  "操作人",
+                                              "opttime":  "操作时间",
+                                              "purchaseUrl":  "采购链接",
+                                              "delivery_cycle":  "备货周期",
+                                              "length":  "长",
+                                              "width":  "宽",
+                                              "height":  "高",
+                                              "weight":  "重量",
+                                              "pid":  "平台商品ID",
+                                              "fnsku":  "FNSKU编码",
+                                              "pname":  "平台商品名称",
+                                              "marketplaceid":  "站点ID"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_status",
+                      "description":  "查询当前店铺的商品状态定义列表，返回自定义的销售状态(如在售、清仓、滞销等)",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/productInfo/getProStatusList",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "状态ID",
+                                              "name":  "状态名称",
+                                              "color":  "状态颜色标识",
+                                              "issystem":  "是否系统内置",
+                                              "remark":  "备注",
+                                              "opttime":  "操作时间",
+                                              "createtime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_price_record",
+                      "description":  "查询商品价格变更记录，查看指定商品的历史价格变动明细",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/product/priceRecord/getPriceRecord",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "pid":  {
+                                                 "type":  "string",
+                                                 "description":  "平台商品ID"
+                                             },
+                                     "byday":  {
+                                                   "type":  "string",
+                                                   "description":  "起始日期，格式：yyyy-MM-dd，筛选该日期之后的记录，不传则查询全部"
+                                               }
+                                 },
+                      "required":  [
+                                       "pid"
+                                   ],
+                      "response_fields":  {
+                                              "pid":  "商品ID",
+                                              "opttime":  "操作时间",
+                                              "lowestprice":  "最低限价",
+                                              "price":  "当前调后价格",
+                                              "refprice":  "参考价格(平台原价)",
+                                              "oldprice":  "调价前价格",
+                                              "shipprice":  "运费",
+                                              "oldshipprice":  "调价前运费",
+                                              "startdate":  "临时调价开始日期",
+                                              "enddate":  "临时调价结束日期",
+                                              "ftype":  "调价类型(1永久调价/2临时调价/3商务调价)",
+                                              "remark":  "调价备注",
+                                              "operator":  "操作人姓名"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_fba_fee",
+                      "description":  "查询商品的Amazon价格信息，获取平台售价、运费、落地价等定价数据",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/productInOpt/findPriceById",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "pid":  {
+                                                 "type":  "string",
+                                                 "description":  "平台商品ID"
+                                             }
+                                 },
+                      "required":  [
+                                       "pid"
+                                   ],
+                      "response_fields":  {
+                                              "marketplaceid":  "站点ID",
+                                              "asin":  "ASIN编码",
+                                              "byday":  "记录日期",
+                                              "ptype":  "价格类型(如BUYP为购买价)",
+                                              "landedAmount":  "落地价(含运费)",
+                                              "landedCurrency":  "落地价币种",
+                                              "listingAmount":  "挂牌价",
+                                              "listingCurrency":  "挂牌价币种",
+                                              "shippingAmount":  "运费",
+                                              "shippingCurrency":  "运费币种",
+                                              "isnewest":  "是否最新记录",
+                                              "fulfillmentchannel":  "配送渠道",
+                                              "itemcondition":  "商品状况",
+                                              "itemsubcondition":  "商品子状况",
+                                              "sellerid":  "卖家ID",
+                                              "sellersku":  "卖家SKU"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_by_fnsku",
+                      "description":  "通过FNSKU查询商品列表，支持按店铺、站点、关键词筛选，返回FNSKU与SKU/MSKU的映射关系",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/productInfo/getProductInfoWithFnSKU",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，模糊搜索SKU或FNSKU"
+                                                },
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "查询类型，传\u0027simple\u0027时返回精简数据"
+                                               },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认1000"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "平台SKU",
+                                              "msku":  "本地SKU",
+                                              "asin":  "ASIN编码",
+                                              "fnsku":  "FNSKU编码",
+                                              "name":  "商品名称",
+                                              "image":  "商品图片URL",
+                                              "marketplaceid":  "站点ID",
+                                              "groupid":  "店铺分组ID"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_asin_info",
+                      "description":  "通过Amazon SP-API查询ASIN的商品目录信息，获取Amazon平台上的商品详情",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/listing/findAsinInfo",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "amazonauthid":  {
+                                                          "type":  "string",
+                                                          "description":  "授权ID"
+                                                      },
+                                     "asins":  {
+                                                   "type":  "string",
+                                                   "description":  "ASIN编码，多个用逗号分隔"
+                                               },
+                                     "marketplaceids":  {
+                                                            "type":  "array",
+                                                            "description":  "站点ID数组"
+                                                        }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "asins"
+                                   ],
+                      "response_fields":  {
+                                              "summaries":  "商品摘要信息(title, brand, manufacturer等)",
+                                              "attributes":  "商品属性信息",
+                                              "fulfillmentAvailability":  "配送可用性信息"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_rank",
+                      "description":  "查询商品的BSR(Best Sellers Rank)排名，获取指定商品在各类目下的当前排名",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/productRank/rank",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "平台商品ID(即t_product_info表的id)"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "categoryId":  "Amazon类目ID",
+                                              "rank":  "BSR排名",
+                                              "name":  "类目名称"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_list",
+                      "description":  "查询商品列表(完整版)，支持按SKU、ASIN、名称、备注、销售状态、负责人、标签等多维度筛选，返回商品的销售、广告、库存、利润等全维度数据",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/productInfo/productList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型：SKU、ASIN、Name、Remark"
+                                                    },
+                                     "marketplace":  {
+                                                         "type":  "string",
+                                                         "description":  "站点ID，可通过amz_query_market_list获取，传\u0027all\u0027或不传为全部"
+                                                     },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取，传\u0027all\u0027或不传为全部"
+                                                 },
+                                     "disable":  {
+                                                     "type":  "string",
+                                                     "description":  "是否隐藏：\u0027true\u0027隐藏/\u0027false\u0027未隐藏，传\u0027all\u0027或不传为全部"
+                                                 },
+                                     "isfba":  {
+                                                   "type":  "string",
+                                                   "description":  "是否FBA配送"
+                                               },
+                                     "salestatus":  {
+                                                        "type":  "string",
+                                                        "description":  "销售状态ID，可通过amz_query_product_status获取，传\u0027all\u0027或不传为全部"
+                                                    },
+                                     "ownerid":  {
+                                                     "type":  "string",
+                                                     "description":  "产品负责人ID"
+                                                 },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码，模糊搜索"
+                                             },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "商品名称，模糊搜索"
+                                              },
+                                     "remark":  {
+                                                    "type":  "string",
+                                                    "description":  "备注，模糊搜索"
+                                                },
+                                     "category":  {
+                                                      "type":  "string",
+                                                      "description":  "分类筛选"
+                                                  },
+                                     "color":  {
+                                                   "type":  "string",
+                                                   "description":  "颜色筛选"
+                                               },
+                                     "changeRate":  {
+                                                        "type":  "string",
+                                                        "description":  "转化率筛选"
+                                                    },
+                                     "isbadreview":  {
+                                                         "type":  "string",
+                                                         "description":  "是否仅显示有差评的商品：\u0027true\u0027"
+                                                     },
+                                     "isparent":  {
+                                                      "type":  "string",
+                                                      "description":  "是否仅显示父商品(变体)：传任意非空值"
+                                                  },
+                                     "parentasin":  {
+                                                        "type":  "string",
+                                                        "description":  "父ASIN，筛选指定父ASIN下的变体"
+                                                    },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认1000"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "商品ID",
+                                              "msku":  "本地SKU",
+                                              "asin":  "ASIN编码",
+                                              "sku":  "平台SKU",
+                                              "name":  "商品名称",
+                                              "image":  "商品图片URL",
+                                              "marketplaceid":  "站点ID",
+                                              "marketplacename":  "站点名称",
+                                              "groupid":  "店铺分组ID",
+                                              "groupname":  "店铺名称",
+                                              "country":  "国家/地区",
+                                              "parentAsin":  "父ASIN",
+                                              "fulfillchannel":  "配送渠道(AFBA/FBM)",
+                                              "opendate":  "上架日期",
+                                              "landedAmount":  "落地价",
+                                              "landedCurrency":  "落地价币种",
+                                              "afnFulfillableQuantity":  "FBA可售库存",
+                                              "rank":  "BSR排名",
+                                              "averageSalesDay":  "日均销量",
+                                              "averageSalesWeek":  "周均销量",
+                                              "averageSalesMonth":  "月均销量",
+                                              "sumweek":  "近7天销量",
+                                              "orderweek":  "近7天订单数",
+                                              "sales15":  "近15天销量",
+                                              "sessions":  "访问量(近7天)",
+                                              "sessionrate":  "转化率",
+                                              "buybox":  "BuyBox占比",
+                                              "advimpr":  "广告展示量(近7天)",
+                                              "advclick":  "广告点击量(近7天)",
+                                              "advsales":  "广告销量(近7天)",
+                                              "advspend":  "广告花费(近7天)",
+                                              "advcpc":  "广告CPC",
+                                              "advctr":  "广告CTR",
+                                              "advacos":  "广告ACOS",
+                                              "advspc":  "广告SPC",
+                                              "acoas":  "广告花费占销售额比",
+                                              "prorate":  "利润率(近7天)",
+                                              "proprate":  "利润占比",
+                                              "profits":  "利润额(近7天)",
+                                              "profitall":  "扣除广告后利润",
+                                              "priceweek":  "近7天销售额",
+                                              "mprice":  "采购成本",
+                                              "totalOfferCount":  "跟卖数量",
+                                              "followcount":  "跟卖数量",
+                                              "flownnumber":  "在途库存",
+                                              "disable":  "是否隐藏",
+                                              "optstatus":  "运营状态ID",
+                                              "optstatusname":  "运营状态名称",
+                                              "optstatuscolor":  "运营状态颜色",
+                                              "remark":  "备注",
+                                              "priceremark":  "调价备注",
+                                              "owner":  "负责人ID",
+                                              "ownername":  "负责人姓名",
+                                              "tagids":  "标签ID列表",
+                                              "tagNameList":  "标签名称列表",
+                                              "profitid":  "利润模型ID",
+                                              "hasChildren":  "是否有子变体",
+                                              "children":  "子变体列表"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_pageviews",
+                      "description":  "查询商品页面浏览量数据，获取各商品的访问量、浏览量、BuyBox占比、转化率等流量统计",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/amzProductPageviews/getPageViewsList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "startDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索SKU"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认1000"
+                                                  }
+                                 },
+                      "required":  [
+                                       "marketplaceid",
+                                       "groupid",
+                                       "startDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "SKU编码",
+                                              "asin":  "ASIN编码",
+                                              "name":  "商品名称",
+                                              "image":  "商品图片URL",
+                                              "byday":  "日期",
+                                              "marketplaceid":  "站点ID",
+                                              "parentAsin":  "父ASIN",
+                                              "childAsin":  "子ASIN",
+                                              "sessions":  "访问量(点击量)",
+                                              "sessionPercentage":  "访问占比",
+                                              "pageViews":  "页面浏览量",
+                                              "pageViewsPercentage":  "浏览量占比",
+                                              "buyBoxPercentage":  "BuyBox占比",
+                                              "unitsOrdered":  "订购数量",
+                                              "unitsOrderedB2B":  "B2B订购数量",
+                                              "unitSessionPercentage":  "订购转化率",
+                                              "orderedProductSales":  "销售额",
+                                              "orderedProductSalesB2B":  "B2B销售额",
+                                              "totalOrderItems":  "订单总数",
+                                              "totalOrderItemsB2B":  "B2B订单总数"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_asin_list",
+                      "description":  "查询商品ASIN列表(分析维度)，获取用于商品分析的ASIN列表，支持按店铺和站点筛选",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/analysis/productAsinList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "搜索类型"
+                                               },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认1000"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "asin":  "ASIN编码",
+                                              "sku":  "SKU编码",
+                                              "name":  "商品名称",
+                                              "image":  "商品图片URL",
+                                              "marketplaceid":  "站点ID",
+                                              "groupid":  "店铺分组ID"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_analysis_detail",
+                      "description":  "查询商品分析详情，获取指定商品的销售、广告、利润、库存等全维度分析数据",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/analysis/productdetail",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "pid":  {
+                                                 "type":  "string",
+                                                 "description":  "平台商品ID"
+                                             }
+                                 },
+                      "required":  [
+                                       "pid"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "商品ID",
+                                              "asin":  "ASIN编码",
+                                              "sku":  "SKU编码",
+                                              "marketplaceid":  "站点ID",
+                                              "name":  "商品名称",
+                                              "opendate":  "上架日期",
+                                              "fulfillchannel":  "配送渠道",
+                                              "binding":  "绑定类型",
+                                              "rank":  "BSR排名",
+                                              "totalOfferCount":  "跟卖数量",
+                                              "manufacturer":  "制造商",
+                                              "pgroup":  "商品分组",
+                                              "typename":  "商品类型",
+                                              "image":  "商品图片URL",
+                                              "amazonAuthId":  "授权ID",
+                                              "averageSalesDay":  "日均销量",
+                                              "averageSalesWeek":  "周均销量",
+                                              "averageSalesMonth":  "月均销量",
+                                              "landed_amount":  "落地价",
+                                              "landed_currency":  "落地价币种",
+                                              "afn_fulfillable_quantity":  "FBA可售库存",
+                                              "allqty":  "总库存(含在途)",
+                                              "daynumber":  "可售天数",
+                                              "listing_currency":  "挂牌币种",
+                                              "sumweek":  "近7天销量",
+                                              "summonth":  "近30天销量",
+                                              "orderweek":  "近7天订单数",
+                                              "ordermonth":  "近30天订单数",
+                                              "remark":  "备注",
+                                              "disable":  "是否隐藏",
+                                              "anysisremark":  "分析备注",
+                                              "flownnumber":  "在途库存",
+                                              "sessions":  "近7天访问量",
+                                              "sessionrate":  "转化率",
+                                              "advimpr":  "广告展示量",
+                                              "advsales":  "广告销量",
+                                              "advcpc":  "广告CPC",
+                                              "advclick":  "广告点击量",
+                                              "advspc":  "广告SPC",
+                                              "advspend":  "广告花费",
+                                              "advctr":  "广告CTR",
+                                              "advacos":  "广告ACOS",
+                                              "buybox":  "BuyBox占比",
+                                              "prorate":  "利润率",
+                                              "priceweek":  "近7天销售额",
+                                              "acoas":  "广告花费占比",
+                                              "profits":  "利润额",
+                                              "profitall":  "扣除广告后利润",
+                                              "proprate":  "利润占比",
+                                              "groupid":  "店铺分组ID",
+                                              "marketplacename":  "站点名称"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_analysis_chart",
+                      "description":  "查询商品分析图表数据，获取销量、排名、访问量等时序趋势数据",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/analysis/getChartData",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取，必填"
+                                                       },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取，必填"
+                                                 },
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "图表类型：sales(销量)、hisrank(历史排名)、或逗号分隔的自定义指标"
+                                               },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+                                       "sku",
+                                       "marketplaceid",
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "byday":  "日期",
+                                              "marketplaceid":  "站点ID"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_record_follow",
+                      "description":  "查询商品跟卖信息，通过Amazon SP-API获取指定ASIN的卖家报价列表并记录",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/listing/recordFollowList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "amazonauthid":  {
+                                                          "type":  "string",
+                                                          "description":  "授权ID"
+                                                      },
+                                     "asin":  {
+                                                  "type":  "string",
+                                                  "description":  "ASIN编码"
+                                              },
+                                     "marketplaceids":  {
+                                                            "type":  "array",
+                                                            "description":  "站点ID数组，单个元素"
+                                                        }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "asin"
+                                   ],
+                      "response_fields":  {
+                                              "offers":  "卖家报价列表(包含price, sellerId, fulfillmentChannel等)"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_info_simple",
+                      "description":  "查询商品简要信息，根据SKU列表或ASIN列表批量获取商品的精简信息",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/productInfo/getProductInfoSimple",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "sellerId":  {
+                                                      "type":  "string",
+                                                      "description":  "卖家ID"
+                                                  },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "skulist":  {
+                                                     "type":  "array",
+                                                     "description":  "SKU列表，按SKU查询时使用"
+                                                 },
+                                     "asinlist":  {
+                                                      "type":  "array",
+                                                      "description":  "ASIN列表，按ASIN查询时使用"
+                                                  }
+                                 },
+                      "required":  [
+                                       "sellerId",
+                                       "marketplaceid"
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "平台SKU",
+                                              "asin":  "ASIN编码",
+                                              "name":  "商品名称",
+                                              "image":  "商品图片URL",
+                                              "openDate":  "上架日期",
+                                              "ownername":  "负责人姓名",
+                                              "price":  "平台售价"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_by_msku",
+                      "description":  "通过本地SKU(MSKU)查询商品信息，根据本地SKU查找对应的Amazon平台商品",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/productInfo/getInfoByMsku",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "本地SKU编码(即MSKU)"
+                                             },
+                                     "country":  {
+                                                     "type":  "string",
+                                                     "description":  "国家代码，如US、UK、DE、JP等，用于匹配站点"
+                                                 },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取，不传则查全部店铺"
+                                                 }
+                                 },
+                      "required":  [
+                                       "sku"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "平台商品ID",
+                                              "sku":  "平台SKU",
+                                              "asin":  "ASIN编码",
+                                              "marketplaceid":  "站点ID",
+                                              "name":  "商品名称",
+                                              "price":  "平台售价",
+                                              "image":  "商品图片URL",
+                                              "brand":  "品牌",
+                                              "fulfillChannel":  "配送渠道",
+                                              "amazonAuthId":  "授权ID",
+                                              "parentAsin":  "父ASIN",
+                                              "invalid":  "是否无效"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_dim",
+                      "description":  "通过Amazon SP-API查询商品的尺寸和重量信息(商品目录数据)",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/productInfo/getDim",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "asin":  {
+                                                  "type":  "string",
+                                                  "description":  "ASIN编码"
+                                              }
+                                 },
+                      "required":  [
+                                       "marketplaceid",
+                                       "asin"
+                                   ],
+                      "response_fields":  {
+                                              "summaries":  "商品摘要信息",
+                                              "attributes":  "商品属性(含尺寸、重量等物理信息)"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_parent_detail",
+                      "description":  "查询父商品(变体)详情列表，获取指定父ASIN下的所有子变体商品信息",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/productInfo/productParentListDetail",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型：SKU、ASIN、Name、Remark"
+                                                    },
+                                     "marketplace":  {
+                                                         "type":  "string",
+                                                         "description":  "站点ID，可通过amz_query_market_list获取"
+                                                     },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "parentasin":  {
+                                                        "type":  "string",
+                                                        "description":  "父ASIN编码，筛选指定父ASIN下的变体"
+                                                    },
+                                     "disable":  {
+                                                     "type":  "string",
+                                                     "description":  "是否隐藏：\u0027true\u0027/\u0027false\u0027/\u0027all\u0027"
+                                                 },
+                                     "isfba":  {
+                                                   "type":  "string",
+                                                   "description":  "是否FBA配送"
+                                               },
+                                     "salestatus":  {
+                                                        "type":  "string",
+                                                        "description":  "销售状态ID"
+                                                    },
+                                     "ownerid":  {
+                                                     "type":  "string",
+                                                     "description":  "产品负责人ID"
+                                                 },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码，模糊搜索"
+                                             },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "商品名称，模糊搜索"
+                                              },
+                                     "remark":  {
+                                                    "type":  "string",
+                                                    "description":  "备注，模糊搜索"
+                                                },
+                                     "category":  {
+                                                      "type":  "string",
+                                                      "description":  "分类筛选"
+                                                  },
+                                     "color":  {
+                                                   "type":  "string",
+                                                   "description":  "颜色筛选"
+                                               },
+                                     "changeRate":  {
+                                                        "type":  "string",
+                                                        "description":  "转化率筛选"
+                                                    },
+                                     "isbadreview":  {
+                                                         "type":  "string",
+                                                         "description":  "是否仅显示有差评的商品"
+                                                     },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认1000"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "商品ID",
+                                              "msku":  "本地SKU",
+                                              "asin":  "ASIN编码",
+                                              "sku":  "平台SKU",
+                                              "name":  "商品名称",
+                                              "image":  "商品图片URL",
+                                              "marketplaceid":  "站点ID",
+                                              "marketplacename":  "站点名称",
+                                              "parentAsin":  "父ASIN",
+                                              "fulfillchannel":  "配送渠道",
+                                              "afnFulfillableQuantity":  "FBA可售库存",
+                                              "landedAmount":  "落地价",
+                                              "landedCurrency":  "落地价币种",
+                                              "rank":  "BSR排名",
+                                              "disable":  "是否隐藏",
+                                              "optstatus":  "运营状态ID",
+                                              "optstatusname":  "运营状态名称",
+                                              "remark":  "备注",
+                                              "hasChildren":  "是否有子变体",
+                                              "children":  "子变体列表"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_fee_rate",
+                      "description":  "查询当前店铺的申报费率(declare rate)，用于货件申报金额计算",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/productInOpt/selectFeeRate",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "rate":  "申报费率(小数形式，如0.3表示30%)"
+                                          }
+                  }
+              ]
+}

@@ -490,11 +490,11 @@
 			sum(i.afn_unsellable_quantity) afnUnsellableQuantity,
 			sum(i.afn_researching_quantity) afnResearchingQuantity,
 			sum(r.reserved_customerorders) reservedCustomerorders,
-			sum(case when r.id is null then ifnull(i.afn_reserved_quantity,0) 
-			       else ifnull(r.reserved_fc_processing,i.afn_reserved_future_supply)  end) reservedFcProcessing,
+			sum(case when r.id is null then ifnull(i.afn_reserved_quantity,0)
+			else ifnull(r.reserved_fc_processing,i.afn_reserved_future_supply)  end) reservedFcProcessing,
 			sum(r.reserved_fc_transfers) reservedFcTransfers,
-      		sum(r.reserved_qty) reservedQty 
-		from t_inventory_report i 
+			sum(r.reserved_qty) reservedQty
+			from t_inventory_report i
 		left join t_inventory_reserved_report r on i.sku=r.sku and i.marketplaceid=r.marketplaceid and i.amazonAuthId=r.amazonAuthId 
 		left join t_amazon_auth a on i.amazonAuthId=a.id 
 		where a.shop_id=#{shopid,jdbcType=CHAR} 
@@ -512,14 +512,9 @@
 		    ir.marketplaceid,ir.sku,
 			ifnull(afn_fulfillable_quantity,0)+ifnull(afn_inbound_working_quantity,0)+
 			ifnull(afn_inbound_shipped_quantity,0)+ifnull(afn_inbound_receiving_quantity,0)+
-			case when rr.id is null then ifnull(afn_reserved_quantity,0) 
-			else ifnull(rr.reserved_fc_processing,0)+ifnull(rr.reserved_fc_transfers,0) 
-			end quantity,
+		    (ifnull(ir.afn_reserved_quantity,0)- ifnull(rr.reserved_customerorders,0))   quantity,
 			
-			ifnull(afn_fulfillable_quantity,0)+
-			case when rr.id is null then ifnull(afn_reserved_quantity,0) 
-			else ifnull(rr.reserved_fc_processing,0)+ifnull(rr.reserved_fc_transfers,0) 
-			end fulfillable,
+			ifnull(afn_fulfillable_quantity,0)+(ifnull(ir.afn_reserved_quantity,0)- ifnull(rr.reserved_customerorders,0))  fulfillable,
 		 (SELECT SUM(i.quantity) FROM  t_erp_ship_v2_inbounditem i
 		 LEFT JOIN t_erp_ship_v2_inboundplan p ON p.id=i.formid
 		 left join t_marketplace m on m.marketplaceid=p.marketplaceid

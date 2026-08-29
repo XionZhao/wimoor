@@ -5,7 +5,7 @@
 			<Group ref="groups" @change="getData" defaultValue="all"/>
 			<Warehouse ref="warehouses" @changeware="getWarehouse" />
 			<Datepicker ref="datepickers" @changedate="changedate" />
-	        <el-input  v-model="searchKeywords" @input="searchConfirm" placeholder="请输入" class="input-with-select" >
+	        <el-input  v-model="searchKeywords" v-debounce-input="searchConfirm" placeholder="请输入" class="input-with-select" >
 	      <template #prepend>
 	        <el-select v-model="selectlabel" @change='searchTypeChange' placeholder="SKU" style="width: 110px">
 	          <el-option label="SKU" value="sku"></el-option>
@@ -141,6 +141,8 @@
 	import Warehouse from '@/components/header/warehouse.vue';
 	import Datepicker from '@/components/header/datepicker.vue';
 	import TransNumber from './transnumber.vue';
+
+
 	export default{
 		name:"Header",
 		components:{MenuUnfold,Search,ArrowDown,SettingTwo,Help,Copy,MoreOne,Group,Warehouse,Datepicker,TransNumber},
@@ -227,14 +229,14 @@
 				}
 			}
 			function searchConfirm(){
-				if(searchKeywords.value&&searchKeywords.value.indexOf("FBA")==0){
-					selectlabel.value="number";
-				}
-				queryParam.searchwords=searchKeywords.value;
-				if(isload==false){
-					context.emit("getdata",queryParam);
-				}
+			if(searchKeywords.value&&searchKeywords.value.indexOf("FBA")==0){
+				selectlabel.value="number";
 			}
+			queryParam.searchwords=searchKeywords.value;
+			if(isload==false){
+				context.emit("getdata",queryParam);
+			}
+		}
 			function getTranList(){
 				transportationApi.getTranlist().then((res)=>{
 					res.data.push({"id":"","name":"全部"})

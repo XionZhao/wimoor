@@ -1,22 +1,6 @@
 package com.wimoor.erp.purchase.service.impl;
 
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -38,8 +22,18 @@ import com.wimoor.erp.purchase.pojo.entity.PurchaseForm;
 import com.wimoor.erp.purchase.pojo.entity.PurchaseFormEntry;
 import com.wimoor.erp.purchase.pojo.entity.PurchaseFormPayment;
 import com.wimoor.erp.purchase.service.IPurchaseFormPaymentService;
-
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
 
 @Service("purchaseFormPaymentService")
 @RequiredArgsConstructor
@@ -171,12 +165,14 @@ public class PurchaseFormPaymentServiceImpl extends  ServiceImpl<PurchaseFormPay
 		titlemap.put("createdate", "创建日期");
 		titlemap.put("cname", "供应商");
 		titlemap.put("sku", "SKU");
+		titlemap.put("groupname", "店铺名称");
 		titlemap.put("mname", "产品名称");
 		titlemap.put("paystatus", "付款状态");
 		titlemap.put("purchases", "订单采购量");
 		titlemap.put("totalin", "订单已入库");
 		titlemap.put("orderprice", "订单采购金额");
 		titlemap.put("totalpay", "订单已付款");
+		titlemap.put("acctname", "账户名称");
 		titlemap.put("payment_method", "付款方式");
 		titlemap.put("fee_type", "费用类型");
 		titlemap.put("payprice", "付款金额");
@@ -219,13 +215,32 @@ public class PurchaseFormPaymentServiceImpl extends  ServiceImpl<PurchaseFormPay
 	}
 
 	public IPage<Map<String, Object>> getPaymentReport(Page<?> page, Map<String, Object> param) {
-		 IPage<Map<String, Object>>  result = this.baseMapper.paymentReport(page,param);
-		 Map<String, Object> summary = this.baseMapper.paymentReportSummary(param);
-		if(result.getRecords()!=null&&result.getRecords().size()>0&&summary!=null) {
-			result.getRecords().get(0).putAll(summary);
+			 IPage<Map<String, Object>>  result = this.baseMapper.paymentReport(page,param);
+			 Map<String, Object> summary = this.baseMapper.paymentReportSummary(param);
+			if(result.getRecords()!=null&&result.getRecords().size()>0) {
+				if(summary!=null) {
+					result.getRecords().get(0).putAll(summary);
+				}
+				// 注入账户名称：通过Java代码查询账户名称，确保即使SQL join未生效也能正确显示
+				Object shopidObj = param.get("shopid");
+				String shopid = shopidObj != null ? shopidObj.toString() : null;
+				if (shopid != null) {
+					List<FinAccount> accounts = faccountService.findAccountAll(shopid);
+					Map<String, String> accountNameMap = new HashMap<>();
+					for (FinAccount acc : accounts) {
+						accountNameMap.put(acc.getId(), acc.getName());
+					}
+					for (Map<String, Object> record : result.getRecords()) {
+						Object acctObj = record.get("acct");
+						String acct = acctObj != null ? acctObj.toString() : null;
+						if (acct != null && accountNameMap.containsKey(acct)) {
+							record.put("acctname", accountNameMap.get(acct));
+						}
+					}
+				}
+			}
+			return result;
 		}
-		return result;
-	}
 	
 	@Override
 	public void cancelPayment(PurchaseFormPayment payment,String paytype, UserInfo user) {
@@ -428,4 +443,30 @@ public class PurchaseFormPaymentServiceImpl extends  ServiceImpl<PurchaseFormPay
 		queryWrapper.orderByDesc("opttime");
 		return this.baseMapper.selectList(queryWrapper);
 	}
+
+    // ==================== 台账Feign接口实现 ====================
+    
+    @Override
+    public List<Map<String, Object>> getPaymentsByEntryId(String entryId) {
+        // 获取订单付款明细（台账用）
+        QueryWrapper<PurchaseFormPayment> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("formentryid", entryId);
+        queryWrapper.orderByDesc("opttime");
+        List<PurchaseFormPayment> payments = this.baseMapper.selectList(queryWrapper);
+        List<Map<String, Object>> result = new ArrayList<>();
+        if (payments != null) {
+            for (PurchaseFormPayment payment : payments) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", payment.getId());
+                map.put("payprice", payment.getPayprice());
+                map.put("opttime", payment.getCreatedate());
+                map.put("remark", payment.getRemark());
+                map.put("projectid", payment.getProjectid());
+				map.put("acct", payment.getAcct());
+                map.put("auditstatus", payment.getAuditstatus());
+                result.add(map);
+            }
+        }
+        return result;
+    }
 }

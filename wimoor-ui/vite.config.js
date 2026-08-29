@@ -12,6 +12,9 @@ export default defineConfig(({ mode, command }) => {
 		// 例如 https://www.wimoor.com/。如果应用被部署在一个子路径上，你就需要用这个选项指定这个子路径。例如，如果你的应用被部署在 admin，则设置 baseUrl 为 /admin/。
 		base: VITE_APP_ENV === 'production' ? '/' : '/',
 		plugins: createVitePlugins(env, command === 'build'),
+		optimizeDeps: {
+			include: ['exceljs']
+		},
 		resolve: {
 			// https://cn.vitejs.dev/config/#resolve-alias
 			alias: {
@@ -35,7 +38,21 @@ export default defineConfig(({ mode, command }) => {
 					chunkFileNames: 'static/js/[name]-[hash].js',
 					entryFileNames: 'static/js/[name]-[hash].js',
 					assetFileNames: 'static/[ext]/[name]-[hash].[ext]',
-					inlineDynamicImports: true
+					manualChunks(id) {
+						if (id.includes('node_modules')) {
+							if (id.includes('echarts')) {
+								return 'echarts';
+							}
+							if (id.includes('element-plus')) {
+								return 'element-plus';
+							}
+							// exceljs 和 lodash 放一起，避免依赖加载顺序问题
+							if (id.includes('exceljs') || id.includes('lodash')) {
+								return 'excel-vendor';
+							}
+							return 'vendor';
+						}
+					}
 				}
 			}
 		},
@@ -57,8 +74,10 @@ export default defineConfig(({ mode, command }) => {
 				'/amazonadv/api': serverurl,
 				'/quote/api': serverurl,
 				'/chelsea/api': serverurl,
+				'/temu/api': serverurl,
 				'/mdata/api': serverurl,
 				'/finance/api': serverurl,
+				'/plantool/api':serverurl,
 				'/code/gen': serverurl,
 			}
 		},

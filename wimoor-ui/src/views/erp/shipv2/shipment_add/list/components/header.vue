@@ -5,7 +5,7 @@
 	 <Group @change="getData" defaultValue="all" />
 	 <Warehouse @changeware="getWarehouse" />
 	 <Datepicker @changedate="changedate"  :shortIndex="1" />
-	   <el-input  v-model="searchKeywords" placeholder="请输入" @input="searchConfirm" clearable class="input-with-select" >
+	   <el-input  v-model="searchKeywords" placeholder="请输入" v-debounce-input="searchConfirm" clearable @clear="searchConfirm" class="input-with-select" >
 	      <template #prepend>
 	        <el-select v-model="selectlabel" @change='searchTypeChange' placeholder="SKU" style="width: 110px">
 	          <el-option label="SKU" value="sku"></el-option>
@@ -78,6 +78,8 @@
 	import Datepicker from '@/components/header/datepicker.vue';
 	import AsyncPlan from './async.vue';
 	import { ElMessage,ElMessageBox } from 'element-plus';
+
+
   import fbacenterApi from "@/api/amazon/inbound/fbacenterApi.js";
 	const emits = defineEmits(["getdata"]);
 	const emitter = inject("emitter");

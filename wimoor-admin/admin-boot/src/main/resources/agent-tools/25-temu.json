@@ -1,0 +1,46 @@
+{
+  "module": "Temu模块",
+  "description": "Temu平台商品管理，包括商品SKC列表和SKU列表查询",
+  "tools": [
+    {
+      "name": "temu_goods_list",
+      "description": "查询Temu商品SKC列表，返回分页的商品数据，支持按货品名称和SKC外部编码筛选",
+      "endpoint": "/temu/api/v1/temu/goods/list",
+      "method": "GET",
+      "service": "wimoor-temu",
+      "params": {
+        "page": {"type": "integer", "description": "页码，默认1"},
+        "pageSize": {"type": "integer", "description": "每页数量，默认10"},
+        "productName": {"type": "string", "description": "货品名称模糊搜索"},
+        "extCode": {"type": "string", "description": "SKC外部编码模糊搜索"}
+      },
+      "required": [],
+      "response_fields": {
+        "list": "商品列表(TemuGoods数组)",
+        "total": "总记录数",
+        "page": "当前页码",
+        "pageSize": "每页数量"
+      }
+    },
+    {
+      "name": "temu_sku_list",
+      "description": "查询Temu商品SKU列表，返回分页的SKU数据，支持按SKU货号筛选",
+      "endpoint": "/temu/api/v1/temu/goods/sku/list",
+      "method": "GET",
+      "service": "wimoor-temu",
+      "params": {
+        "page": {"type": "integer", "description": "页码，默认1"},
+        "pageSize": {"type": "integer", "description": "每页数量，默认10"},
+        "productName": {"type": "string", "description": "货品名称（当前实现未使用此参数过滤）"},
+        "extCode": {"type": "string", "description": "SKU货号模糊搜索"}
+      },
+      "required": [],
+      "response_fields": {
+        "list": "SKU列表(TemuGoodsSku数组)",
+        "total": "总记录数",
+        "page": "当前页码",
+        "pageSize": "每页数量"
+      }
+    }
+  ]
+}

@@ -5,7 +5,7 @@
 			<el-space>
 				   <Group  @change="groupChange"   defaultValue="only" ></Group>
 					<Datepicker ref="datepickers" :shortIndex="2" @changedate="changedate" />
-					 <el-input class='ic-btn' v-model="queryParams.search" @input="handleQuery" placeholder="搜索ASIN或平台SKU"></el-input>
+					 <el-input class='ic-btn' v-model="queryParams.search" v-debounce-input="handleQuery" placeholder="搜索ASIN或平台SKU"></el-input>
 		    </el-space>
 			<div class='rt-btn-group' style="margin-bottom:10px;">
 			  <el-button style="float:right;" :loading="downloading" @click="downloadList">导出</el-button>  

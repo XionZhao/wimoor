@@ -1,0 +1,3019 @@
+﻿{
+    "module":  "Amazon广告管理",
+    "description":  "Amazon广告(PPC)管理，包括广告活动、广告组、商品广告、关键词、定向、品牌广告、创意、预算规则、广告报表等全链路查询",
+    "service":  "wimoor-amazon-adv",
+    "tools":  [
+                  {
+                      "name":  "amz_query_ad_profile",
+                      "description":  "加载Amazon广告Profile列表，获取广告账户的profile_id，是所有广告查询的前置依赖",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advert/loadProfile",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "广告Profile ID",
+                                              "countryCode":  "国家代码",
+                                              "currencyCode":  "币种",
+                                              "dailyBudget":  "日预算",
+                                              "timezone":  "时区",
+                                              "marketplaceId":  "站点ID",
+                                              "sellerId":  "卖家ID",
+                                              "ftime":  "该时区当前时间",
+                                              "name":  "Profile名称"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_adv_group",
+                      "description":  "获取广告维度的店铺分组列表，用于筛选广告数据所属店铺",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advManager/getGroup",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "分组ID",
+                                              "name":  "分组名称"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_campaign_list",
+                      "description":  "查询SP广告活动列表，支持按状态、投放类型、竞价策略等筛选，返回广告活动汇总指标",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advCampaignManager/getCampaignList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID，可通过amz_query_ad_profile获取"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignStatus":  {
+                                                            "type":  "string",
+                                                            "description":  "广告活动状态：enabled/paused/archived，不传默认enabled+paused"
+                                                        },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型：sp/sb/sd/all，默认all"
+                                                      },
+                                     "targetingType":  {
+                                                           "type":  "string",
+                                                           "description":  "投放类型：auto/manual"
+                                                       },
+                                     "campaignName":  {
+                                                          "type":  "string",
+                                                          "description":  "广告活动名称，支持模糊搜索"
+                                                      },
+                                     "portfolios":  {
+                                                        "type":  "string",
+                                                        "description":  "广告组合ID"
+                                                    },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认10"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "campaignId":  "广告活动ID",
+                                              "name":  "广告活动名称",
+                                              "status":  "状态(enabled/paused)",
+                                              "campaignType":  "广告类型(SP/SB/SD)",
+                                              "bidding":  "竞价策略",
+                                              "budget":  "日预算",
+                                              "targetingType":  "投放类型",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "sumUnits":  "7天归因订单数",
+                                              "ACOS":  "7天广告成本销售比(ACOS)",
+                                              "ROAS":  "7天广告支出回报率(ROAS)",
+                                              "avgcost":  "平均点击单价(CPC)",
+                                              "CTR":  "点击率",
+                                              "CSRT":  "7天转化率",
+                                              "startDate":  "开始日期",
+                                              "endDate":  "结束日期",
+                                              "marketplaceid":  "站点ID",
+                                              "groupname":  "店铺分组名",
+                                              "remark":  "备注",
+                                              "portfolioid":  "广告组合ID",
+                                              "portfoliosName":  "广告组合名称"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_campaign_sum",
+                      "description":  "查询SP广告活动汇总统计数据，返回所有广告活动的总计指标",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advCampaignManager/getSumCampaign",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignStatus":  {
+                                                            "type":  "string",
+                                                            "description":  "广告活动状态"
+                                                        },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "targetingType":  {
+                                                           "type":  "string",
+                                                           "description":  "投放类型"
+                                                       },
+                                     "campaignName":  {
+                                                          "type":  "string",
+                                                          "description":  "广告活动名称"
+                                                      }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "impressions":  "总曝光量",
+                                              "clicks":  "总点击量",
+                                              "cost":  "总花费",
+                                              "sumSales":  "总7天归因销售额",
+                                              "sumUnits":  "总7天归因订单数",
+                                              "ACOS":  "平均ACOS",
+                                              "ROAS":  "平均ROAS",
+                                              "avgcost":  "平均CPC",
+                                              "CTR":  "平均CTR",
+                                              "CSRT":  "平均转化率"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_campaign_chart",
+                      "description":  "查询SP广告活动趋势图表数据，按时间维度展示广告活动指标变化",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advCampaignManager/getCampaignChart",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "bytime":  {
+                                                    "type":  "string",
+                                                    "description":  "时间维度：Daily/Weekly/Monthly"
+                                                },
+                                     "searchlist":  {
+                                                        "type":  "string",
+                                                        "description":  "查询指标列表，如：impressions,clicks,cost,sumSales,sumUnits,ACOS,ROAS,avgcost,CTR,CSRT"
+                                                    }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "bydate":  "日期/周/月",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "ACOS":  "ACOS",
+                                              "avgcost":  "平均CPC",
+                                              "CTR":  "CTR",
+                                              "CSRT":  "转化率",
+                                              "ROAS":  "ROAS"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_campaign_placement",
+                      "description":  "查询SP广告活动的广告位分布数据，了解不同展示位置的效果差异",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advCampaignManager/getCampaignPlacement",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "campaignId":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "campaignId",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "name":  "广告位名称",
+                                              "impressionsPlacement":  "曝光量",
+                                              "clicksPlacement":  "点击量",
+                                              "costPlacement":  "花费",
+                                              "sumSalesPlacement":  "7天归因销售额",
+                                              "ACOSPlacement":  "ACOS",
+                                              "ROASPlacement":  "ROAS",
+                                              "avgcostPlacement":  "平均CPC",
+                                              "CTRPlacement":  "CTR",
+                                              "CSRTPlacement":  "转化率",
+                                              "sumUnitsPlacement":  "7天归因订单数"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_budget_rule_detail",
+                      "description":  "查询单个预算规则详情(从Amazon API获取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/campaign/budgetRules/amzGetBudgetRule/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd/HSA"
+                                                      },
+                                     "budgetRuleId":  {
+                                                          "type":  "string",
+                                                          "description":  "预算规则ID(查询参数)"
+                                                      }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType",
+                                       "budgetRuleId"
+                                   ],
+                      "response_fields":  {
+                                              "ruleId":  "预算规则ID",
+                                              "ruleName":  "规则名称",
+                                              "ruleType":  "规则类型(scheduled/performance)",
+                                              "budget":  "预算值",
+                                              "recurrence":  "重复周期",
+                                              "startDate":  "开始日期",
+                                              "endDate":  "结束日期",
+                                              "metric":  "触发指标",
+                                              "threshold":  "触发阈值"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_budget_rules_by_ids",
+                      "description":  "按ID批量查询预算规则(从Amazon API获取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/campaign/budgetRules/amzGetBudgetRules/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd/HSA"
+                                                      },
+                                     "budgetRuleIds":  {
+                                                           "type":  "array",
+                                                           "description":  "预算规则ID列表(请求体)"
+                                                       }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType"
+                                   ],
+                      "response_fields":  {
+                                              "ruleId":  "预算规则ID",
+                                              "ruleName":  "规则名称",
+                                              "ruleType":  "规则类型",
+                                              "campaignId":  "广告活动ID",
+                                              "budget":  "预算值"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_campaign_by_budget_rule",
+                      "description":  "按预算规则查询关联的广告活动列表",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/campaign/budgetRules/amzGetCampaignByBudgetRule/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "budgetRuleId":  {
+                                                          "type":  "string",
+                                                          "description":  "预算规则ID(查询参数)"
+                                                      }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType",
+                                       "budgetRuleId"
+                                   ],
+                      "response_fields":  {
+                                              "campaignId":  "广告活动ID",
+                                              "campaignName":  "广告活动名称",
+                                              "state":  "状态"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_local_budget_rules",
+                      "description":  "查询本地数据库中存储的广告活动预算规则列表",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/campaign/budgetRules/getAdvBudgetRuleByProfileid/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "规则ID",
+                                              "ruleId":  "预算规则ID",
+                                              "ruleName":  "规则名称",
+                                              "ruleType":  "规则类型",
+                                              "profileid":  "广告Profile ID",
+                                              "campaignType":  "广告类型",
+                                              "budget":  "预算值",
+                                              "startDate":  "开始日期",
+                                              "endDate":  "结束日期"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_bidding_rules_by_campaign",
+                      "description":  "按广告活动查询竞价规则详情",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/campaign/biddingRules/amzGetBiddingRulesByCampaign/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "campaignId":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID(查询参数)"
+                                                    }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType",
+                                       "campaignId"
+                                   ],
+                      "response_fields":  {
+                                              "biddingRuleId":  "竞价规则ID",
+                                              "campaignId":  "广告活动ID",
+                                              "biddingStrategy":  "竞价策略",
+                                              "ruleState":  "规则状态"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_campaign_optimization_rules",
+                      "description":  "查询单个广告活动优化规则详情(从Amazon API获取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/campaign/biddingRules/amzGetCampaignOptimiztionRules/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "campaignOptimizationId":  {
+                                                                    "type":  "string",
+                                                                    "description":  "优化规则ID(查询参数)"
+                                                                }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType",
+                                       "campaignOptimizationId"
+                                   ],
+                      "response_fields":  {
+                                              "campaignOptimizationId":  "优化规则ID",
+                                              "ruleName":  "规则名称",
+                                              "state":  "状态",
+                                              "campaignId":  "广告活动ID",
+                                              "conditions":  "触发条件",
+                                              "action":  "执行动作"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_campaign_optimization_rules_list",
+                      "description":  "查询广告活动优化规则列表(从Amazon API获取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/campaign/biddingRules/amzListCampaignOptimiztionRules/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "requestBody":  {
+                                                         "type":  "object",
+                                                         "description":  "请求体，包含筛选条件"
+                                                     }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType"
+                                   ],
+                      "response_fields":  {
+                                              "campaignOptimizationId":  "优化规则ID",
+                                              "ruleName":  "规则名称",
+                                              "state":  "状态",
+                                              "campaignId":  "广告活动ID"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_campaign_budget_usage",
+                      "description":  "查询广告活动预算使用情况，了解预算消耗进度",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advCampaignManager/getCampaignBudgetUsage/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "campaignIds":  {
+                                                         "type":  "array",
+                                                         "description":  "广告活动ID列表(请求体)"
+                                                     }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType",
+                                       "campaignIds"
+                                   ],
+                      "response_fields":  {
+                                              "campaignId":  "广告活动ID",
+                                              "budgetUsagePercent":  "预算使用百分比",
+                                              "budgetAmount":  "预算金额",
+                                              "budgetSpent":  "已花费金额"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_campaigns_detail_by_ids",
+                      "description":  "按广告活动ID列表查询广告活动详情(从Amazon API拉取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advCampaignManager/getCampaigns/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "campaignIds":  {
+                                                         "type":  "array",
+                                                         "description":  "广告活动ID列表(请求体)"
+                                                     }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType",
+                                       "campaignIds"
+                                   ],
+                      "response_fields":  {
+                                              "campaignId":  "广告活动ID",
+                                              "name":  "广告活动名称",
+                                              "state":  "状态(enabled/paused/archived)",
+                                              "campaignType":  "广告类型",
+                                              "targetingType":  "投放类型",
+                                              "dailyBudget":  "日预算",
+                                              "startDate":  "开始日期",
+                                              "endDate":  "结束日期",
+                                              "bidding":  "竞价策略"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_budget_rules_recommendations",
+                      "description":  "查询广告活动的预算规则推荐建议(从Amazon API获取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advCampaignManager/budgetRulesRecommendations/{profileid}/{CampaignType}/{campaignId}/ignoreRepeat",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "campaignId":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID(路径参数)"
+                                                    }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType",
+                                       "campaignId"
+                                   ],
+                      "response_fields":  {
+                                              "recommendedBudget":  "推荐预算",
+                                              "expectedImprovement":  "预期提升",
+                                              "ruleType":  "推荐规则类型"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_budget_recommendation",
+                      "description":  "查询广告预算推荐建议(从Amazon API获取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advCampaignManager/budgetRecommendations/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "requestBody":  {
+                                                         "type":  "object",
+                                                         "description":  "请求体，包含预算推荐查询条件"
+                                                     }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType"
+                                   ],
+                      "response_fields":  {
+                                              "recommendedBudget":  "推荐预算金额",
+                                              "expectedImpressions":  "预期曝光量",
+                                              "expectedClicks":  "预期点击量",
+                                              "expectedSales":  "预期销售额"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_campaign_recommendations",
+                      "description":  "查询广告活动推荐建议(从Amazon API获取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advCampaignManager/campaignRecommendations/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "requestBody":  {
+                                                         "type":  "object",
+                                                         "description":  "请求体，包含广告活动推荐查询条件"
+                                                     }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType"
+                                   ],
+                      "response_fields":  {
+                                              "recommendationId":  "推荐ID",
+                                              "recommendationType":  "推荐类型",
+                                              "campaignId":  "广告活动ID",
+                                              "currentValue":  "当前值",
+                                              "recommendedValue":  "推荐值",
+                                              "expectedImprovement":  "预期提升"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_portfolios",
+                      "description":  "查询广告组合(Portfolios)列表，用于管理广告活动分组",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/AdvertPortfolios/findPortfoliosForProfileId",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   }
+                                 },
+                      "required":  [
+                                       "profileid"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "广告组合ID",
+                                              "name":  "广告组合名称",
+                                              "state":  "状态",
+                                              "budget":  "预算",
+                                              "currencyCode":  "币种",
+                                              "profileid":  "广告Profile ID"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_portfolios_detail",
+                      "description":  "按ID查询单个广告组合详情",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/AdvertPortfolios/getPortfoliosById",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileId":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "广告组合ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "profileId",
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "广告组合ID",
+                                              "name":  "广告组合名称",
+                                              "state":  "状态",
+                                              "budget":  "预算",
+                                              "currencyCode":  "币种",
+                                              "inBudget":  "是否在预算内"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_brand_stores",
+                      "description":  "查询品牌旗舰店(Stores)列表，用于SB广告素材管理",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/AdvertStores/findStoresForProfileId",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "entityid":  {
+                                                      "type":  "string",
+                                                      "description":  "品牌实体ID"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid"
+                                   ],
+                      "response_fields":  {
+                                              "storeId":  "旗舰店ID",
+                                              "storeName":  "旗舰店名称",
+                                              "pageUrl":  "页面URL",
+                                              "status":  "状态"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_brand_list",
+                      "description":  "查询Profile关联的品牌列表，用于SB/SD广告创意素材",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/AdvertStores/findBrandForProfileId",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   }
+                                 },
+                      "required":  [
+                                       "profileid"
+                                   ],
+                      "response_fields":  {
+                                              "brandEntityId":  "品牌实体ID",
+                                              "brandName":  "品牌名称",
+                                              "brandLogoAssetID":  "品牌Logo资源ID",
+                                              "brandStorefrontUrl":  "品牌旗舰店URL"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_brand_assets",
+                      "description":  "查询品牌下的素材资源列表(图片等)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/AdvertStores/findAssetsForBrandEntityId",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "brandEntityId":  {
+                                                           "type":  "string",
+                                                           "description":  "品牌实体ID"
+                                                       }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "brandEntityId"
+                                   ],
+                      "response_fields":  {
+                                              "assetId":  "素材ID",
+                                              "assetType":  "素材类型",
+                                              "name":  "素材名称",
+                                              "mediaType":  "媒体类型",
+                                              "url":  "素材URL",
+                                              "imageType":  "图片类型"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_operate_log",
+                      "description":  "查询广告操作日志列表，记录广告变更历史",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advOperateLogManager/getOperateLogList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持模糊搜索"
+                                                },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认10"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "日志ID",
+                                              "profileid":  "广告Profile ID",
+                                              "operationType":  "操作类型",
+                                              "recordType":  "记录类型(campaign/adGroup/keyword/target/productAd)",
+                                              "recordId":  "记录ID",
+                                              "oldValue":  "变更前值",
+                                              "newValue":  "变更后值",
+                                              "operator":  "操作人ID",
+                                              "username":  "操作人姓名",
+                                              "opttime":  "操作时间",
+                                              "remark":  "备注"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_invoices_summary",
+                      "description":  "查询广告发票月份汇总数据，统计广告花费按月分布",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/ads/invoices/getInvoicesSummary",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                }
+                                 },
+                      "required":  [
+                                       "fromDate",
+                                       "toDate"
+                                   ],
+                      "response_fields":  {
+                                              "月份":  "月份标识(如2024-01)",
+                                              "amount":  "该月广告花费金额"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_campaigns_by_type",
+                      "description":  "按广告类型查询广告活动列表(从Amazon API拉取)，支持ignoreRepeat去重",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advCampaignManager/getCampaignsExt/{profileid}/{CampaignType}/ignoreRepeat",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "ids":  {
+                                                 "type":  "array",
+                                                 "description":  "广告活动ID列表(请求体)"
+                                             }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType"
+                                   ],
+                      "response_fields":  {
+                                              "campaignId":  "广告活动ID",
+                                              "name":  "广告活动名称",
+                                              "state":  "状态(enabled/paused/archived)",
+                                              "campaignType":  "广告类型",
+                                              "targetingType":  "投放类型",
+                                              "dailyBudget":  "日预算",
+                                              "startDate":  "开始日期",
+                                              "endDate":  "结束日期"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_campaign_detail",
+                      "description":  "查询广告活动详情信息(从Amazon API拉取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advCampaignManager/getCampaignDetail/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType"
+                                   ],
+                      "response_fields":  {
+                                              "campaignId":  "广告活动ID",
+                                              "name":  "广告活动名称",
+                                              "state":  "状态",
+                                              "targetingType":  "投放类型",
+                                              "dailyBudget":  "日预算",
+                                              "startDate":  "开始日期",
+                                              "endDate":  "结束日期"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_adgroup_list",
+                      "description":  "查询SP广告组列表，支持按广告活动、状态等条件筛选，返回广告组维度的汇总指标",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advAdgroupManager/getAdGroupList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型：sp/sb/sd/all"
+                                                      },
+                                     "adGroupsStatus":  {
+                                                            "type":  "string",
+                                                            "description":  "广告组状态：enabled/paused/archived"
+                                                        },
+                                     "adGroupsName":  {
+                                                          "type":  "string",
+                                                          "description":  "广告组名称，支持模糊搜索"
+                                                      },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认10"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "adGroupId":  "广告组ID",
+                                              "name":  "广告组名称",
+                                              "status":  "状态",
+                                              "campaignId":  "所属广告活动ID",
+                                              "campaignName":  "所属广告活动名称",
+                                              "campaignStatus":  "所属广告活动状态",
+                                              "defaultBid":  "默认出价",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "sumUnits":  "7天归因订单数",
+                                              "ACOS":  "ACOS",
+                                              "ROAS":  "ROAS",
+                                              "avgcost":  "平均CPC",
+                                              "CTR":  "CTR",
+                                              "CSRT":  "转化率",
+                                              "passiveState":  "被动状态(父级暂停/归档时显示)"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_adgroup_sum",
+                      "description":  "查询SP广告组汇总统计数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advAdgroupManager/getSumAdGroup",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "adGroupsStatus":  {
+                                                            "type":  "string",
+                                                            "description":  "广告组状态"
+                                                        }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "impressions":  "总曝光量",
+                                              "clicks":  "总点击量",
+                                              "cost":  "总花费",
+                                              "sumSales":  "总7天归因销售额",
+                                              "sumUnits":  "总7天归因订单数",
+                                              "ACOS":  "平均ACOS",
+                                              "ROAS":  "平均ROAS",
+                                              "avgcost":  "平均CPC",
+                                              "CTR":  "平均CTR",
+                                              "CSRT":  "平均转化率"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_adgroup_chart",
+                      "description":  "查询SP广告组趋势图表数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advAdgroupManager/getAdGroupChart",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "adGroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID"
+                                                   },
+                                     "bytime":  {
+                                                    "type":  "string",
+                                                    "description":  "时间维度：Daily/Weekly/Monthly"
+                                                }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "bydate":  "日期/周/月",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "ACOS":  "ACOS",
+                                              "avgcost":  "平均CPC",
+                                              "CTR":  "CTR",
+                                              "CSRT":  "转化率"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_adgroup_ext_list",
+                      "description":  "按广告类型查询广告组扩展列表(从Amazon API拉取，支持去重)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advAdgroupManager/getAdgroupExtList/{profileid}/{campaignType}/ignoreRepeat",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "ids":  {
+                                                 "type":  "array",
+                                                 "description":  "广告组ID列表(请求体)"
+                                             }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "campaignType"
+                                   ],
+                      "response_fields":  {
+                                              "adGroupId":  "广告组ID",
+                                              "name":  "广告组名称",
+                                              "state":  "状态",
+                                              "defaultBid":  "默认出价"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_adgroup_bid",
+                      "description":  "查询SP广告组出价详情(从Amazon API拉取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advAdgroupManager/getAdGroupsBid/{profileid}/{campaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp"
+                                                      },
+                                     "adgroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID(查询参数)"
+                                                   }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "campaignType",
+                                       "adgroupid"
+                                   ],
+                      "response_fields":  {
+                                              "adGroupId":  "广告组ID",
+                                              "defaultBid":  "默认出价"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_ad_list",
+                      "description":  "查询SP商品广告列表，展示广告投放的ASIN/SKU维度数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductAdsManager/getProductAdList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "adGroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型：sp/sb/sd/all"
+                                                      },
+                                     "state":  {
+                                                   "type":  "string",
+                                                   "description":  "商品广告状态：enabled/paused/archived"
+                                               },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU，支持模糊搜索"
+                                             },
+                                     "asin":  {
+                                                  "type":  "string",
+                                                  "description":  "ASIN，支持模糊搜索"
+                                              },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "产品名称，支持模糊搜索"
+                                              },
+                                     "remark":  {
+                                                    "type":  "string",
+                                                    "description":  "备注，支持模糊搜索"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认10"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "商品广告ID",
+                                              "campaignId":  "广告活动ID",
+                                              "adGroupId":  "广告组ID",
+                                              "asin":  "投放ASIN",
+                                              "sku":  "SKU",
+                                              "status":  "状态",
+                                              "campaignName":  "广告活动名称",
+                                              "adGroupName":  "广告组名称",
+                                              "campaignStatus":  "广告活动状态",
+                                              "adGroupStatus":  "广告组状态",
+                                              "campaignType":  "广告类型",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "sumUnits":  "7天归因订单数",
+                                              "ACOS":  "ACOS",
+                                              "ROAS":  "ROAS",
+                                              "avgcost":  "平均CPC",
+                                              "CTR":  "CTR",
+                                              "CSRT":  "转化率",
+                                              "passiveState":  "被动状态"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_ad_sum",
+                      "description":  "查询SP商品广告汇总统计数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductAdsManager/getSumProductAd",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "adGroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "state":  {
+                                                   "type":  "string",
+                                                   "description":  "商品广告状态"
+                                               },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU"
+                                             },
+                                     "asin":  {
+                                                  "type":  "string",
+                                                  "description":  "ASIN"
+                                              }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "impressions":  "总曝光量",
+                                              "clicks":  "总点击量",
+                                              "cost":  "总花费",
+                                              "sumSales":  "总7天归因销售额",
+                                              "sumUnits":  "总7天归因订单数",
+                                              "ACOS":  "平均ACOS",
+                                              "ROAS":  "平均ROAS",
+                                              "avgcost":  "平均CPC",
+                                              "CTR":  "平均CTR",
+                                              "CSRT":  "平均转化率"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_ad_chart",
+                      "description":  "查询SP商品广告趋势图表数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductAdsManager/getProductAdChart",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "adGroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "bytime":  {
+                                                    "type":  "string",
+                                                    "description":  "时间维度：Daily/Weekly/Monthly"
+                                                },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU"
+                                             },
+                                     "asin":  {
+                                                  "type":  "string",
+                                                  "description":  "ASIN"
+                                              }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "bydate":  "日期/周/月",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "ACOS":  "ACOS"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_ad_other_asin",
+                      "description":  "查询商品广告关联的其他ASIN购买数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductAdsManager/getProductAdotherAsin",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "adGroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID"
+                                                   },
+                                     "asin":  {
+                                                  "type":  "string",
+                                                  "description":  "ASIN"
+                                              },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+                                       "profileid"
+                                   ],
+                      "response_fields":  {
+                                              "asin":  "ASIN",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "sumUnits":  "7天归因订单数",
+                                              "ACOS":  "ACOS"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_ads_ext",
+                      "description":  "按广告类型查询商品广告扩展列表(从Amazon API拉取，支持去重)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductAdsManager/getProductAdsExt/{profileid}/{campaignType}/ignoreRepeat",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "ids":  {
+                                                 "type":  "array",
+                                                 "description":  "商品广告ID列表(请求体)"
+                                             }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "campaignType"
+                                   ],
+                      "response_fields":  {
+                                              "adId":  "商品广告ID",
+                                              "asin":  "投放ASIN",
+                                              "sku":  "SKU",
+                                              "state":  "状态"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_ads_detail",
+                      "description":  "查询商品广告详情(从Amazon API拉取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductAdsManager/getProductAdsDetail/{profileid}/{campaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sd"
+                                                      },
+                                     "adgroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID(查询参数)"
+                                                   }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "campaignType",
+                                       "adgroupid"
+                                   ],
+                      "response_fields":  {
+                                              "adId":  "商品广告ID",
+                                              "campaignId":  "广告活动ID",
+                                              "adGroupId":  "广告组ID",
+                                              "asin":  "ASIN",
+                                              "sku":  "SKU",
+                                              "state":  "状态"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_purchase_product_ad_list",
+                      "description":  "查询商品广告已购商品列表(含购买转化数据)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductAdsManager/getPurchaseProductAdList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "campaignId":  "广告活动ID",
+                                              "asin":  "ASIN",
+                                              "purchasedAsin":  "购买ASIN",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "orders":  "订单数",
+                                              "sales":  "销售额"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_sd_purchase_product_ad_list",
+                      "description":  "查询SD(展示型推广)商品广告已购商品列表",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductAdsManager/getSDPurchaseProductAdList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "SD广告活动ID"
+                                                    },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "campaignId":  "广告活动ID",
+                                              "asin":  "ASIN",
+                                              "purchasedAsin":  "购买ASIN",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "orders":  "订单数",
+                                              "sales":  "销售额"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_sd_ads_list",
+                      "description":  "查询SD/SB广告列表(展示广告格式维度)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/ads/getAdsList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "campaignStatus":  {
+                                                            "type":  "string",
+                                                            "description":  "状态：enabled/paused"
+                                                        },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "广告ID",
+                                              "adGroupId":  "广告组ID",
+                                              "campaignId":  "广告活动ID",
+                                              "status":  "状态",
+                                              "campaignName":  "广告活动名称",
+                                              "adGroupName":  "广告组名称",
+                                              "campaignStatus":  "广告活动状态",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "sumUnits":  "7天归因订单数",
+                                              "ACOS":  "ACOS",
+                                              "ROAS":  "ROAS",
+                                              "avgcost":  "平均CPC",
+                                              "CTR":  "CTR",
+                                              "CSRT":  "转化率",
+                                              "passiveState":  "被动状态"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_sd_ads_sum",
+                      "description":  "查询SD/SB广告汇总统计数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/ads/getSumAds",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "impressions":  "总曝光量",
+                                              "clicks":  "总点击量",
+                                              "cost":  "总花费",
+                                              "sumSales":  "总7天归因销售额",
+                                              "sumUnits":  "总7天归因订单数",
+                                              "ACOS":  "平均ACOS",
+                                              "ROAS":  "平均ROAS",
+                                              "avgcost":  "平均CPC",
+                                              "CTR":  "平均CTR"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_sd_ads_chart",
+                      "description":  "查询SD/SB广告趋势图表数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/ads/getAdsChart",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "bytime":  {
+                                                    "type":  "string",
+                                                    "description":  "时间维度：Daily/Weekly/Monthly"
+                                                }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "bydate":  "日期/周/月",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "ACOS":  "ACOS"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_sd_purchase_ads_list",
+                      "description":  "查询SB广告已购商品列表",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/ads/getPurchaseAdsList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "campaignId":  "广告活动ID",
+                                              "asin":  "ASIN",
+                                              "purchasedAsin":  "购买ASIN",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "orders":  "订单数",
+                                              "sales":  "销售额"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_keyword_list",
+                      "description":  "查询SP关键词广告列表，展示关键词投放效果数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advKeywordManager/getKeywordList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "adGroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型：sp/sb"
+                                                      },
+                                     "state":  {
+                                                   "type":  "string",
+                                                   "description":  "关键词状态：enabled/paused/archived"
+                                               },
+                                     "matchType":  {
+                                                       "type":  "string",
+                                                       "description":  "匹配类型：exact/phrase/broad"
+                                                   },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "关键词文本，支持模糊搜索，多个以逗号分隔"
+                                              },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认10"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "keywordId":  "关键词ID",
+                                              "name":  "关键词文本",
+                                              "matchType":  "匹配类型(exact/phrase/broad)",
+                                              "status":  "状态",
+                                              "campaignId":  "广告活动ID",
+                                              "adGroupId":  "广告组ID",
+                                              "bid":  "出价",
+                                              "campaignName":  "广告活动名称",
+                                              "adGroupName":  "广告组名称",
+                                              "campaignStatus":  "广告活动状态",
+                                              "adGroupStatus":  "广告组状态",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "sumUnits":  "7天归因订单数",
+                                              "ACOS":  "ACOS",
+                                              "ROAS":  "ROAS",
+                                              "avgcost":  "平均CPC",
+                                              "CTR":  "CTR",
+                                              "CSRT":  "转化率",
+                                              "passiveState":  "被动状态"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_keyword_sum",
+                      "description":  "查询SP关键词广告汇总统计数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advKeywordManager/getSumAdvKeywords",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "adGroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "state":  {
+                                                   "type":  "string",
+                                                   "description":  "关键词状态"
+                                               },
+                                     "matchType":  {
+                                                       "type":  "string",
+                                                       "description":  "匹配类型"
+                                                   },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "关键词文本"
+                                              }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "impressions":  "总曝光量",
+                                              "clicks":  "总点击量",
+                                              "cost":  "总花费",
+                                              "sumSales":  "总7天归因销售额",
+                                              "sumUnits":  "总7天归因订单数",
+                                              "ACOS":  "平均ACOS",
+                                              "ROAS":  "平均ROAS",
+                                              "avgcost":  "平均CPC",
+                                              "CTR":  "平均CTR",
+                                              "CSRT":  "平均转化率"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_keyword_chart",
+                      "description":  "查询SP关键词广告趋势图表数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advKeywordManager/getKeywordChart",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "state":  {
+                                                   "type":  "string",
+                                                   "description":  "关键词状态"
+                                               },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "关键词文本"
+                                              },
+                                     "bytime":  {
+                                                    "type":  "string",
+                                                    "description":  "时间维度：Daily/Weekly/Monthly"
+                                                }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "bydate":  "日期/周/月",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "ACOS":  "ACOS"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_keyword_suggest_bid",
+                      "description":  "查询SP关键词建议出价，帮助优化关键词竞价",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advKeywordManager/getKeywordSuggestBid",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "关键词ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "suggestedBid":  "建议出价",
+                                              "rangeStart":  "出价范围低值",
+                                              "rangeEnd":  "出价范围高值"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_keyword_query_list",
+                      "description":  "查询SP搜索词报表列表，展示用户搜索词触发的广告效果数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advKeywordManager/getKeywordQueryList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "adGroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID"
+                                                   },
+                                     "keywordid":  {
+                                                       "type":  "string",
+                                                       "description":  "触发关键词ID"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型：sp/sb"
+                                                      },
+                                     "matchType":  {
+                                                       "type":  "string",
+                                                       "description":  "匹配类型：exact/phrase/broad"
+                                                   },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "搜索词，支持模糊搜索"
+                                              },
+                                     "state":  {
+                                                   "type":  "string",
+                                                   "description":  "状态"
+                                               },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认10"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "query":  "搜索词",
+                                              "keywordId":  "触发关键词ID",
+                                              "keyword":  "关键词文本",
+                                              "matchType":  "匹配类型",
+                                              "campaignId":  "广告活动ID",
+                                              "adGroupId":  "广告组ID",
+                                              "status":  "状态",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "sumUnits":  "7天归因订单数",
+                                              "ACOS":  "ACOS",
+                                              "CTR":  "CTR",
+                                              "CSRT":  "转化率"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_keyword_query_chart",
+                      "description":  "查询SP搜索词报表趋势图表数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advKeywordManager/getKeywordQueryChart",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "搜索词"
+                                              },
+                                     "matchType":  {
+                                                       "type":  "string",
+                                                       "description":  "匹配类型"
+                                                   },
+                                     "state":  {
+                                                   "type":  "string",
+                                                   "description":  "状态"
+                                               },
+                                     "bytime":  {
+                                                    "type":  "string",
+                                                    "description":  "时间维度：Daily/Weekly/Monthly"
+                                                }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "bydate":  "日期/周/月",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "ACOS":  "ACOS"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_negative_keyword_list",
+                      "description":  "查询SP否定关键词列表",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advKeywordManager/getNegativaKeywordsList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "adGroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型：sp/sb"
+                                                      },
+                                     "state":  {
+                                                   "type":  "string",
+                                                   "description":  "状态"
+                                               },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "关键词文本，支持模糊搜索"
+                                              },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "keywordId":  "否定关键词ID",
+                                              "name":  "否定关键词文本",
+                                              "matchType":  "匹配类型(phrase/exact)",
+                                              "status":  "状态",
+                                              "campaignId":  "广告活动ID",
+                                              "adGroupId":  "广告组ID",
+                                              "campaignName":  "广告活动名称",
+                                              "adGroupName":  "广告组名称",
+                                              "campaignStatus":  "广告活动状态",
+                                              "adGroupStatus":  "广告组状态",
+                                              "passiveState":  "被动状态"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_target_list",
+                      "description":  "查询SP商品定向(Target)列表，展示定向投放效果",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductTargeManager/getProductTargeList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "adGroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型：sp/sb/sd"
+                                                      },
+                                     "state":  {
+                                                   "type":  "string",
+                                                   "description":  "定向状态：enabled/paused/archived"
+                                               },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持模糊搜索"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认10"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "定向ID",
+                                              "expressionType":  "定向类型",
+                                              "expression":  "定向表达式",
+                                              "expressionname":  "定向名称(如ASIN类别名称)",
+                                              "bid":  "出价",
+                                              "status":  "状态",
+                                              "campaignId":  "广告活动ID",
+                                              "adGroupId":  "广告组ID",
+                                              "campaignName":  "广告活动名称",
+                                              "adGroupName":  "广告组名称",
+                                              "campaignStatus":  "广告活动状态",
+                                              "adGroupStatus":  "广告组状态",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "sumUnits":  "7天归因订单数",
+                                              "ACOS":  "ACOS",
+                                              "ROAS":  "ROAS",
+                                              "avgcost":  "平均CPC",
+                                              "CTR":  "CTR",
+                                              "CSRT":  "转化率",
+                                              "passiveState":  "被动状态"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_target_sum",
+                      "description":  "查询SP商品定向汇总统计数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductTargeManager/getSumProductTarge",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "impressions":  "总曝光量",
+                                              "clicks":  "总点击量",
+                                              "cost":  "总花费",
+                                              "sumSales":  "总7天归因销售额",
+                                              "sumUnits":  "总7天归因订单数",
+                                              "ACOS":  "平均ACOS",
+                                              "ROAS":  "平均ROAS",
+                                              "avgcost":  "平均CPC",
+                                              "CTR":  "平均CTR",
+                                              "CSRT":  "平均转化率"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_target_chart",
+                      "description":  "查询SP商品定向趋势图表数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductTargeManager/getProductTargeChart",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "state":  {
+                                                   "type":  "string",
+                                                   "description":  "定向状态"
+                                               },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                },
+                                     "bytime":  {
+                                                    "type":  "string",
+                                                    "description":  "时间维度：Daily/Weekly/Monthly"
+                                                }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "bydate":  "日期/周/月",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "ACOS":  "ACOS"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_target_ext_list",
+                      "description":  "按广告类型查询商品定向扩展列表(从Amazon API拉取，支持去重)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductTargeManager/targetsExt/{profileid}/{campaignType}/ignoreRepeat",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "ids":  {
+                                                 "type":  "array",
+                                                 "description":  "定向ID列表(请求体)"
+                                             }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "campaignType"
+                                   ],
+                      "response_fields":  {
+                                              "targetId":  "定向ID",
+                                              "expressionType":  "定向类型",
+                                              "expression":  "定向表达式",
+                                              "state":  "状态",
+                                              "bid":  "出价"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_target_query_list",
+                      "description":  "查询SP商品定向搜索词列表",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductTargeManager/getProductTargeQueryList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "adGroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "state":  {
+                                                   "type":  "string",
+                                                   "description":  "状态"
+                                               },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "搜索词，支持模糊搜索"
+                                              },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "query":  "搜索词",
+                                              "targetId":  "定向ID",
+                                              "campaignId":  "广告活动ID",
+                                              "adGroupId":  "广告组ID",
+                                              "status":  "状态",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "sumUnits":  "7天归因订单数",
+                                              "ACOS":  "ACOS"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_target_query_chart",
+                      "description":  "查询SP商品定向搜索词趋势图表数据",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductTargeManager/getProductTargeQueryChart",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型"
+                                                      },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "搜索词"
+                                              },
+                                     "state":  {
+                                                   "type":  "string",
+                                                   "description":  "状态"
+                                               },
+                                     "bytime":  {
+                                                    "type":  "string",
+                                                    "description":  "时间维度：Daily/Weekly/Monthly"
+                                                }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "bydate":  "日期/周/月",
+                                              "impressions":  "曝光量",
+                                              "clicks":  "点击量",
+                                              "cost":  "花费",
+                                              "sumSales":  "7天归因销售额",
+                                              "ACOS":  "ACOS"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_negative_target_list",
+                      "description":  "查询SP否定定向列表",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductTargeManager/getNegativaTargeList",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "adGroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型：sp/sd/sb"
+                                                      },
+                                     "state":  {
+                                                   "type":  "string",
+                                                   "description":  "状态"
+                                               },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "fromDate",
+                                       "endDate"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "否定定向ID",
+                                              "expressionType":  "定向类型",
+                                              "expression":  "定向表达式",
+                                              "status":  "状态",
+                                              "campaignId":  "广告活动ID",
+                                              "adGroupId":  "广告组ID",
+                                              "campaignName":  "广告活动名称",
+                                              "adGroupName":  "广告组名称",
+                                              "campaignStatus":  "广告活动状态",
+                                              "adGroupStatus":  "广告组状态",
+                                              "passiveState":  "被动状态"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_target_bid_recommendations",
+                      "description":  "查询商品定向出价建议(从Amazon API获取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductTargeManager/getTargetBidRecommendations",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID"
+                                                   },
+                                     "adGroupid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告组ID"
+                                                   },
+                                     "campaignId":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "adtype":  {
+                                                    "type":  "string",
+                                                    "description":  "广告类型：sp/sb/hsa"
+                                                },
+                                     "expression":  {
+                                                        "type":  "array",
+                                                        "description":  "定向表达式数组"
+                                                    }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "expression"
+                                   ],
+                      "response_fields":  {
+                                              "suggestedBid":  "建议出价",
+                                              "rangeStart":  "出价范围低值",
+                                              "rangeEnd":  "出价范围高值"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_target_suggest_bid",
+                      "description":  "查询商品定向建议出价(带广告类型参数，从Amazon API获取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductTargeManager/getTargetsBidRecommendations/{profileid}/{campaignType}/ignoreRepeat",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "requestBody":  {
+                                                         "type":  "object",
+                                                         "description":  "请求体，包含定向表达式等参数"
+                                                     }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "campaignType"
+                                   ],
+                      "response_fields":  {
+                                              "suggestedBid":  "建议出价",
+                                              "rangeStart":  "出价范围低值",
+                                              "rangeEnd":  "出价范围高值"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_negative_target_query_list",
+                      "description":  "查询否定定向与搜索词关联关系，用于前端展示",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/advProductTargeManager/getNagetiveTargetforQuery",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "requestBody":  {
+                                                         "type":  "object",
+                                                         "description":  "包含否定定向和关键词查询条件的Map对象"
+                                                     }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "说明":  "该接口为数据处理接口，输入什么返回什么，主要用于补充否定定向和否定关键词的搜索词关联数据"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_creative_list",
+                      "description":  "查询SB/SD广告创意素材列表",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/creative/getListOfCreatives/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sb/sd"
+                                                      },
+                                     "currentPage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码"
+                                                     },
+                                     "pageSize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType"
+                                   ],
+                      "response_fields":  {
+                                              "creativeId":  "创意ID",
+                                              "creativeType":  "创意类型",
+                                              "headline":  "标题",
+                                              "brandName":  "品牌名称",
+                                              "assets":  "素材列表",
+                                              "moderationStatus":  "审核状态"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_creative_preview",
+                      "description":  "查询广告创意HTML预览",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/creative/getCreativePreviewHTML/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sd"
+                                                      },
+                                     "creativeId":  {
+                                                        "type":  "string",
+                                                        "description":  "创意ID"
+                                                    }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType",
+                                       "creativeId"
+                                   ],
+                      "response_fields":  {
+                                              "previewHtml":  "预览HTML内容"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_creative_moderation_list",
+                      "description":  "查询广告创意审核状态列表",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/creative/getListCreativeModerations/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sd"
+                                                      },
+                                     "currentPage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码"
+                                                     },
+                                     "pageSize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType"
+                                   ],
+                      "response_fields":  {
+                                              "creativeId":  "创意ID",
+                                              "moderationStatus":  "审核状态(APPROVED/REJECTED/IN_REVIEW/PENDING)",
+                                              "moderationReason":  "审核原因",
+                                              "lastUpdatedDate":  "最后更新时间"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_sd_ads_by_type",
+                      "description":  "按广告类型查询广告列表(从Amazon API拉取)",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/ads/getAds/{profileid}/{campaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "campaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sb/sd"
+                                                      },
+                                     "requestBody":  {
+                                                         "type":  "object",
+                                                         "description":  "请求体，包含adIdFilter等筛选条件"
+                                                     }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "campaignType"
+                                   ],
+                      "response_fields":  {
+                                              "adId":  "广告ID",
+                                              "campaignId":  "广告活动ID",
+                                              "adGroupId":  "广告组ID",
+                                              "state":  "状态"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_budget_rules_list",
+                      "description":  "查询广告活动预算规则列表",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/campaign/budgetRules/list/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "POST",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd/HSA"
+                                                      },
+                                     "campaignid":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID"
+                                                    },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "当前页码"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType"
+                                   ],
+                      "response_fields":  {
+                                              "ruleId":  "预算规则ID",
+                                              "ruleName":  "规则名称",
+                                              "ruleType":  "规则类型(scheduled/performance)",
+                                              "campaignId":  "广告活动ID",
+                                              "budget":  "预算值",
+                                              "recurrence":  "重复周期",
+                                              "startDate":  "开始日期",
+                                              "endDate":  "结束日期",
+                                              "metric":  "触发指标",
+                                              "threshold":  "触发阈值"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_budget_rules_by_campaign",
+                      "description":  "按广告活动查询预算规则详情",
+                      "menu_id":  61,
+                      "endpoint":  "/amazonadv/api/v1/campaign/budgetRules/amzGetBudgetRulesByCampaign/{profileid}/{CampaignType}",
+                      "service":  "wimoor-amazon-adv",
+                      "method":  "GET",
+                      "params":  {
+                                     "profileid":  {
+                                                       "type":  "string",
+                                                       "description":  "广告Profile ID(路径参数)"
+                                                   },
+                                     "CampaignType":  {
+                                                          "type":  "string",
+                                                          "description":  "广告类型(路径参数)：sp/sb/sd"
+                                                      },
+                                     "campaignId":  {
+                                                        "type":  "string",
+                                                        "description":  "广告活动ID(查询参数)"
+                                                    }
+                                 },
+                      "required":  [
+                                       "profileid",
+                                       "CampaignType",
+                                       "campaignId"
+                                   ],
+                      "response_fields":  {
+                                              "ruleId":  "预算规则ID",
+                                              "name":  "规则名称",
+                                              "ruleState":  "规则状态",
+                                              "lastUpdatedDate":  "最后更新时间",
+                                              "createdDate":  "创建时间",
+                                              "duration":  "持续时间",
+                                              "recurrence":  "重复周期",
+                                              "ruleType":  "规则类型(scheduled/performance)",
+                                              "budgetIncreaseBy":  "预算增加比例/金额",
+                                              "performanceMeasureCondition":  "绩效衡量条件",
+                                              "ruleStatus":  "规则状态",
+                                              "campaigntype":  "广告类型"
+                                          }
+                  }
+              ]
+}

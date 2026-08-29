@@ -289,7 +289,14 @@ function removeCondition(index) {
 function updateValue(index) {
   const condition = filter.conditions[index];
   if (condition.valueInput) {
-    condition.value = condition.valueInput.split(',').map(v => v.trim()).filter(v => v);
+    condition.value = condition.valueInput.split(',').map(v => {
+      const trimmed = v.trim();
+      // 如果是数字，强制转换为数字类型
+      if (trimmed !== '' && !isNaN(trimmed)) {
+        return Number(trimmed).toString();
+      }
+      return trimmed;
+    }).filter(v => v);
   } else {
     condition.value = [];
   }
@@ -325,7 +332,6 @@ function confirmFilter() {
   emit('filter-generated', finalFilter);
 
   editDialogVisible.value = false;
-  ElMessage.success('筛选条件已应用');
 }
 
 // 初始化时如果有 modelValue，更新内部状态
@@ -478,5 +484,29 @@ onMounted(() => {
 
 .dialog-footer {
   text-align: right;
+}
+</style>
+
+<style>
+/* 暗黑模式适配 */
+.dark .preview-section {
+  background: var(--el-fill-color-lighter);
+  border-color: var(--el-border-color);
+}
+
+.dark .form-label {
+  color: var(--el-text-color-primary);
+}
+
+.dark .empty-preview {
+  color: var(--el-text-color-placeholder);
+}
+
+.dark .conjunction-text {
+  color: var(--el-text-color-regular);
+}
+
+.dark .json-toggle-section {
+  border-top-color: var(--el-border-color);
 }
 </style>

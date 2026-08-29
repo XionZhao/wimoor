@@ -28,10 +28,19 @@
 							</template>
 						</el-table-column>
 						<el-table-column label="日期" prop="byday">
-							<template #default="scope">
-							<span>{{dateFormat(scope.row.byday)}}</span>
-							</template>
-						</el-table-column>
+						<template #default="scope">
+						<span>{{dateFormat(scope.row.byday)}}</span>
+						</template>
+					</el-table-column>
+					<el-table-column label="操作" width="80">
+						<template #default="scope">
+							<el-popconfirm title="确认要删除该条记录吗？" @confirm="handleDeleteDetail(scope.row)">
+								<template #reference>
+									<el-button type="danger" link size="small">删除</el-button>
+								</template>
+							</el-popconfirm>
+						</template>
+					</el-table-column>
 					</el-table>
 				 </template>	 
 			</el-table-column>
@@ -131,6 +140,11 @@
 			});
 		}
 		
+	}
+	function handleDeleteDetail(row){
+		financesItemDataApi.deleteFinItemData({id:row.id}).then(()=>{
+			handleQuery();
+		});
 	}
 	function tableRowClick(row){
 		   globalTable.value.toggleRowExpansion(row);

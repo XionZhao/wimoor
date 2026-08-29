@@ -17,4 +17,5 @@ public class FinQueryDTO extends BasePageQuery{
 	String createdate ;
 	String sumType;
 	String acc;
+	String groupid;
 }

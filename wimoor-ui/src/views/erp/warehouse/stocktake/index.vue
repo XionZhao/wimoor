@@ -13,7 +13,7 @@
                	</el-button>
                	<Warehouse @changeware="getWarehouse" />
                	<Datepicker ref="datepickers" @changedate="changedate" />
-               	<el-input v-model="searchKeywords" @input="handleQuery" placeholder="单据编码"  >
+               	<el-input v-model="searchKeywords" v-debounce-input="handleQuery" placeholder="单据编码"  >
                		<template #suffix>
                		<el-icon style="font-size:16px;" class="el-input__icon"><search/></el-icon>
                		 </template> 

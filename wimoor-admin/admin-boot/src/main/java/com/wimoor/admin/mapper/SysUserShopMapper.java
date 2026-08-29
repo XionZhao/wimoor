@@ -3,6 +3,7 @@ package com.wimoor.admin.mapper;
 import java.math.BigInteger;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -16,4 +17,16 @@ public interface SysUserShopMapper extends BaseMapper<SysUserShop> {
             "where t.shop_id=#{shopid} and u.`disable`=0 and u.logicDelete=0 and u.losingEffect>curdate() "+
             "</script>")
     BigInteger findByCompanyId(BigInteger CompanyId);
+
+    /**
+     * 通过飞书成员名称和shopId查找系统用户ID
+     * 匹配 t_userinfo.name 与飞书成员名称，并验证用户属于该shop
+     */
+    @Select("select u.id from t_userinfo i " +
+            "inner join t_user u on i.id = u.id " +
+            "inner join t_user_shop t on (u.id = t.user_id or u.leader_id = t.user_id) " +
+            "where i.name = #{name} and t.shop_id = #{shopId} " +
+            "and u.`disable`=0 and u.logicDelete=0 and u.losingEffect>curdate() " +
+            "limit 1")
+    BigInteger findByNameAndShopId(@Param("name") String name, @Param("shopId") String shopId);
 }

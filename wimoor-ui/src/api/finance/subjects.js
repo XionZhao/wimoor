@@ -61,11 +61,12 @@ export function initFinAccountingSubjects(groupid) {
 }
 
 // 上传科目文件
-export function uploadSubjectsFile(data, groupid) {
+export function uploadSubjectsFile(data, groupid, importType) {
   return request({
     url: '/api/finance/subjects/upload/'+groupid,
     method: 'post',
     data: data,
+    params: { importType: importType },
     headers: {
       'Content-Type': 'multipart/form-data'
     }

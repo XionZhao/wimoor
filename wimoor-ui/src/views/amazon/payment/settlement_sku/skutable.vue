@@ -7,7 +7,7 @@
                defaultValue="only"/>
         <el-input  v-model="queryParams.search"
                    clearable
-                   @input="handleQuery"
+                   v-debounce-input="handleQuery"
                    @clear="handleQuery"
                    placeholder="请输入SKU"
                    class="input-with-select" >

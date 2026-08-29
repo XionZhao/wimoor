@@ -287,3 +287,87 @@ export default {
   white-space: nowrap;
 }
 </style>
+
+<!-- 暗黑模式样式 -->
+<style>
+html.dark .main-sty {
+  background: #0d0d0d !important;
+}
+
+html.dark .announcement-section {
+  background-color: #111111 !important;
+}
+
+html.dark .announcement-section h3 {
+  color: #e0e0e0 !important;
+}
+
+html.dark .font24 {
+  color: #e0e0e0 !important;
+}
+
+html.dark .font-extraSmall {
+  color: #808080 !important;
+}
+
+html.dark .message-wrapper .font-extraSmall {
+  color: #808080 !important;
+}
+
+/* 表格行暗黑模式 */
+html.dark .announcement-section .el-table {
+  background-color: #111111 !important;
+  color: #e0e0e0 !important;
+}
+
+html.dark .announcement-section .el-table tr {
+  background-color: #111111 !important;
+}
+
+html.dark .announcement-section .el-table td {
+  background-color: #111111 !important;
+  border-bottom-color: #1a1a1a !important;
+  color: #e0e0e0 !important;
+}
+
+html.dark .announcement-section .el-table--enable-row-hover .el-table__body tr:hover > td {
+  background-color: #1a1a1a !important;
+}
+
+html.dark .announcement-section .el-table .el-table__row {
+  background-color: #111111 !important;
+}
+
+html.dark .announcement-section .el-table .el-table__row:hover > td {
+  background-color: #1a1a1a !important;
+}
+
+/* 公告内容区域 */
+html.dark .announcement-section .message-body {
+  color: #a0a0a0 !important;
+}
+
+/* 表单区域暗黑模式 */
+html.dark .el-form-item__label {
+  color: #e0e0e0 !important;
+}
+
+html.dark .el-input__wrapper {
+  background-color: #161616 !important;
+  box-shadow: 0 0 0 1px #2a2a2a !important;
+}
+
+html.dark .el-input__inner {
+  color: #e0e0e0 !important;
+}
+
+html.dark .el-select .el-input__wrapper {
+  background-color: #161616 !important;
+}
+
+html.dark .el-textarea__inner {
+  background-color: #161616 !important;
+  color: #e0e0e0 !important;
+  border-color: #2a2a2a !important;
+}
+</style>

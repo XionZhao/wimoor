@@ -1,0 +1,65 @@
+﻿{
+    "tools":  [
+                  {
+                      "name":  "system_get_current_time",
+                      "description":  "获取系统当前时间，包含日期、星期、时区信息。当用户询问\"现在几点\"、\"今天几号\"、\"这个月是几月\"等时间相关问题时，或需要确定日期参数时，使用此工具。",
+                      "menu_id":  22,
+                      "endpoint":  "/api/v1/system/current-time",
+                      "method":  "GET",
+                      "service":  "system",
+                      "module":  "系统工具",
+                      "params":  {
+
+                                 },
+                      "response":  {
+                                       "fields":  [
+                                                      {
+                                                          "name":  "datetime",
+                                                          "type":  "string",
+                                                          "description":  "完整日期时间，格式：yyyy-MM-dd HH:mm:ss"
+                                                      },
+                                                      {
+                                                          "name":  "date",
+                                                          "type":  "string",
+                                                          "description":  "日期，格式：yyyy-MM-dd"
+                                                      },
+                                                      {
+                                                          "name":  "year",
+                                                          "type":  "int",
+                                                          "description":  "年份"
+                                                      },
+                                                      {
+                                                          "name":  "month",
+                                                          "type":  "int",
+                                                          "description":  "月份（1-12）"
+                                                      },
+                                                      {
+                                                          "name":  "day",
+                                                          "type":  "int",
+                                                          "description":  "日（1-31）"
+                                                      },
+                                                      {
+                                                          "name":  "hour",
+                                                          "type":  "int",
+                                                          "description":  "小时（0-23）"
+                                                      },
+                                                      {
+                                                          "name":  "minute",
+                                                          "type":  "int",
+                                                          "description":  "分钟（0-59）"
+                                                      },
+                                                      {
+                                                          "name":  "dayOfWeek",
+                                                          "type":  "string",
+                                                          "description":  "星期几，如：星期一"
+                                                      },
+                                                      {
+                                                          "name":  "timezone",
+                                                          "type":  "string",
+                                                          "description":  "时区，如：Asia/Shanghai"
+                                                      }
+                                                  ]
+                                   }
+                  }
+              ]
+}

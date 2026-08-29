@@ -188,6 +188,18 @@ function syncProductList(){
 	 return request.get("/erp/api/v1/material/getSerialNumber",{params:data});
  }
  
+ function getAttachments(materialid){
+	 return request.get('/erp/api/v1/material/getAttachments',{params:{materialid:materialid}});
+ }
+ 
+ function saveAttachments(materialid, attachments){
+	 return request.post('/erp/api/v1/material/saveAttachments?materialid='+materialid, attachments);
+ }
+ 
+ function deleteAttachment(id){
+	 return request.get('/erp/api/v1/material/deleteAttachment',{params:{id:id}});
+ }
+ 
  
   
 export default{
@@ -204,5 +216,5 @@ export default{
 	consumableSafetyStockSave,consumableSafetyStockShow,
 	packageList,packageListAll,updateMaterial,batchUpdatePrice,syncProductList,
 	batchUpdateCons,batchClearCons,getCustoms,saveCustoms,getMskuInventory,uploadMoreSupplierFile,getSerialNumber,
-	
+	getAttachments,saveAttachments,deleteAttachment,
 }

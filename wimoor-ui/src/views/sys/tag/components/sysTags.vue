@@ -11,9 +11,9 @@
         >
 		<el-input
 		  v-model="queryParams.name"
-		  placeholder="标签名称" 
+		  placeholder="标签名称"
 		  @clear="handleQuery()"
-		  @input="handleQuery()"
+		  v-debounce-input="handleQuery"
 		  clearable
 		/>
 </el-space>

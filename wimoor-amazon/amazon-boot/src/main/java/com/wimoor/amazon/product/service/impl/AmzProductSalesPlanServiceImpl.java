@@ -862,7 +862,11 @@ public void setShipRecord(Map<String,Object> item,String shopid,String groupid,S
    
     public void handItem(Map<String, Object> item,Map<String,Map<String,Object>> planmap,PlanDetailDTO dto,
                          Map<String, Map<String, ProductInPresale>> presaleCache,
-                         Map<String, Integer> feignCache) {
+                         Map<String, Integer> feignCache,
+                         Map<String, FBAShipCycle> cycleCache,
+                         Map<String, AmzInventoryPlanning> planCache,
+                         Map<String, List<Map<String, Object>>> recordCache,
+                         Map<String, AmzInboundFbaCycle> cycleListCache) {
 	    String psku=item.get("sku").toString();
 	    String marketplaceid=item.get("marketplaceid").toString();
 	    String amazonauthid =item.get("amazonauthid").toString();
@@ -891,12 +895,20 @@ public void setShipRecord(Map<String,Object> item,String shopid,String groupid,S
 	    	item.put("aftersalesday",0);
 	    	item.put("amount",item.get("amount"));
 	    }
-		List<AmzInboundFbaCycle> cycleList = iAmzInboundFbaCycleService.getInboundFbaCycle(dto.getShopid(),marketplaceid);
-		AmzInboundFbaCycle myfbacycle =iAmzInboundFbaCycleService.getDefaultInboundFbaCycle(cycleList);
+		// 使用缓存的备货周期数据
+		AmzInboundFbaCycle myfbacycle = cycleListCache.get(marketplaceid);
+		if (myfbacycle == null) {
+			List<AmzInboundFbaCycle> cycleList = iAmzInboundFbaCycleService.getInboundFbaCycle(dto.getShopid(), marketplaceid);
+			myfbacycle = iAmzInboundFbaCycleService.getDefaultInboundFbaCycle(cycleList);
+			if(myfbacycle != null) {
+				cycleListCache.put(marketplaceid, myfbacycle);
+			}
+		}
 		item.put("defaultTranstype", myfbacycle.getTranstype());
-		FBAShipCycle cycle = iFBAShipCycleService.getFbaShipCycle(groupid,marketplaceid,psku);
+		// 使用缓存的FBA发货周期数据
+		FBAShipCycle cycle = cycleCache != null ? cycleCache.get(psku) : iFBAShipCycleService.getFbaShipCycle(groupid, marketplaceid, psku);
 	    if(cycle!=null&&cycle.getTranstype()!=null) {
-        	myfbacycle=iAmzInboundFbaCycleService.getTransInboundFbaCycle(cycleList,cycle.getTranstype());
+        	myfbacycle=iAmzInboundFbaCycleService.getTransInboundFbaCycle(iAmzInboundFbaCycleService.getInboundFbaCycle(dto.getShopid(), marketplaceid),cycle.getTranstype());
         }
 	    if(dto.getPlantype().equals("ship")&&dto.getIseu()) {
 	     Integer inbound = iShipInboundItemService.summaryShipmentSku(groupid, marketplaceid, psku);
@@ -990,35 +1002,39 @@ public void setShipRecord(Map<String,Object> item,String shopid,String groupid,S
 				dto.setAmount(dto.getAmount()-needpurchase);
 			}
 		}
-		Map<String, ProductInPresale> prelist = null;
-		if(presaleCache!=null) {
-			String presaleKey = groupid + "_" + psku + "_" + marketplaceid;
-			prelist = presaleCache.get(presaleKey);
-		} else {
-			prelist = iProductInPresaleService.getPresale(psku,marketplaceid,groupid);
-		}
-		if(prelist==null) {
-			prelist = new HashMap<>();
-		}
-		Calendar c=Calendar.getInstance();
-		if(prelist.size()>0) {
-			int j=0;
-			for (int i = 1; i <= 180; i++) {
-				ProductInPresale old = prelist.get(GeneralUtil.formatDate(c.getTime()));
-				if (old == null) {
-					ProductInPresale presale = new ProductInPresale();
-					presale.setQuantity(sysavgsales);
-					prelist.put(GeneralUtil.formatDate(c.getTime()), presale);
-					j++;
-				}
-				if(j>=30) break;
-				c.add(Calendar.DATE, 1);
+		Map<String, ProductInPresale> prelist = new HashMap<>();
+		// 跳过预估销量数据查询（默认展开/全部展开时优化性能）
+		if(dto.getSkipPrelist() == null || !dto.getSkipPrelist()) {
+			if(presaleCache!=null) {
+				String presaleKey = groupid + "_" + psku + "_" + marketplaceid;
+				prelist = presaleCache.get(presaleKey);
+			} else {
+				prelist = iProductInPresaleService.getPresale(psku,marketplaceid,groupid);
 			}
-			item.put("prelist", prelist);
+			if(prelist==null) {
+				prelist = new HashMap<>();
+			}
+			Calendar c=Calendar.getInstance();
+			if(prelist.size()>0) {
+				int j=0;
+				for (int i = 1; i <= 180; i++) {
+					ProductInPresale old = prelist.get(GeneralUtil.formatDate(c.getTime()));
+					if (old == null) {
+						ProductInPresale presale = new ProductInPresale();
+						presale.setQuantity(sysavgsales);
+						prelist.put(GeneralUtil.formatDate(c.getTime()), presale);
+						j++;
+					}
+					if(j>=30) break;
+					c.add(Calendar.DATE, 1);
+				}
+				item.put("prelist", prelist);
+			}
+			// 动态计算 salesday、aftersalesday、salesdayAvgsales（基于实时库存+预估销量）
+			Map<String, Object> dynamicSales = this.getDynamicSalesData(prelist, sysavgsales, fbaquantity, overseaqty, reallyamount);
+			item.putAll(dynamicSales);
 		}
-		// 动态计算 salesday、aftersalesday、salesdayAvgsales（基于实时库存+预估销量）
-		Map<String, Object> dynamicSales = this.getDynamicSalesData(prelist, sysavgsales, fbaquantity, overseaqty, reallyamount);
-		item.putAll(dynamicSales);
+
 		if(dto.getPlantype().equals("purchase")) {
 			int aftersalesday=item.get("aftersalesday")==null?0:Integer.parseInt(item.get("aftersalesday").toString());
 			int salesday=item.get("salesday")==null?0:Integer.parseInt(item.get("salesday").toString());
@@ -1048,20 +1064,26 @@ public void setShipRecord(Map<String,Object> item,String shopid,String groupid,S
 		}
 		item.put("statuscolor",GeneralUtil.getColorType(item.get("statuscolor")));
 		if(!country.equals("EU")) {
-			LambdaQueryWrapper<AmzInventoryPlanning> query=new LambdaQueryWrapper<AmzInventoryPlanning>();
-			query.eq(AmzInventoryPlanning::getAmazonauthid,amazonauthid);
-			query.eq(AmzInventoryPlanning::getSku,psku);
-			query.and(wrapper -> {
-				wrapper.eq(AmzInventoryPlanning::getCondition,"new")
-				.or().eq(AmzInventoryPlanning::getCondition,"New")
-						.or().eq(AmzInventoryPlanning::getCondition,"");
-			});
-			query.eq(AmzInventoryPlanning::getCountrycode,country);
-			List<AmzInventoryPlanning> plandataList = iAmzInventoryPlanningService.list(query);
-			AmzInventoryPlanning plandata=null;
-			for(AmzInventoryPlanning plandataItem:plandataList){
-				if(plandata==null||"New".equals(plandataItem.getCondition())){
-					plandata=plandataItem;
+			// 使用缓存的库存规划数据
+			AmzInventoryPlanning plandata = null;
+			if (planCache != null) {
+				String planKey = amazonauthid + "_" + psku + "_" + country;
+				plandata = planCache.get(planKey);
+			} else {
+				LambdaQueryWrapper<AmzInventoryPlanning> query=new LambdaQueryWrapper<AmzInventoryPlanning>();
+				query.eq(AmzInventoryPlanning::getAmazonauthid,amazonauthid);
+				query.eq(AmzInventoryPlanning::getSku,psku);
+				query.and(wrapper -> {
+					wrapper.eq(AmzInventoryPlanning::getCondition,"new")
+					.or().eq(AmzInventoryPlanning::getCondition,"New")
+							.or().eq(AmzInventoryPlanning::getCondition,"");
+				});
+				query.eq(AmzInventoryPlanning::getCountrycode,country);
+				List<AmzInventoryPlanning> plandataList = iAmzInventoryPlanningService.list(query);
+				for(AmzInventoryPlanning plandataItem:plandataList){
+					if(plandata==null||"New".equals(plandataItem.getCondition())){
+						plandata=plandataItem;
+					}
 				}
 			}
 			if(plandata!=null && dto.getPlantype().equals("ship")) {
@@ -1072,7 +1094,37 @@ public void setShipRecord(Map<String,Object> item,String shopid,String groupid,S
 
 		}
 		if(dto.getPlantype().equals("ship")) {
-			setShipRecord(item,dto.getShopid(),groupid,marketplaceid,psku,myfbacycle.getPutOnDays());
+			// 使用缓存的发货记录数据（key为sku_marketplaceid）
+			if (recordCache != null) {
+				String recordKey = psku + "_" + marketplaceid;
+				List<Map<String, Object>> shipRecords = recordCache.get(recordKey);
+				if (shipRecords != null && !shipRecords.isEmpty()) {
+					Map<String, Object> ship = shipRecords.get(0);
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+					String nowday = GeneralUtil.getStrDate(new Date());
+					String shiprecord = GeneralUtil.formatDate(AmzDateUtils.getDate(ship.get("createdate").toString()), sdf);
+					if (nowday.indexOf(shiprecord) >= 0) {
+						shiprecord = "今日";
+						item.put("dayship", "istoday");
+					} else {
+						item.put("dayship", "notoday");
+					}
+					item.put("shipRecordQuantity", ship.get("Quantity").toString());
+					item.put("shipRecordStatusName",ship.get("statusName")!=null?ship.get("statusName").toString():"");
+					item.put("shipRecordStatus", ship.get("status").toString());
+					item.put("shipRecordDay", shiprecord);
+					if (ship.get("arrivalTime") != null) {
+						Calendar today = Calendar.getInstance();
+						Calendar cal = today;
+						cal.setTime(GeneralUtil.getDatez(ship.get("arrivalTime").toString()));
+						cal.add(Calendar.DAY_OF_MONTH, myfbacycle.getPutOnDays());
+						double arrivalday = GeneralUtil.distanceOfDay(cal, today);
+						item.put("shipRecordArrivalday", arrivalday);
+					}
+				}
+			} else {
+				setShipRecord(item,dto.getShopid(),groupid,marketplaceid,psku,myfbacycle.getPutOnDays());
+			}
 		}
     }
 
@@ -1156,17 +1208,74 @@ public void setShipRecord(Map<String,Object> item,String shopid,String groupid,S
 			dto.setAmount(0);
 		}
 		// 批量预取预估销量数据（按行级groupid+sku查询）
-		Set<String> skuSet = new HashSet<>();
-		Set<String> groupidSet = new HashSet<>();
-		for(Map<String, Object> item:result) {
-			skuSet.add(item.get("sku").toString());
-			groupidSet.add(item.get("groupid").toString());
+		Map<String, Map<String, ProductInPresale>> presaleCache = new HashMap<>();
+		if(dto.getSkipPrelist() == null || !dto.getSkipPrelist()) {
+			Set<String> skuSet = new HashSet<>();
+			Set<String> groupidSet = new HashSet<>();
+			for(Map<String, Object> item:result) {
+				skuSet.add(item.get("sku").toString());
+				groupidSet.add(item.get("groupid").toString());
+			}
+			presaleCache = iProductInPresaleService.getPresaleBatch(groupidSet, skuSet);
 		}
-		Map<String, Map<String, ProductInPresale>> presaleCache = iProductInPresaleService.getPresaleBatch(groupidSet, skuSet);
 		// 批量预取海外仓库存数据（并行Feign调用）
 		Map<String, Integer> feignCache = preFetchFeignOverseaQty(result, dto);
+		
+		// 批量预取FBA发货周期数据（按marketplaceid分组，groupid从dto获取）
+		Map<String, Set<String>> cycleGroupMap = new HashMap<>();
 		for(Map<String, Object> item:result) {
-			handItem(item,planmap,dto, presaleCache, feignCache);
+			String marketplaceid = item.get("marketplaceid").toString();
+			cycleGroupMap.computeIfAbsent(marketplaceid, k -> new HashSet<>()).add(item.get("sku").toString());
+		}
+		Map<String, FBAShipCycle> cycleCache = new HashMap<>();
+		String groupid = dto.getGroupid();
+		for(Map.Entry<String, Set<String>> entry : cycleGroupMap.entrySet()) {
+			Map<String, FBAShipCycle> batchResult = iFBAShipCycleService.getFbaShipCycleBatch(groupid, entry.getKey(), entry.getValue());
+			cycleCache.putAll(batchResult);
+		}
+		
+		// 批量预取库存规划数据
+		Set<String> amazonauthidSet = new HashSet<>();
+		Set<String> skuSetForPlan = new HashSet<>();
+		Set<String> countrySet = new HashSet<>();
+		Map<String, Marketplace> marketMap = marketplaceService.findMapByMarketplaceId();
+		for(Map<String, Object> item:result) {
+			String marketplaceid = item.get("marketplaceid").toString();
+			if(!marketplaceid.equals("EU")) {
+				amazonauthidSet.add(item.get("amazonauthid").toString());
+				skuSetForPlan.add(item.get("sku").toString());
+				Marketplace market = marketMap.get(marketplaceid);
+				if(market != null) {
+					countrySet.add(market.getMarket());
+				}
+			}
+		}
+		Map<String, AmzInventoryPlanning> planCache = iAmzInventoryPlanningService.listBatch(amazonauthidSet, skuSetForPlan, countrySet);
+		
+		// 批量预取发货记录数据（按marketplaceid分组查询）
+		Map<String, Set<String>> recordGroupMap = new HashMap<>();
+		for(Map<String, Object> item:result) {
+			String marketplaceid = item.get("marketplaceid").toString();
+			recordGroupMap.computeIfAbsent(marketplaceid, k -> new HashSet<>()).add(item.get("sku").toString());
+		}
+		Map<String, List<Map<String, Object>>> recordCache = new HashMap<>();
+		for(Map.Entry<String, Set<String>> entry : recordGroupMap.entrySet()) {
+			Map<String, List<Map<String, Object>>> batchResult = shipInboundPlanService.getShipRecordBatch(dto.getShopid(), dto.getGroupid(), entry.getKey(), entry.getValue());
+			recordCache.putAll(batchResult);
+		}
+		
+		// 批量预取备货周期数据（按marketplaceid分组查询）
+		Map<String, AmzInboundFbaCycle> cycleListCache = new HashMap<>();
+		for(String marketplaceid : recordGroupMap.keySet()) {
+			List<AmzInboundFbaCycle> cycleList = iAmzInboundFbaCycleService.getInboundFbaCycle(dto.getShopid(), marketplaceid);
+			AmzInboundFbaCycle defaultCycle = iAmzInboundFbaCycleService.getDefaultInboundFbaCycle(cycleList);
+			if(defaultCycle != null) {
+				cycleListCache.put(marketplaceid, defaultCycle);
+			}
+		}
+		
+		for(Map<String, Object> item:result) {
+			handItem(item,planmap,dto, presaleCache, feignCache, cycleCache, planCache, recordCache, cycleListCache);
 		}
 		return result;
 	}
@@ -1189,18 +1298,75 @@ public void setShipRecord(Map<String,Object> item,String shopid,String groupid,S
 			dto.setAmount(0);
 		}
 		// 批量预取预估销量数据（按行级groupid+sku查询）
-		Set<String> skuSet = new HashSet<>();
-		Set<String> groupidSet = new HashSet<>();
-		for(Map<String, Object> item:countryresult) {
-			skuSet.add(item.get("sku").toString());
-			groupidSet.add(item.get("groupid").toString());
+		Map<String, Map<String, ProductInPresale>> presaleCache = new HashMap<>();
+		if(dto.getSkipPrelist() == null || !dto.getSkipPrelist()) {
+			Set<String> skuSet = new HashSet<>();
+			Set<String> groupidSet = new HashSet<>();
+			for(Map<String, Object> item:countryresult) {
+				skuSet.add(item.get("sku").toString());
+				groupidSet.add(item.get("groupid").toString());
+			}
+			presaleCache = iProductInPresaleService.getPresaleBatch(groupidSet, skuSet);
 		}
-		Map<String, Map<String, ProductInPresale>> presaleCache = iProductInPresaleService.getPresaleBatch(groupidSet, skuSet);
 		// 批量预取海外仓库存数据（并行Feign调用）
 		Map<String, Integer> feignCache = preFetchFeignOverseaQty(countryresult, dto);
+		
+		// 批量预取FBA发货周期数据（按marketplaceid分组，groupid从dto获取）
+		Map<String, Set<String>> cycleGroupMap = new HashMap<>();
+		for(Map<String, Object> item:countryresult) {
+			String marketplaceid = item.get("marketplaceid").toString();
+			cycleGroupMap.computeIfAbsent(marketplaceid, k -> new HashSet<>()).add(item.get("sku").toString());
+		}
+		Map<String, FBAShipCycle> cycleCache = new HashMap<>();
+		String groupid = dto.getGroupid();
+		for(Map.Entry<String, Set<String>> entry : cycleGroupMap.entrySet()) {
+			Map<String, FBAShipCycle> batchResult = iFBAShipCycleService.getFbaShipCycleBatch(groupid, entry.getKey(), entry.getValue());
+			cycleCache.putAll(batchResult);
+		}
+		
+		// 批量预取库存规划数据
+		Set<String> amazonauthidSet = new HashSet<>();
+		Set<String> skuSetForPlan = new HashSet<>();
+		Set<String> countrySet = new HashSet<>();
+		Map<String, Marketplace> marketMap = marketplaceService.findMapByMarketplaceId();
+		for(Map<String, Object> item:countryresult) {
+			String marketplaceid = item.get("marketplaceid").toString();
+			if(!marketplaceid.equals("EU")) {
+				amazonauthidSet.add(item.get("amazonauthid").toString());
+				skuSetForPlan.add(item.get("sku").toString());
+				Marketplace market = marketMap.get(marketplaceid);
+				if(market != null) {
+					countrySet.add(market.getMarket());
+				}
+			}
+		}
+		Map<String, AmzInventoryPlanning> planCache = iAmzInventoryPlanningService.listBatch(amazonauthidSet, skuSetForPlan, countrySet);
+		
+		// 批量预取发货记录数据（按marketplaceid分组查询）
+		Map<String, Set<String>> recordGroupMap = new HashMap<>();
+		for(Map<String, Object> item:countryresult) {
+			String marketplaceid = item.get("marketplaceid").toString();
+			recordGroupMap.computeIfAbsent(marketplaceid, k -> new HashSet<>()).add(item.get("sku").toString());
+		}
+		Map<String, List<Map<String, Object>>> recordCache = new HashMap<>();
+		for(Map.Entry<String, Set<String>> entry : recordGroupMap.entrySet()) {
+			Map<String, List<Map<String, Object>>> batchResult = shipInboundPlanService.getShipRecordBatch(dto.getShopid(), dto.getGroupid(), entry.getKey(), entry.getValue());
+			recordCache.putAll(batchResult);
+		}
+		
+		// 批量预取备货周期数据（按marketplaceid分组查询）
+		Map<String, AmzInboundFbaCycle> cycleListCache = new HashMap<>();
+		for(String marketplaceid : recordGroupMap.keySet()) {
+			List<AmzInboundFbaCycle> cycleList = iAmzInboundFbaCycleService.getInboundFbaCycle(dto.getShopid(), marketplaceid);
+			AmzInboundFbaCycle defaultCycle = iAmzInboundFbaCycleService.getDefaultInboundFbaCycle(cycleList);
+			if(defaultCycle != null) {
+				cycleListCache.put(marketplaceid, defaultCycle);
+			}
+		}
+		
 		for(Map<String, Object> item:countryresult) {
 			String msku=item.get("msku").toString();
-			handItem(item,planmap,dto, presaleCache, feignCache);
+			handItem(item,planmap,dto, presaleCache, feignCache, cycleCache, planCache, recordCache, cycleListCache);
 			List<Map<String, Object>> itemlist = result.get(msku);
 			if(itemlist==null) {
 				itemlist=new LinkedList<Map<String,Object>>();

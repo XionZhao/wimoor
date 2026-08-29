@@ -61,8 +61,8 @@
 				 					<div class='text-center mar-top-16'>
 				 						 <div style="padding-top:10px;">
 				 							<el-space>
-												<el-button type="primary" @click.stop="showConsDialog">辅料出库</el-button>
 				 								<el-button  @click.stop="closePage">关闭</el-button>
+												<el-button type="primary" @click.stop="showConsDialog">辅料出库</el-button>
 				 							</el-space>
 				 						</div>
 				 					</div>
@@ -98,11 +98,17 @@
 		emitter.emit("removeTab", 100);
 	};
     function load(){
+		if(!id){
+			ElMessage.error("出库单ID不能为空");
+			return;
+		}
 		outApi.getData({"id":id}).then((res)=>{
 			if(res.data){
 				state.warehouseform=res.data.warehouseform;
 				state.outFormEntryList=res.data.outFormEntryList;
 			}
+		}).catch((err)=>{
+			console.error("加载出库单详情失败:",err);
 		});
 	}
 	function closePage(){

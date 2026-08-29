@@ -1,0 +1,1349 @@
+﻿{
+    "module":  "ERP组装与第三方与财务",
+    "description":  "ERP组装单管理、第三方系统对接、流水账管理、财务账户管理、项目管理",
+    "service":  "wimoor-erp",
+    "tools":  [
+                  {
+                      "name":  "assembly_list",
+                      "description":  "查询ERP组装单（加工单）列表，支持按状态、仓库、日期范围等条件筛选",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持组装单号或SKU"
+                                                },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型：number(单号)、shipment(发货)、sku(SKU)"
+                                                    },
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "组装类型：assembly(组装)、split(拆分)"
+                                               },
+                                     "auditstatus":  {
+                                                         "type":  "string",
+                                                         "description":  "审核状态：1(待组装)、2(组装中)、3(已完成)"
+                                                     },
+                                     "operate":  {
+                                                     "type":  "string",
+                                                     "description":  "操作人筛选"
+                                                 },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "preprocessingid":  {
+                                                             "type":  "string",
+                                                             "description":  "预处理ID"
+                                                         },
+                                     "isplan":  {
+                                                    "type":  "boolean",
+                                                    "description":  "是否计划"
+                                                },
+                                     "hasPurchase":  {
+                                                         "type":  "boolean",
+                                                         "description":  "是否有采购"
+                                                     },
+                                     "supplier":  {
+                                                      "type":  "string",
+                                                      "description":  "供应商ID"
+                                                  },
+                                     "owner":  {
+                                                   "type":  "string",
+                                                   "description":  "所有者ID"
+                                               },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "组装单ID",
+                                              "number":  "组装单编号",
+                                              "ftype":  "类型：assembly(组装)、split(拆分)",
+                                              "sku":  "主SKU编码",
+                                              "name":  "主物料名称",
+                                              "image":  "主物料图片",
+                                              "amount":  "计划数量",
+                                              "amount_handle":  "已处理数量",
+                                              "auditstatus":  "审核状态：1(待组装)、2(组装中)、3(已完成)",
+                                              "remark":  "备注",
+                                              "creator":  "创建人",
+                                              "opttime":  "操作时间",
+                                              "createdate":  "创建时间",
+                                              "warehouseid":  "仓库ID",
+                                              "wname":  "仓库名称",
+                                              "purchaseneed":  "是否需要采购",
+                                              "hasqty":  "可用组装数量",
+                                              "needin":  "还需入库数量",
+                                              "shipmentids":  "关联发货计划ID",
+                                              "check_inv":  "盘点ID",
+                                              "puramount":  "采购计划数量"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_detail",
+                      "description":  "获取组装单详情，包括组装单信息、子物料列表和组装记录",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/getData",
+                      "method":  "GET",
+                      "params":  {
+                                     "formid":  {
+                                                    "type":  "string",
+                                                    "description":  "组装单ID"
+                                                }
+                                 },
+                      "required":  [
+                                       "formid"
+                                   ],
+                      "response_fields":  {
+                                              "warehouseform":  "组装单信息（包含id、number、warehouseid、warehouse、mainmid、skuname、mname、image、amount、amount_handle、auditstatus、ftype、remark、creator、createdate、invqty、inAmount）",
+                                              "asFormEntryList":  "子物料列表（包含id、sku、materialid、warehouseid、warename、amount、mname、image、invcount、inbound、inbounddetail、num、totalamount）",
+                                              "recordList":  "组装记录列表（包含id、amount、operatorname、opttime、remark）",
+                                              "count":  "计划数量",
+                                              "status":  "审核状态",
+                                              "skuname":  "主物料名称"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_save",
+                      "description":  "添加或修改组装单/拆分单",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/saveData",
+                      "method":  "POST",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "组装单ID，修改时传入"
+                                            },
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "类型：assembly(组装)、split(拆分)"
+                                               },
+                                     "materialid":  {
+                                                        "type":  "string",
+                                                        "description":  "主物料ID"
+                                                    },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "amount":  {
+                                                    "type":  "string",
+                                                    "description":  "操作数量"
+                                                },
+                                     "remark":  {
+                                                    "type":  "string",
+                                                    "description":  "备注"
+                                                },
+                                     "subAssList":  {
+                                                        "type":  "string",
+                                                        "description":  "子物料列表JSON字符串，包含sku、amount、warehouseid字段"
+                                                    }
+                                 },
+                      "required":  [
+                                       "materialid",
+                                       "warehouseid",
+                                       "amount",
+                                       "subAssList"
+                                   ],
+                      "response_fields":  {
+                                              "msg":  "操作结果消息",
+                                              "forms":  "组装单信息对象",
+                                              "id":  "组装单ID"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_delete",
+                      "description":  "取消组装单，支持批量取消",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/deleteFrom",
+                      "method":  "GET",
+                      "params":  {
+                                     "ids":  {
+                                                 "type":  "string",
+                                                 "description":  "组装单ID，多个用逗号分隔"
+                                             }
+                                 },
+                      "required":  [
+                                       "ids"
+                                   ],
+                      "response_fields":  {
+                                              "msg":  "操作结果消息",
+                                              "type":  "消息类型"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_start",
+                      "description":  "开始组装，将组装单状态改为组装中",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/startAssemblyEvent",
+                      "method":  "GET",
+                      "params":  {
+                                     "formid":  {
+                                                    "type":  "string",
+                                                    "description":  "组装单ID"
+                                                },
+                                     "amounthandle":  {
+                                                          "type":  "string",
+                                                          "description":  "本次处理数量"
+                                                      }
+                                 },
+                      "required":  [
+                                       "formid"
+                                   ],
+                      "response_fields":  {
+                                              "msg":  "操作结果消息",
+                                              "form":  "组装单信息对象"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_stop",
+                      "description":  "终止组装",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/stopAssemblyEvent",
+                      "method":  "GET",
+                      "params":  {
+                                     "formid":  {
+                                                    "type":  "string",
+                                                    "description":  "组装单ID"
+                                                }
+                                 },
+                      "required":  [
+                                       "formid"
+                                   ],
+                      "response_fields":  {
+                                              "msg":  "操作结果消息",
+                                              "status":  "审核状态"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_save_record",
+                      "description":  "保存组装记录，记录组装入库信息",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/saveRecord",
+                      "method":  "GET",
+                      "params":  {
+                                     "formid":  {
+                                                    "type":  "string",
+                                                    "description":  "组装单ID"
+                                                },
+                                     "amount":  {
+                                                    "type":  "string",
+                                                    "description":  "入库数量"
+                                                },
+                                     "remark":  {
+                                                    "type":  "string",
+                                                    "description":  "备注"
+                                                }
+                                 },
+                      "required":  [
+                                       "formid",
+                                       "amount"
+                                   ],
+                      "response_fields":  {
+                                              "msg":  "操作结果消息",
+                                              "resAmount":  "剩余待入库数量",
+                                              "inAmount":  "本次入库数量"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_change_amount",
+                      "description":  "修改组装数量",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/changeAssAmount",
+                      "method":  "GET",
+                      "params":  {
+                                     "formid":  {
+                                                    "type":  "string",
+                                                    "description":  "组装单ID"
+                                                },
+                                     "value":  {
+                                                   "type":  "string",
+                                                   "description":  "新的数量值"
+                                               }
+                                 },
+                      "required":  [
+                                       "formid",
+                                       "value"
+                                   ],
+                      "response_fields":  {
+                                              "message":  "操作结果消息",
+                                              "value":  "更新后的数量"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_reset",
+                      "description":  "重置组装单",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/resetAssForm",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "组装单ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "msg":  "操作结果消息",
+                                              "code":  "操作结果代码：success/fail"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_cancel_instock",
+                      "description":  "撤销组装入库",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/assemblyCancelInstock",
+                      "method":  "GET",
+                      "params":  {
+                                     "instockid":  {
+                                                       "type":  "string",
+                                                       "description":  "入库记录ID"
+                                                   }
+                                 },
+                      "required":  [
+                                       "instockid"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "入库记录ID"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_change_warehouse",
+                      "description":  "加工单更换仓库",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/changeAssemblyWarehouse",
+                      "method":  "GET",
+                      "params":  {
+                                     "number":  {
+                                                    "type":  "string",
+                                                    "description":  "组装单编号"
+                                                },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "目标仓库ID"
+                                                     }
+                                 },
+                      "required":  [
+                                       "number",
+                                       "warehouseid"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "操作结果"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_get_sub_form",
+                      "description":  "获取组装单子物料信息，包括库存和待处理数量",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/getSubForm",
+                      "method":  "GET",
+                      "params":  {
+                                     "materialid":  {
+                                                        "type":  "string",
+                                                        "description":  "主物料ID"
+                                                    },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID，可选"
+                                                     }
+                                 },
+                      "required":  [
+                                       "materialid"
+                                   ],
+                      "response_fields":  {
+                                              "sublist":  "子物料列表，每项包含AssemblyVO字段（submid、sku、mname、image、subnumber、mainsku）及submap子对象（warehouseid、warehouse、amount、inbound、needprocess、moreqty）",
+                                              "msg":  "提示消息"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_get_sub_list",
+                      "description":  "获取物料的组装清单（子SKU列表）及库存信息",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/sublit",
+                      "method":  "GET",
+                      "params":  {
+                                     "materialid":  {
+                                                        "type":  "string",
+                                                        "description":  "主物料ID"
+                                                    },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID，可选"
+                                                     }
+                                 },
+                      "required":  [
+                                       "materialid"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "组装产品对应关系ID",
+                                              "mainmid":  "主产品ID",
+                                              "submid":  "子产品ID",
+                                              "subnumber":  "子产品需求数量（1个主产品需要的子产品量）",
+                                              "subamount":  "子产品实际总需求数量",
+                                              "needamount":  "子产品初始需求数量",
+                                              "remark":  "备注",
+                                              "operator":  "操作人",
+                                              "image":  "子产品图片",
+                                              "mname":  "子产品名称",
+                                              "mcolor":  "子产品颜色标签",
+                                              "boxnum":  "子产品单个箱子数量",
+                                              "sku":  "子产品SKU",
+                                              "mainsku":  "主产品SKU",
+                                              "subprice":  "子产品采购价格",
+                                              "supplierid":  "子产品供应商ID",
+                                              "supplier":  "子产品供应商名称",
+                                              "deliverycycle":  "子产品供货周期",
+                                              "deliverycycledate":  "子产品供货周期日期",
+                                              "historyprice":  "历史价格",
+                                              "opttime":  "操作时间",
+                                              "inbound":  "子产品-待入库库存",
+                                              "outbound":  "子产品-待出库库存",
+                                              "fulfillable":  "子产品-可用库存",
+                                              "submap":  "组装信息子产品Map",
+                                              "shelfInvList":  "货架库存列表",
+                                              "shelfInvRecordList":  "货架库存记录列表"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_need_inv",
+                      "description":  "获取组装单所需库存信息",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/assemblyFormNeedInv",
+                      "method":  "GET",
+                      "params":  {
+                                     "materialid":  {
+                                                        "type":  "string",
+                                                        "description":  "物料ID"
+                                                    },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     }
+                                 },
+                      "required":  [
+                                       "materialid",
+                                       "warehouseid"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "所需库存信息"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_count_num",
+                      "description":  "获取组装单数量统计",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/getCountNum",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "pendingNum":  "待组装数量（需要采购的）",
+                                              "pendingNointerNum":  "待组装数量（不需要采购的）",
+                                              "inProgressNum":  "组装中数量"
+                                          }
+                  },
+                  {
+                      "name":  "assembly_check_shipment",
+                      "description":  "检查发货计划是否有关联的组装单",
+                      "menu_id":  70,
+                      "endpoint":  "/erp/api/v1/assembly/assemblyShipment",
+                      "method":  "GET",
+                      "params":  {
+                                     "shipmentid":  {
+                                                        "type":  "string",
+                                                        "description":  "发货计划ID"
+                                                    }
+                                 },
+                      "required":  [
+                                       "shipmentid"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "关联的组装单数量"
+                                          }
+                  },
+                  {
+                      "name":  "thirdparty_list",
+                      "description":  "查询已对接的第三方系统列表，展示系统类型、对接状态等信息",
+                      "menu_id":  261,
+                      "endpoint":  "/erp/api/v1/thirdparty/getList",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "第三方系统ID",
+                                              "name":  "系统名称",
+                                              "appkey":  "API密钥",
+                                              "appsecret":  "API秘钥",
+                                              "api":  "API接口标识",
+                                              "token":  "API令牌",
+                                              "url":  "API地址",
+                                              "system":  "系统类型ID",
+                                              "systemName":  "系统类型名称",
+                                              "systemEntity":  "系统类型实体对象",
+                                              "shopid":  "店铺ID",
+                                              "operator":  "操作人",
+                                              "opttime":  "操作时间",
+                                              "runtime":  "运行时间",
+                                              "isdelete":  "是否禁用"
+                                          }
+                  },
+                  {
+                      "name":  "thirdparty_support_system",
+                      "description":  "获取所有支持的第三方系统类型",
+                      "menu_id":  261,
+                      "endpoint":  "/erp/api/v1/thirdparty/getAllSupportSystem",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "系统类型ID",
+                                              "name":  "系统类型名称",
+                                              "cname":  "系统中文名称",
+                                              "support":  "支持标识",
+                                              "url":  "API地址",
+                                              "apidoc":  "API文档地址",
+                                              "classz":  "实现类",
+                                              "needkey":  "是否需要API Key",
+                                              "needtoken":  "是否需要Token"
+                                          }
+                  },
+                  {
+                      "name":  "thirdparty_support_api",
+                      "description":  "获取指定系统类型支持的API列表",
+                      "menu_id":  261,
+                      "endpoint":  "/erp/api/v1/thirdparty/getSupportApi",
+                      "method":  "GET",
+                      "params":  {
+                                     "support":  {
+                                                     "type":  "string",
+                                                     "description":  "系统类型ID"
+                                                 }
+                                 },
+                      "required":  [
+                                       "support"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "第三方系统ID",
+                                              "name":  "系统名称",
+                                              "appkey":  "API密钥",
+                                              "appsecret":  "API秘钥",
+                                              "api":  "API接口标识",
+                                              "token":  "API令牌",
+                                              "url":  "API地址",
+                                              "system":  "系统类型ID",
+                                              "systemName":  "系统类型名称",
+                                              "systemEntity":  "系统类型实体对象",
+                                              "shopid":  "店铺ID",
+                                              "operator":  "操作人",
+                                              "opttime":  "操作时间",
+                                              "runtime":  "运行时间",
+                                              "isdelete":  "是否禁用"
+                                          }
+                  },
+                  {
+                      "name":  "thirdparty_info",
+                      "description":  "获取第三方系统详情",
+                      "menu_id":  261,
+                      "endpoint":  "/erp/api/v1/thirdparty/info",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "第三方系统ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "第三方系统ID",
+                                              "name":  "系统名称",
+                                              "appkey":  "API密钥",
+                                              "appsecret":  "API秘钥",
+                                              "api":  "API接口标识",
+                                              "token":  "API令牌",
+                                              "url":  "API地址",
+                                              "system":  "系统类型ID",
+                                              "systemName":  "系统类型名称",
+                                              "systemEntity":  "系统类型实体对象",
+                                              "shopid":  "店铺ID",
+                                              "operator":  "操作人",
+                                              "opttime":  "操作时间",
+                                              "runtime":  "运行时间",
+                                              "isdelete":  "是否禁用"
+                                          }
+                  },
+                  {
+                      "name":  "thirdparty_save",
+                      "description":  "保存第三方系统配置",
+                      "menu_id":  261,
+                      "endpoint":  "/erp/api/v1/thirdparty/save",
+                      "method":  "POST",
+                      "params":  {
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "系统名称"
+                                              },
+                                     "system":  {
+                                                    "type":  "string",
+                                                    "description":  "系统类型ID"
+                                                },
+                                     "apikey":  {
+                                                    "type":  "string",
+                                                    "description":  "API密钥"
+                                                },
+                                     "apisecret":  {
+                                                       "type":  "string",
+                                                       "description":  "API秘钥"
+                                                   },
+                                     "apiurl":  {
+                                                    "type":  "string",
+                                                    "description":  "API地址"
+                                                }
+                                 },
+                      "required":  [
+                                       "name",
+                                       "system"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "保存结果"
+                                          }
+                  },
+                  {
+                      "name":  "thirdparty_update",
+                      "description":  "更新第三方系统配置",
+                      "menu_id":  261,
+                      "endpoint":  "/erp/api/v1/thirdparty/update",
+                      "method":  "POST",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "第三方系统ID"
+                                            },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "系统名称"
+                                              },
+                                     "system":  {
+                                                    "type":  "string",
+                                                    "description":  "系统类型ID"
+                                                },
+                                     "apikey":  {
+                                                    "type":  "string",
+                                                    "description":  "API密钥"
+                                                },
+                                     "apisecret":  {
+                                                       "type":  "string",
+                                                       "description":  "API秘钥"
+                                                   },
+                                     "apiurl":  {
+                                                    "type":  "string",
+                                                    "description":  "API地址"
+                                                }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "更新结果"
+                                          }
+                  },
+                  {
+                      "name":  "thirdparty_disable",
+                      "description":  "禁用第三方系统",
+                      "menu_id":  261,
+                      "endpoint":  "/erp/api/v1/thirdparty/disable",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "第三方系统ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "操作结果"
+                                          }
+                  },
+                  {
+                      "name":  "thirdparty_enable",
+                      "description":  "启用第三方系统",
+                      "menu_id":  261,
+                      "endpoint":  "/erp/api/v1/thirdparty/enable",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "第三方系统ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "操作结果"
+                                          }
+                  },
+                  {
+                      "name":  "thirdparty_refresh_data",
+                      "description":  "刷新第三方系统数据（异步执行）",
+                      "menu_id":  261,
+                      "endpoint":  "/erp/api/v1/thirdparty/refreshData",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "data":  "操作结果"
+                                          }
+                  },
+                  {
+                      "name":  "journal_list",
+                      "description":  "查询财务流水账列表，记录所有财务收支明细",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/fin/journal/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                },
+                                     "project":  {
+                                                     "type":  "string",
+                                                     "description":  "项目ID"
+                                                 },
+                                     "acc":  {
+                                                 "type":  "string",
+                                                 "description":  "账户ID"
+                                             },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "流水ID",
+                                              "name":  "项目名称",
+                                              "number":  "关联单据编号",
+                                              "sku":  "关联SKU",
+                                              "ftype":  "收支方向：in(收入)、out(支出)",
+                                              "amount":  "金额",
+                                              "remark":  "备注",
+                                              "createtime":  "创建时间",
+                                              "operator":  "操作人",
+                                              "isable":  "是否可操作：1(是)、0(否)",
+                                              "supplier":  "供应商名称"
+                                          }
+                  },
+                  {
+                      "name":  "journal_save",
+                      "description":  "记一笔账，新增财务流水记录",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/fin/journal/save",
+                      "method":  "POST",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "流水ID，修改时传入"
+                                            },
+                                     "acc":  {
+                                                 "type":  "string",
+                                                 "description":  "账户ID"
+                                             },
+                                     "projectid":  {
+                                                       "type":  "string",
+                                                       "description":  "项目ID"
+                                                   },
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "收支方向：in(收入)、out(支出)"
+                                               },
+                                     "amount":  {
+                                                    "type":  "number",
+                                                    "description":  "金额"
+                                                },
+                                     "remark":  {
+                                                    "type":  "string",
+                                                    "description":  "备注"
+                                                }
+                                 },
+                      "required":  [
+                                       "acc",
+                                       "projectid",
+                                       "ftype",
+                                       "amount"
+                                   ],
+                      "response_fields":  {
+                                              "msg":  "操作结果消息",
+                                              "faccount":  "流水信息"
+                                          }
+                  },
+                  {
+                      "name":  "journal_cancel",
+                      "description":  "撤销一笔账",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/fin/journal/cancel",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "流水ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "操作结果"
+                                          }
+                  },
+                  {
+                      "name":  "journal_outin_sum",
+                      "description":  "查询本月收支汇总",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/fin/journal/outinsum",
+                      "method":  "POST",
+                      "params":  {
+                                     "acc":  {
+                                                 "type":  "string",
+                                                 "description":  "账户ID，可选"
+                                             }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "insum":  "本月收入总额",
+                                              "outsum":  "本月支出总额"
+                                          }
+                  },
+                  {
+                      "name":  "journal_payment_sum",
+                      "description":  "按项目汇总支付信息",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/fin/journal/paymentsum",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "sumType":  {
+                                                     "type":  "string",
+                                                     "description":  "汇总类型"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "date":  "日期",
+                                              "amount_in":  "收入金额",
+                                              "amount_out":  "支出金额"
+                                          }
+                  },
+                  {
+                      "name":  "journal_detail",
+                      "description":  "查询指定日期的财务明细",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/fin/journal/findDetialByCondition",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                },
+                                     "project":  {
+                                                     "type":  "string",
+                                                     "description":  "项目ID"
+                                                 },
+                                     "acc":  {
+                                                 "type":  "string",
+                                                 "description":  "账户ID"
+                                             },
+                                     "createdate":  {
+                                                        "type":  "string",
+                                                        "description":  "日期，格式：yyyy-MM-dd"
+                                                    }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "记录ID",
+                                              "projectid":  "项目ID",
+                                              "name":  "项目名称",
+                                              "number":  "关联单据编号",
+                                              "sku":  "关联SKU",
+                                              "ftype":  "收支方向：in(收入)、out(支出)",
+                                              "amount":  "金额",
+                                              "remark":  "备注",
+                                              "createtime":  "创建时间",
+                                              "operator":  "操作人",
+                                              "isable":  "是否可操作：1(是)、0(否)",
+                                              "postdate":  "过账日期"
+                                          }
+                  },
+                  {
+                      "name":  "journal_summary_table",
+                      "description":  "查询财务汇总表",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/fin/journal/summaryTable",
+                      "method":  "POST",
+                      "params":  {
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "date":  "日期",
+                                              "amount_in":  "收入金额",
+                                              "amount_out":  "支出金额",
+                                              "amount_rest":  "余额"
+                                          }
+                  },
+                  {
+                      "name":  "faccount_list",
+                      "description":  "查询财务账户列表，展示所有财务账户信息及余额",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/faccount/getAccountAll",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "账户ID",
+                                              "name":  "账户名称",
+                                              "paymeth":  "支付方式ID",
+                                              "paymethName":  "支付方式名称",
+                                              "balance":  "账户余额",
+                                              "isdefault":  "是否默认账户",
+                                              "isdelete":  "是否删除",
+                                              "createdate":  "创建时间",
+                                              "shopid":  "店铺ID",
+                                              "findex":  "排序索引",
+                                              "isautopay":  "是否自动支付",
+                                              "projectMap":  "项目金额映射"
+                                          }
+                  },
+                  {
+                      "name":  "faccount_archive_list",
+                      "description":  "查询归档的财务账户列表",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/faccount/findAccountArchiveAll",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "账户ID",
+                                              "name":  "账户名称",
+                                              "paymeth":  "支付方式ID",
+                                              "paymethName":  "支付方式名称",
+                                              "balance":  "账户余额",
+                                              "isdefault":  "是否默认账户",
+                                              "isdelete":  "是否删除",
+                                              "createdate":  "创建时间",
+                                              "shopid":  "店铺ID",
+                                              "findex":  "排序索引",
+                                              "isautopay":  "是否自动支付",
+                                              "projectMap":  "项目金额映射"
+                                          }
+                  },
+                  {
+                      "name":  "faccount_save",
+                      "description":  "保存财务账户",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/faccount/saveAccount",
+                      "method":  "POST",
+                      "params":  {
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "账户名称"
+                                              },
+                                     "paymeth":  {
+                                                     "type":  "string",
+                                                     "description":  "支付方式"
+                                                 },
+                                     "remark":  {
+                                                    "type":  "string",
+                                                    "description":  "备注"
+                                                }
+                                 },
+                      "required":  [
+                                       "name",
+                                       "paymeth"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "账户ID",
+                                              "name":  "账户名称",
+                                              "paymeth":  "支付方式ID",
+                                              "paymethName":  "支付方式名称",
+                                              "balance":  "账户余额",
+                                              "isdefault":  "是否默认账户",
+                                              "isdelete":  "是否删除",
+                                              "createdate":  "创建时间",
+                                              "shopid":  "店铺ID",
+                                              "findex":  "排序索引",
+                                              "isautopay":  "是否自动支付",
+                                              "projectMap":  "项目金额映射"
+                                          }
+                  },
+                  {
+                      "name":  "faccount_update_name",
+                      "description":  "更新财务账户名称",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/faccount/updateAccountName",
+                      "method":  "POST",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "账户ID"
+                                            },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "新账户名称"
+                                              },
+                                     "paymeth":  {
+                                                     "type":  "string",
+                                                     "description":  "支付方式"
+                                                 }
+                                 },
+                      "required":  [
+                                       "id",
+                                       "name",
+                                       "paymeth"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "账户ID",
+                                              "name":  "账户名称",
+                                              "paymeth":  "支付方式ID",
+                                              "paymethName":  "支付方式名称",
+                                              "balance":  "账户余额",
+                                              "isdefault":  "是否默认账户",
+                                              "isdelete":  "是否删除",
+                                              "createdate":  "创建时间",
+                                              "shopid":  "店铺ID",
+                                              "findex":  "排序索引",
+                                              "isautopay":  "是否自动支付",
+                                              "projectMap":  "项目金额映射"
+                                          }
+                  },
+                  {
+                      "name":  "faccount_delete",
+                      "description":  "删除财务账户（账户余额必须为0）",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/faccount/updateAccountDelete",
+                      "method":  "POST",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "账户ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "账户ID",
+                                              "name":  "账户名称",
+                                              "paymeth":  "支付方式ID",
+                                              "paymethName":  "支付方式名称",
+                                              "balance":  "账户余额",
+                                              "isdefault":  "是否默认账户",
+                                              "isdelete":  "是否删除",
+                                              "createdate":  "创建时间",
+                                              "shopid":  "店铺ID",
+                                              "findex":  "排序索引",
+                                              "isautopay":  "是否自动支付",
+                                              "projectMap":  "项目金额映射"
+                                          }
+                  },
+                  {
+                      "name":  "faccount_recover",
+                      "description":  "恢复已删除的财务账户",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/faccount/recoverAccountDelete",
+                      "method":  "POST",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "账户ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "账户ID",
+                                              "name":  "账户名称",
+                                              "paymeth":  "支付方式ID",
+                                              "paymethName":  "支付方式名称",
+                                              "balance":  "账户余额",
+                                              "isdefault":  "是否默认账户",
+                                              "isdelete":  "是否删除",
+                                              "createdate":  "创建时间",
+                                              "shopid":  "店铺ID",
+                                              "findex":  "排序索引",
+                                              "isautopay":  "是否自动支付",
+                                              "projectMap":  "项目金额映射"
+                                          }
+                  },
+                  {
+                      "name":  "faccount_set_default",
+                      "description":  "设置财务账户为默认账户",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/faccount/updateAccountDefault",
+                      "method":  "POST",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "账户ID"
+                                            },
+                                     "paymeth":  {
+                                                     "type":  "string",
+                                                     "description":  "支付方式"
+                                                 }
+                                 },
+                      "required":  [
+                                       "id",
+                                       "paymeth"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "操作结果"
+                                          }
+                  },
+                  {
+                      "name":  "faccount_cancel_default",
+                      "description":  "取消财务账户的默认状态",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/faccount/cancelAccountDefault",
+                      "method":  "POST",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "账户ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "操作结果"
+                                          }
+                  },
+                  {
+                      "name":  "faccount_payment_method",
+                      "description":  "获取支付方式列表",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/faccount/getPaymentMethod",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "支付方式ID",
+                                              "name":  "支付方式名称",
+                                              "opttime":  "操作时间",
+                                              "createtime":  "创建时间",
+                                              "operator":  "操作人",
+                                              "creator":  "创建人"
+                                          }
+                  },
+                  {
+                      "name":  "faccount_payment_account",
+                      "description":  "根据支付方式获取账户列表",
+                      "menu_id":  28,
+                      "endpoint":  "/erp/api/v1/faccount/getPaymentAccount",
+                      "method":  "GET",
+                      "params":  {
+                                     "paymethod":  {
+                                                       "type":  "string",
+                                                       "description":  "支付方式ID"
+                                                   }
+                                 },
+                      "required":  [
+                                       "paymethod"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "账户ID",
+                                              "name":  "账户名称",
+                                              "paymeth":  "支付方式ID",
+                                              "paymethName":  "支付方式名称",
+                                              "balance":  "账户余额",
+                                              "isdefault":  "是否默认账户",
+                                              "isdelete":  "是否删除",
+                                              "createdate":  "创建时间",
+                                              "shopid":  "店铺ID",
+                                              "findex":  "排序索引",
+                                              "isautopay":  "是否自动支付",
+                                              "projectMap":  "项目金额映射"
+                                          }
+                  },
+                  {
+                      "name":  "project_list",
+                      "description":  "查询财务项目列表，用于财务收支的项目分类管理",
+                      "menu_id":  1012188,
+                      "endpoint":  "/erp/api/v1/faccount/getProject",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "项目ID",
+                                              "name":  "项目名称",
+                                              "issys":  "是否系统项目",
+                                              "shopid":  "店铺ID",
+                                              "createdate":  "创建时间",
+                                              "creator":  "创建人",
+                                              "operator":  "操作人",
+                                              "opttime":  "操作时间"
+                                          }
+                  },
+                  {
+                      "name":  "project_save",
+                      "description":  "保存财务项目",
+                      "menu_id":  1012188,
+                      "endpoint":  "/erp/api/v1/fin/project/saveProject",
+                      "method":  "GET",
+                      "params":  {
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "项目名称"
+                                              }
+                                 },
+                      "required":  [
+                                       "name"
+                                   ],
+                      "response_fields":  {
+                                              "msg":  "操作结果消息",
+                                              "id":  "项目ID"
+                                          }
+                  },
+                  {
+                      "name":  "project_update",
+                      "description":  "更新财务项目",
+                      "menu_id":  1012188,
+                      "endpoint":  "/erp/api/v1/fin/project/updateProject",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "项目ID"
+                                            },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "新项目名称"
+                                              }
+                                 },
+                      "required":  [
+                                       "id",
+                                       "name"
+                                   ],
+                      "response_fields":  {
+                                              "msg":  "操作结果消息"
+                                          }
+                  },
+                  {
+                      "name":  "project_delete",
+                      "description":  "删除财务项目",
+                      "menu_id":  1012188,
+                      "endpoint":  "/erp/api/v1/fin/project/delProject",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "项目ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "msg":  "操作结果消息",
+                                              "isok":  "是否删除成功：true/false"
+                                          }
+                  }
+              ]
+}

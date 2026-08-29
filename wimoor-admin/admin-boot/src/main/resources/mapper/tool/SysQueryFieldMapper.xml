@@ -43,4 +43,9 @@
     and uf.fquery = #{fquery,jdbcType=CHAR}
     order by vf.findex asc
   </select>
+  
+  <!-- 获取所有去重的查询名称列表 -->
+  <select id="getDistinctQueryNames" resultType="java.lang.String">
+    SELECT DISTINCT fquery FROM t_sys_query_field ORDER BY fquery
+  </select>
 </mapper>

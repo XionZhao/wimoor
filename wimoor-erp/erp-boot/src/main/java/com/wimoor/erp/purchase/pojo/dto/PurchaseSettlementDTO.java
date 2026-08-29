@@ -23,6 +23,9 @@ public class PurchaseSettlementDTO extends BasePageQuery{
     @ApiModelProperty(value = "搜索内容" )
     String search;
     
+    @ApiModelProperty(value = "备注" )
+    String remark;
+    
     @ApiModelProperty(value = "银行卡ID" )
     String acct;
     

@@ -4,7 +4,7 @@
 	    <div class="flex-between" style="padding-bottom:20px">
 		  <el-space>
 			 <Group  @change="groupChange" defaultValue="" isproduct="ok"></Group>
-		<el-input  v-model="queryParams.search" @input="handleQuery" clearable placeholder="请输入SKU" style="width: 250px;" class="input-with-select" >
+		<el-input  v-model="queryParams.search" v-debounce-input="handleQuery" clearable @clear="handleQuery" placeholder="请输入SKU" style="width: 250px;" class="input-with-select" >
 		   <template #append>
 		     <el-button @click="handleQuery" >
 		        <el-icon class="ic-cen font-medium">
@@ -114,7 +114,6 @@
 	import UploadRpt from '@/components/Upload/uploadRpt.vue';
   import UploadDialog from '@/components/Upload/uploadDialog.vue';
   import financesItemDataApi from "@/api/amazon/finances/financesItemDataApi.js";
-
   let uploadDialogRef=ref();
 	let detailsRef =ref();
 	let globalTable=ref();

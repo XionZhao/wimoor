@@ -12,7 +12,7 @@
 			 defaultValue="only" 
 			:isform="true" />
 			<Datepicker ref="datepickers"   @changedate="changedate" />
-			<el-input  v-model="searchKeywords" placeholder="输入订单编码,SKU或名称" @input="handleQuery" clearable class="input-with-select" >
+			<el-input  v-model="searchKeywords" placeholder="输入订单编码,SKU或名称" v-debounce-input="handleQuery" clearable @clear="handleQuery" class="input-with-select" >
 			   <template #append>
 			     <el-button @click="handleQuery">
 			        <el-icon style="font-size: 16px;align-itmes:center">
@@ -231,6 +231,6 @@
 	}
 	.font-48{
 		font-size: 48px;
-		    color: #999;
+		    color: var(--el-text-color-secondary);
 	}
 </style>

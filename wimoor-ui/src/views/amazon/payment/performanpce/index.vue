@@ -17,7 +17,7 @@
 			    <el-input 
 				    v-model="queryParams.search" 
 					placeholder="请输入" 
-					@input="searchConfirm" 
+					v-debounce-input="handleQuery"
 					class="input-with-select" >
 			      <template #prepend>
 			        <el-select v-model="queryParams.fatype" @change='searchTypeChange'  style="width:100px">
@@ -87,7 +87,8 @@
 		import {Plus,Formula,Help,Copy,MoreOne} from '@icon-park/vue-next';
 		import settlementMonthSummaryApi from "@/api/amazon/finances/settlementMonthSummaryApi.js";
 		import Helper from '@/components/header/helper.vue';
-		const router = useRouter()
+	
+	const router = useRouter()
 		const refreshDataDialogRef=ref();
 		const FormulaRef =ref()
 		const tableRef =ref()

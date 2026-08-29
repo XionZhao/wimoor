@@ -1,39 +1,26 @@
 package com.wimoor.amazon.product.service.impl;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-
-import javax.annotation.Resource;
-
-import com.amazon.spapi.model.catalogitems.*;
-import com.wimoor.amazon.common.mapper.DimensionsInfoMapper;
-import com.wimoor.amazon.common.pojo.entity.DimensionsInfo;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import cn.hutool.core.util.StrUtil;
 import com.amazon.spapi.SellingPartnerAPIAA.LWAException;
 import com.amazon.spapi.api.CatalogApi;
 import com.amazon.spapi.client.ApiException;
+import com.amazon.spapi.model.catalogitems.*;
 import com.amazon.spapi.model.catalogitems.ItemImage.VariantEnum;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.wimoor.amazon.auth.pojo.entity.AmazonAuthority;
 import com.wimoor.amazon.auth.pojo.entity.Marketplace;
 import com.wimoor.amazon.auth.service.IAmazonAuthorityService;
 import com.wimoor.amazon.auth.service.IMarketplaceService;
 import com.wimoor.amazon.auth.service.impl.ApiBuildService;
+import com.wimoor.amazon.common.mapper.DimensionsInfoMapper;
+import com.wimoor.amazon.common.pojo.entity.DimensionsInfo;
 import com.wimoor.amazon.product.mapper.ProductInOptMapper;
 import com.wimoor.amazon.product.mapper.ProductInOrderMapper;
 import com.wimoor.amazon.product.pojo.dto.ProductCatalogItemsDTO;
-import com.wimoor.amazon.product.pojo.entity.AmzProductRefresh;
+import com.wimoor.amazon.product.pojo.entity.AmzProductRefreshType;
 import com.wimoor.amazon.product.pojo.entity.ProductInOrder;
 import com.wimoor.amazon.product.pojo.entity.ProductInfo;
 import com.wimoor.amazon.product.pojo.entity.ProductRank;
-import com.wimoor.amazon.product.service.IAmzProductRefreshService;
+import com.wimoor.amazon.product.service.IAmzProductRefreshTypeService;
 import com.wimoor.amazon.product.service.IProductCatalogItemService;
 import com.wimoor.amazon.product.service.IProductInfoService;
 import com.wimoor.amazon.product.service.IProductRankService;
@@ -42,11 +29,20 @@ import com.wimoor.common.mvc.BizException;
 import com.wimoor.common.pojo.entity.Picture;
 import com.wimoor.common.service.IPictureService;
 import com.wimoor.common.service.impl.PictureServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import cn.hutool.core.util.StrUtil;
+import javax.annotation.Resource;
+import java.math.BigInteger;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
-@Service 
+@Service
 public class ProductCatalogItemServiceImpl implements IProductCatalogItemService {
+	private static final Logger log = LoggerFactory.getLogger(ProductCatalogItemServiceImpl.class);
 	@Resource
 	private IProductInfoService iProductInfoService;
 	@Resource
@@ -56,7 +52,7 @@ public class ProductCatalogItemServiceImpl implements IProductCatalogItemService
 	@Autowired
 	ApiBuildService apiBuildService;
 	@Autowired
-	IAmzProductRefreshService iAmzProductRefreshService;
+	IAmzProductRefreshTypeService iAmzProductRefreshTypeService;
 	@Autowired
 	IPictureService pictureService;
     @Autowired
@@ -120,14 +116,21 @@ public class ProductCatalogItemServiceImpl implements IProductCatalogItemService
 	
 	@Override
 	public void runApi(AmazonAuthority amazonAuthority) {
-		// TODO Auto-generated method stub
-		List<AmzProductRefresh> skulist =iAmzProductRefreshService.findForCatalogRefresh(amazonAuthority.getId());
-		if(skulist!=null&&skulist.size()>0) {
-			AmzProductRefresh skuRefresh=skulist.get(0);
-			String[] marketarray = skuRefresh.getMarketplaceid().split(",");
-			captureCatalogProductSync(amazonAuthority,skuRefresh,Arrays.asList(marketarray));
-		}
-	}		
+		AmzProductRefreshType skuRefresh = iAmzProductRefreshTypeService.findForCatalogRefresh(amazonAuthority.getId());
+		if (skuRefresh == null) return;
+		// 查询产品信息，补充sku、asin
+		ProductInfo productInfo = iProductInfoService.getById(skuRefresh.getPid().toString());
+		if (productInfo == null) return;
+		skuRefresh.setSku(productInfo.getSku());
+		skuRefresh.setAsin(productInfo.getAsin());
+		if (skuRefresh.getAsin() == null || StrUtil.isBlank(skuRefresh.getAsin())) return;
+		// 查询当前auth下的所有站点
+		List<String> marketList = iMarketplaceService.findbyauth(amazonAuthority.getId())
+				.stream().map(Marketplace::getMarketplaceid).collect(Collectors.toList());
+		if (marketList.isEmpty()) return;
+		skuRefresh.setMarketplaceid(String.join(",", marketList));
+		captureCatalogProductSync(amazonAuthority, skuRefresh, marketList);
+	}
 	@Override
 	public Item captureCatalogProductDim(AmazonAuthority auth,String asin, List<String> market) {
 		// TODO Auto-generated method stub
@@ -156,7 +159,7 @@ public class ProductCatalogItemServiceImpl implements IProductCatalogItemService
 	}
 	
 	@Override
-	public Item captureCatalogProduct(AmazonAuthority auth, AmzProductRefresh skuRefresh, List<String> market) {
+	public Item captureCatalogProduct(AmazonAuthority auth, AmzProductRefreshType skuRefresh, List<String> market) {
 		// TODO Auto-generated method stub
 		CatalogApi api = apiBuildService.getCatalogApi(auth);
 		Item response =null;
@@ -179,7 +182,7 @@ public class ProductCatalogItemServiceImpl implements IProductCatalogItemService
 	}
 
 	@Override
-	public void captureCatalogProductSync(AmazonAuthority auth, AmzProductRefresh skuRefresh, List<String> market) {
+	public void captureCatalogProductSync(AmazonAuthority auth, AmzProductRefreshType skuRefresh, List<String> market) {
 		// TODO Auto-generated method stub
 		auth.setUseApi("getCatalogItem");
 		try {
@@ -190,7 +193,7 @@ public class ProductCatalogItemServiceImpl implements IProductCatalogItemService
 				includedData.add("salesRanks");
 				includedData.add("summaries");
 				includedData.add("dimensions");
-				if(skuRefresh.getCatalogRefreshTime()==null) {
+				if(skuRefresh.getRefreshTime()==null) {
 					includedData.add("images");
 				}	
 				if(skuRefresh!=null&&skuRefresh.getAsin()!=null&&StrUtil.isNotBlank(skuRefresh.getAsin())) {
@@ -199,51 +202,61 @@ public class ProductCatalogItemServiceImpl implements IProductCatalogItemService
 				}else {
 					String[] marketarray = skuRefresh.getMarketplaceid().split(",");
 					for(String marketstr:marketarray) {
-			    			AmzProductRefresh refresh = iAmzProductRefreshService.getOne(new LambdaQueryWrapper<AmzProductRefresh>()
-									.eq(AmzProductRefresh::getMarketplaceid, marketstr)
-									.eq(AmzProductRefresh::getSku,skuRefresh.getSku())
-									.eq(AmzProductRefresh::getAmazonauthid, auth.getId())
-									);
-			    			if(refresh!=null) {
-			    				refresh.setCatalogRefreshTime(LocalDateTime.now());
-			    				iAmzProductRefreshService.updateById(refresh);
-			    			}
-			    	}
-					System.out.println("存在为空的ASIN："+skuRefresh.getSku());
-				}
+						// 先通过sku、marketplaceid、amazonauthid查询t_product_info获取pid
+						List<ProductInfo> infoList = iProductInfoService.selectBySku(skuRefresh.getSku(), marketstr, auth.getId());
+						if(infoList != null && infoList.size() > 0) {
+							ProductInfo info = infoList.get(0);
+							iAmzProductRefreshTypeService.updateRefreshTime(info.getId(), AmzProductRefreshType.TYPE_CATALOG, LocalDateTime.now());
+						}
+		    	}
+				System.out.println("存在为空的ASIN："+skuRefresh.getSku());
 			}
-		} catch (ApiException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			auth.setApiRateLimit( null, e);
-		} catch (LWAException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			auth.setApiStatus(e);
 		}
+	} catch (ApiException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+		auth.setApiRateLimit( null, e);
+	} catch (LWAException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+		auth.setApiStatus(e);
 	}
+}
  
 	@Override
-	public void handlerResult(AmazonAuthority auth, AmzProductRefresh skuRefresh,Item result) {
-		// TODO Auto-generated method stub
-	   if(result==null)return;
+	public void handlerResult(AmazonAuthority auth, AmzProductRefreshType skuRefresh,Item result) {
+		log.info("handlerResult开始执行, authId={}, sku={}, asin={}, pid={}", 
+				auth.getId(), skuRefresh.getSku(), skuRefresh.getAsin(), skuRefresh.getPid());
+	   if(result==null) {
+		   log.warn("handlerResult: result为null，直接返回, authId={}, sku={}", auth.getId(), skuRefresh.getSku());
+		   return;
+	   }
        ItemRelationships relist = result.getRelationships();
+       log.info("handlerResult: relist={}, authId={}, sku={}", relist == null ? "null" : "size=" + relist.size(), auth.getId(), skuRefresh.getSku());
+       // 如果pid未设置，通过sku查询产品信息获取pid
+       if(skuRefresh.getPid()==null) {
+    	   ProductInfo baseInfo = iProductInfoService.productOnlyone(auth.getId(), skuRefresh.getSku(), skuRefresh.getMarketplaceid());
+    	   if(baseInfo!=null) {
+    		   skuRefresh.setPid(new BigInteger(baseInfo.getId()));
+    		   log.info("handlerResult: pid为空，通过sku查询补全pid={}", skuRefresh.getPid());
+    	   } else {
+    		   log.warn("handlerResult: pid为空且通过sku查询不到商品, authId={}, sku={}", auth.getId(), skuRefresh.getSku());
+    	   }
+       }
+       // API调用成功，更新刷新时间（无论是否有relationships）
+       if(skuRefresh.getPid()!=null) {
+    	   boolean updated = iAmzProductRefreshTypeService.updateRefreshTime(
+    			   skuRefresh.getPid().toString(), AmzProductRefreshType.TYPE_CATALOG, LocalDateTime.now());
+    	   log.info("handlerResult: updateRefreshTime结果={}, pid={}, authId={}", updated, skuRefresh.getPid(), auth.getId());
+       } else {
+    	   log.warn("handlerResult: pid仍为null，无法更新refresh_time, authId={}, sku={}", auth.getId(), skuRefresh.getSku());
+       }
+       if(relist==null) {
+    	   log.info("handlerResult: relist为null，跳过后续处理, authId={}, sku={}", auth.getId(), skuRefresh.getSku());
+    	   return;
+       }
        for(ItemRelationshipsByMarketplace relations:relist) {
     	  String marketplaceid= relations.getMarketplaceId();
-	      AmzProductRefresh refresh = iAmzProductRefreshService.getOne(new LambdaQueryWrapper<AmzProductRefresh>()
-																.eq(AmzProductRefresh::getMarketplaceid, marketplaceid)
-																.eq(AmzProductRefresh::getSku,skuRefresh.getSku())
-																.eq(AmzProductRefresh::getAmazonauthid, auth.getId())
-																);
-	    	    if(refresh!=null) {
-	    	    	refresh.setSku(skuRefresh.getSku());
-	    	    	refresh.setAsin(skuRefresh.getAsin());
-	    	    	refresh.setMarketplaceid(marketplaceid);
-	    	    	refresh.setAmazonauthid(new BigInteger(auth.getId()));
-	    	    	refresh.setCatalogRefreshTime(LocalDateTime.now());
-	    	    	refresh.setNotfound(false);
-	    	    	iAmzProductRefreshService.updateById(refresh);
-	    	    }
     	    for(ItemRelationship rela:relations.getRelationships()) {
     	    	List<String> parentAsins = rela.getParentAsins();
     	    	List<String> children = rela.getChildAsins();
@@ -342,6 +355,7 @@ public class ProductCatalogItemServiceImpl implements IProductCatalogItemService
 		if(dimensions!=null && !dimensions.isEmpty()){
 			for(ItemDimensionsByMarketplace dim:dimensions){
 				ProductInfo info = iProductInfoService.productOnlyone(auth.getId(),skuRefresh.getSku(),  dim.getMarketplaceId());
+				if(info==null) {continue;}
 				if(dim.getItem()!= null){
 					DimensionsInfo item=new DimensionsInfo();
 					if(  dim.getItem().getLength()!=null){
@@ -476,50 +490,24 @@ public class ProductCatalogItemServiceImpl implements IProductCatalogItemService
 
 
 	@Override
-	public void handlerFailure(AmazonAuthority auth, AmzProductRefresh skuRefresh, ApiException e) {
+	public void handlerFailure(AmazonAuthority auth, AmzProductRefreshType skuRefresh, ApiException e) {
 		// TODO Auto-generated method stub
-		String[] marketarray = skuRefresh.getMarketplaceid().split(",");
-	    if(e.getMessage().contains("Not Found")) {
-	    	String responsebody=e.getResponseBody();
-	    	for(String market:marketarray) {
-	    		if(responsebody.contains(skuRefresh.getAsin())&&responsebody.contains(market)) {
-	    			AmzProductRefresh refresh = iAmzProductRefreshService.getOne(new LambdaQueryWrapper<AmzProductRefresh>()
-							.eq(AmzProductRefresh::getMarketplaceid, market)
-							.eq(AmzProductRefresh::getSku,skuRefresh.getSku())
-							.eq(AmzProductRefresh::getAmazonauthid, auth.getId())
-							);
-	    			if(refresh!=null) {
-	    			    ProductInOrder order = productInOrderMapper.selectById(refresh.getPid());
-	    	    	    if(order!=null&&order.getSalesMonth()!=null&&order.getSalesMonth()>0) {
-	    	    	    	refresh.setDetailRefreshTime(LocalDateTime.now());
-			    		 	iAmzProductRefreshService.updateById(refresh);
-	    	    	    }else {
-	    	    	    	refresh.setNotfound(true);
-		    				refresh.setCatalogRefreshTime(LocalDateTime.now());
-		    				iAmzProductRefreshService.updateById(refresh);
-		    				ProductInfo info = iProductInfoService.getById(refresh.getPid());
-		    				info.setInvalid(true);
-		    				iProductInfoService.updateById(info);
-	    	    	    }
-	    	    	    
-	    				
-	    			}
-	    		}
-	    	}
-	    }else {
-	    	for(String market:marketarray) {
-	    			AmzProductRefresh refresh = iAmzProductRefreshService.getOne(new LambdaQueryWrapper<AmzProductRefresh>()
-							.eq(AmzProductRefresh::getMarketplaceid, market)
-							.eq(AmzProductRefresh::getSku,skuRefresh.getSku())
-							.eq(AmzProductRefresh::getAmazonauthid, auth.getId())
-							);
-	    			if(refresh!=null) {
-	    				refresh.setCatalogRefreshTime(LocalDateTime.now());
-	    				iAmzProductRefreshService.updateById(refresh);
-	    			}
-	    	}
-	    }
-	
+		if(skuRefresh!=null&&skuRefresh.getPid()!=null) {
+			String pid = skuRefresh.getPid().toString();
+			if(e.getMessage().contains("Not Found")) {
+				ProductInOrder order = productInOrderMapper.selectById(pid);
+				if(order!=null&&order.getSalesMonth()!=null&&order.getSalesMonth()>0) {
+					iAmzProductRefreshTypeService.updateRefreshTime(pid, AmzProductRefreshType.TYPE_CATALOG, LocalDateTime.now());
+				}else {
+					iAmzProductRefreshTypeService.updateRefreshTime(pid, AmzProductRefreshType.TYPE_CATALOG, LocalDateTime.now());
+					ProductInfo info = iProductInfoService.getById(pid);
+					info.setInvalid(true);
+					iProductInfoService.updateById(info);
+				}
+			}else {
+				iAmzProductRefreshTypeService.updateRefreshTime(pid, AmzProductRefreshType.TYPE_CATALOG, LocalDateTime.now());
+			}
+		}
 	}
 
     boolean isrun=true;

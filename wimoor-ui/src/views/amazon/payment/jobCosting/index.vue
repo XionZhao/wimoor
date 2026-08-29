@@ -9,7 +9,7 @@
 		<el-select v-model="queryParam.status" @change="handleQuery" placeholder="状态" clearable>
 			<el-option v-for="item in statusOptions" :label="item.label" :value="item.value"></el-option>
 		</el-select>
-		<el-input  v-model="queryParam.search" @input="handleQuery" placeholder="请输入" class="input-with-select" >
+		<el-input  v-model="queryParam.search" v-debounce-input="handleQuery" placeholder="请输入" class="input-with-select" >
 		  <template #prepend>
 		    <el-select v-model="queryParam.searchType" @change='handleQuery' style="width: 110px">
 		      <el-option label="平台SKU" value="sku"></el-option>

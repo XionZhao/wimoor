@@ -23,18 +23,39 @@
       </template>
       <div class="template-content">
         <div class="form-item">
-          <label class="form-label">凭证摘要：</label>
+          <label class="form-label">凭证摘要：
+            <el-popover placement="top" :width="300" trigger="click">
+              <template #reference>
+                <el-icon class="help-icon"><InfoFilled /></el-icon>
+              </template>
+              <p style="font-size: 13px;">填写生成凭证时使用的摘要说明文字，如"结转汇兑损益"。该文字会显示在凭证的摘要列中。</p>
+            </el-popover>
+          </label>
           <el-input v-model="form.summary" placeholder="结转汇兑损益" style="width: 300px; border-radius: 0;"></el-input>
         </div>
         <div class="form-item">
-          <label class="form-label">凭证分类：</label>
+          <label class="form-label">凭证分类：
+            <el-popover placement="top" :width="300" trigger="click">
+              <template #reference>
+                <el-icon class="help-icon"><InfoFilled /></el-icon>
+              </template>
+              <p style="font-size: 13px;">选择收益和损失的结转方式。"分开结转"会分别生成收益凭证和损失凭证；"同时结转"则将收益和损失合并为一张凭证。</p>
+            </el-popover>
+          </label>
           <el-radio-group v-model="form.voucherClassify">
             <el-radio label="1">收益和损失分开结转（分别生成收益凭证和损失凭证）</el-radio>
             <el-radio label="2">收益和损失同时结转</el-radio>
           </el-radio-group>
         </div>
         <div class="form-item">
-          <label class="form-label">汇兑收益科目：</label>
+          <label class="form-label">汇兑收益科目：
+            <el-popover placement="top" :width="300" trigger="click">
+              <template #reference>
+                <el-icon class="help-icon"><InfoFilled /></el-icon>
+              </template>
+              <p style="font-size: 13px;">选择汇兑收益对应的会计科目。当外币折算产生收益时，金额记入此科目的贷方。默认科目编码为530105。</p>
+            </el-popover>
+          </label>
           <el-select
             v-model="form.incomeSubject"
             placeholder="请选择科目"
@@ -50,7 +71,14 @@
           </el-select>
         </div>
         <div class="form-item">
-          <label class="form-label">汇兑损失科目：</label>
+          <label class="form-label">汇兑损失科目：
+            <el-popover placement="top" :width="300" trigger="click">
+              <template #reference>
+                <el-icon class="help-icon"><InfoFilled /></el-icon>
+              </template>
+              <p style="font-size: 13px;">选择汇兑损失对应的会计科目。当外币折算产生损失时，金额记入此科目的借方。默认科目编码为560301。</p>
+            </el-popover>
+          </label>
           <el-select
             v-model="form.lossSubject"
             placeholder="请选择科目"
@@ -67,6 +95,12 @@
         </div>
         <div class="form-item">
           <el-checkbox v-model="form.transferByDirection">结转方式：按科目方向调汇</el-checkbox>
+          <el-popover placement="top" :width="300" trigger="click">
+            <template #reference>
+              <el-icon class="help-icon"><InfoFilled /></el-icon>
+            </template>
+            <p style="font-size: 13px;">勾选后，系统会根据科目的默认余额方向（借方/贷方）确定调汇方向。不勾选则按金额的正数方向调汇。</p>
+          </el-popover>
         </div>
       </div>
 
@@ -77,6 +111,7 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { InfoFilled } from '@element-plus/icons-vue'
 import { addFinClosingTemplate, updateFinClosingTemplate } from '@/api/finance/closing_template.js'
 import { listTemplateItem, updateTemplateItem, addTemplateItem } from '@/api/finance/closing_template_item.js'
 import { listVoucherTypes } from '@/api/finance/voucher_type'
@@ -392,5 +427,17 @@ watch(() => props.selectedTemplate, (newTemplate) => {
 
 .el-checkbox {
   font-size: 14px;
+}
+
+.help-icon {
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
+  cursor: pointer;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.help-icon:hover {
+  color: #409eff;
 }
 </style>

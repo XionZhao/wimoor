@@ -1,0 +1,285 @@
+{
+    "module":  "ERP订单管理",
+    "description":  "ERP多平台订单查询、订单详情、订单计划、销售明细、订单发票等订单全生命周期管理",
+    "service":  "wimoor-erp",
+    "tools":  [
+                  {
+                      "name":  "order_list",
+                      "description":  "查询ERP多平台订单列表（SKU维度），支持按平台、状态、日期范围、SKU等条件筛选",
+                      "menu_id":  8,
+                      "endpoint":  "/erp/api/v1/order/findByCondition",
+                      "method":  "POST",
+                      "params":  {
+                                     "paramother":  {
+                                                        "type":  "object",
+                                                        "description":  "查询参数对象，包含以下字段"
+                                                    },
+                                     "paramother.sku":  {
+                                                            "type":  "string",
+                                                            "description":  "搜索关键词，支持SKU"
+                                                        },
+                                     "paramother.platformid":  {
+                                                                   "type":  "string",
+                                                                   "description":  "平台ID"
+                                                               },
+                                     "paramother.warehouseid":  {
+                                                                    "type":  "string",
+                                                                    "description":  "仓库ID"
+                                                                },
+                                     "paramother.ischeck":  {
+                                                                "type":  "string",
+                                                                "description":  "是否选中"
+                                                            },
+                                     "paramother.categoryid":  {
+                                                                   "type":  "string",
+                                                                   "description":  "分类ID"
+                                                               },
+                                     "paramother.fromDate":  {
+                                                                   "type":  "string",
+                                                                   "description":  "开始日期，格式：yyyy-MM-dd"
+                                                               },
+                                     "paramother.toDate":  {
+                                                                   "type":  "string",
+                                                                   "description":  "结束日期，格式：yyyy-MM-dd"
+                                                               },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "产品SKU",
+                                              "name":  "产品名称",
+                                              "image":  "产品图片URL",
+                                              "platformname":  "平台名称",
+                                              "platform_id":  "平台ID",
+                                              "country":  "国家代码",
+                                              "msku":  "平台SKU（如无则返回原SKU）",
+                                              "warehouseid":  "仓库ID",
+                                              "warehousename":  "仓库名称",
+                                              "thirdparty_warehousename":  "第三方仓库名称",
+                                              "quantity":  "销量合计",
+                                              "price":  "销售额合计",
+                                              "ship_fee":  "邮费合计",
+                                              "referral_fee":  "佣金合计",
+                                              "referral_rate":  "佣金比率合计",
+                                              "profit":  "利润合计",
+                                              "profit_rate":  "利润率合计",
+                                              "opttime":  "最后更新时间"
+                                          }
+                  },
+                  {
+                      "name":  "order_detail",
+                      "description":  "查询单个订单的详细信息",
+                      "menu_id":  8,
+                      "endpoint":  "/erp/api/v1/order/get",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "订单ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "订单ID",
+                                              "orderId":  "平台订单号",
+                                              "platformId":  "平台ID",
+                                              "sku":  "产品SKU",
+                                              "quantity":  "数量",
+                                              "price":  "价格",
+                                              "country":  "国家",
+                                              "warehouseid":  "仓库ID",
+                                              "thirdpartyWarehouseid":  "第三方仓库ID",
+                                              "purchaseDate":  "购买日期",
+                                              "currency":  "货币类型",
+                                              "shopid":  "公司ID",
+                                              "isout":  "是否已出库",
+                                              "shipFee":  "邮费",
+                                              "referralFee":  "平台佣金",
+                                              "referralRate":  "佣金比率",
+                                              "operator":  "操作人ID",
+                                              "opttime":  "操作时间"
+                                          }
+                  },
+                  {
+                      "name":  "order_material_list",
+                      "description":  "查询多平台订单的产品维度列表，支持按平台、仓库、分类等条件筛选",
+                      "menu_id":  8,
+                      "endpoint":  "/erp/api/v1/order/findMaterialByCondition",
+                      "method":  "POST",
+                      "params":  {
+                                     "paramother":  {
+                                                        "type":  "object",
+                                                        "description":  "查询参数对象，包含以下字段"
+                                                    },
+                                     "paramother.sku":  {
+                                                            "type":  "string",
+                                                            "description":  "搜索关键词，支持SKU"
+                                                        },
+                                     "paramother.platformid":  {
+                                                                   "type":  "string",
+                                                                   "description":  "平台ID"
+                                                               },
+                                     "paramother.warehouseid":  {
+                                                                    "type":  "string",
+                                                                    "description":  "仓库ID"
+                                                                },
+                                     "paramother.ischeck":  {
+                                                                "type":  "string",
+                                                                "description":  "是否选中"
+                                                            },
+                                     "paramother.categoryid":  {
+                                                                   "type":  "string",
+                                                                   "description":  "分类ID"
+                                                               },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "产品ID",
+                                              "sku":  "产品SKU",
+                                              "name":  "产品名称",
+                                              "image":  "产品图片URL",
+                                              "color":  "SKU颜色标识",
+                                              "catecolor":  "分类颜色",
+                                              "category":  "产品分类",
+                                              "brand":  "品牌",
+                                              "upc":  "UPC编码",
+                                              "shopid":  "公司ID",
+                                              "boxnum":  "箱规",
+                                              "qty":  "库存数量（可售+待出库）",
+                                              "fulfillable":  "可售库存",
+                                              "outbound":  "待出库数量",
+                                              "warehousename":  "仓库名称",
+                                              "quantity":  "库存周转天数（可售库存/日均销量）",
+                                              "price":  "采购成本",
+                                              "supplier":  "供应商名称",
+                                              "supplierid":  "供应商ID",
+                                              "issfg":  "产品类型（成品/半成品/配件）",
+                                              "remark":  "备注",
+                                              "operator":  "操作人",
+                                              "opttime":  "操作时间",
+                                              "MOQ":  "最小起订量",
+                                              "delivery_cycle":  "交货周期",
+                                              "createdate":  "生效日期",
+                                              "purchaseUrl":  "采购链接",
+                                              "length":  "包装长(cm)",
+                                              "width":  "包装宽(cm)",
+                                              "height":  "包装高(cm)",
+                                              "weight":  "包装重量(kg)",
+                                              "plength":  "单品长(cm)",
+                                              "pwidth":  "单品宽(cm)",
+                                              "pheight":  "单品高(cm)",
+                                              "pweight":  "单品重量(kg)",
+                                              "boxqty":  "箱数（库存/箱规）",
+                                              "boxsize":  "单品体积(cm³)",
+                                              "ischeck":  "是否在发货计划中",
+                                              "mark":  "标记信息",
+                                              "isDelete":  "是否删除"
+                                          }
+                  },
+                  {
+                      "name":  "cycle_list",
+                      "description":  "查询产品销售趋势图数据，展示指定SKU在指定天数内的每日销量",
+                      "menu_id":  8,
+                      "endpoint":  "/erp/api/v1/order/salesLine",
+                      "method":  "GET",
+                      "params":  {
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "产品SKU"
+                                             },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "daysize":  {
+                                                     "type":  "string",
+                                                     "description":  "天数，如7、30、90"
+                                                 }
+                                 },
+                      "required":  [
+                                       "sku",
+                                       "daysize"
+                                   ],
+                      "response_fields":  {
+                                              "lines":  "数据线列表，ChartLine[]，每条线包含: name(线名), data(数据数组), data2/data3/data4(附加数据), markpoint/markpoint2(标记点), summary(汇总)",
+                                              "labels":  "日期标签数组，String[]",
+                                              "legends":  "图例数组，String[]（SKU列表）"
+                                          }
+                  },
+                  {
+                      "name":  "order_invoice_list",
+                      "description":  "查询ERP多平台订单（按订单维度查询），支持按SKU等条件筛选",
+                      "menu_id":  8,
+                      "endpoint":  "/erp/api/v1/order/findOrderByCondition",
+                      "method":  "POST",
+                      "params":  {
+                                     "paramother":  {
+                                                        "type":  "object",
+                                                        "description":  "查询参数对象，包含以下字段"
+                                                    },
+                                     "paramother.sku":  {
+                                                            "type":  "string",
+                                                            "description":  "搜索关键词，支持SKU"
+                                                        },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "订单ID",
+                                              "orderId":  "平台订单号",
+                                              "platformname":  "平台名称",
+                                              "sku":  "产品SKU",
+                                              "name":  "产品名称",
+                                              "image":  "产品图片URL",
+                                              "country":  "国家",
+                                              "purchase_date":  "购买日期",
+                                              "quantity":  "数量",
+                                              "price":  "价格",
+                                              "currency":  "货币类型",
+                                              "warehouseid":  "仓库ID",
+                                              "warehousename":  "仓库名称",
+                                              "thirdparty_warehousename":  "第三方仓库名称",
+                                              "ship_fee":  "邮费",
+                                              "referral_fee":  "平台佣金",
+                                              "referral_rate":  "佣金比率",
+                                              "profit":  "利润（价格-邮费-佣金-采购成本）",
+                                              "profit_rate":  "利润率",
+                                              "isout":  "是否已出库",
+                                              "shopid":  "公司ID",
+                                              "platformId":  "平台ID",
+                                              "operator":  "操作人ID",
+                                              "opttime":  "操作时间"
+                                          }
+                  }
+              ]
+}

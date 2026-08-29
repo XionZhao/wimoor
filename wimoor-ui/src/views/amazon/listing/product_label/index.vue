@@ -10,7 +10,7 @@
 				 <el-button   @click.stop="handleUpload">导入添加</el-button>
 		  </el-space>
 		  <div class='rt-btn-group'>
-		   <el-input class='ic-btn' v-model="queryParams.search" @input="handleQuery" placeholder="搜索ASIN或SKU"></el-input>
+		   <el-input class='ic-btn' v-model="queryParams.search" v-debounce-input="handleQuery" placeholder="搜索ASIN或SKU"></el-input>
 		  </div>
 		  </el-row>
 		  

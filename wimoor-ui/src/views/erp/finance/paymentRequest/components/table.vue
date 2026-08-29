@@ -6,6 +6,7 @@
 	 height="calc(100vh - 302px)"  @loadTable="loadTableData" >
 		<template #field>
 		<el-table-column type="selection" width="55"></el-table-column>
+		<el-table-column label="店铺" width="150" prop="groupname" show-overflow-tooltip/>
 		<el-table-column label="请款单号" width="150" prop="number" />
 		<el-table-column label="关联单号" width="150"  prop="purnumber">
 			
@@ -177,10 +178,12 @@
 			idlist.push(row.id); 
 			purchaseFinlistApi.paymentForm(idlist).then((res)=>{
 				if(res.data){
-					state.paydialogVisible=false;
 					ElMessage.success('付款成功！');
+					row.payVisible = false;
 					load(state.queryParams);
 				}
+			}).catch((err)=>{
+				ElMessage.error('付款失败，请检查后重试');
 			});
 	}
 	function handlePayReturn(row){

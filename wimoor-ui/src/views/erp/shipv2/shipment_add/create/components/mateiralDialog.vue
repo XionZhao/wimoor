@@ -5,7 +5,7 @@
 		<el-dialog v-model="dialogVisible" title="添加产品" width="60%" :before-close="handleClose">
 			<div class="con-header">
 				<el-row>
-					<el-input v-model="searchSku" @input="loadData" placeholder="搜索产品SKU">
+					<el-input v-model="searchSku" v-debounce-input="loadData" placeholder="搜索产品SKU">
 						<template #suffix>
 							<el-icon :size="16">
 								<Search />
@@ -76,6 +76,8 @@
 	} from 'element-plus'
 	import shipmentplanApi from '@/api/erp/ship/shipmentplanApi.js';
 	import GlobalTable from "@/components/Table/GlobalTable/index.vue";
+
+
 	export default {
 		name: 'mateiralDialog',
 		components: {
@@ -100,11 +102,11 @@
 	 
 
 			function loadData() {
-					if (globalTable.value && globalTable.value["loadTable"]) {
-						   globalTable.value.loadTable();
-					} 
+				if (globalTable.value && globalTable.value["loadTable"]) {
+					   globalTable.value.loadTable();
+				}
 
-			}
+		}
 
 			function loadTableData(data) {
 				if ( params.value["groupid"]) {

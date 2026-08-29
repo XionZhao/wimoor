@@ -28,15 +28,18 @@
 							   <el-step title="完成"  />
 							 </el-steps>
 							<el-descriptions :column="3">
-							    <el-descriptions-item label="请款单号">
-									{{formData.number}}
-								</el-descriptions-item>
-							    <el-descriptions-item label="关联单号">
-									{{formData.purnumber}}
-								</el-descriptions-item>
-								<el-descriptions-item label="付款方式">
-									{{formData.paymethod}}
-								</el-descriptions-item>
+						    <el-descriptions-item label="店铺">
+								{{formData.groupname}}
+							</el-descriptions-item>
+						    <el-descriptions-item label="请款单号">
+								{{formData.number}}
+							</el-descriptions-item>
+						    <el-descriptions-item label="关联单号">
+								{{formData.purnumber}}
+							</el-descriptions-item>
+							<el-descriptions-item label="付款方式">
+								{{formData.paymethod}}
+							</el-descriptions-item>
 								<el-descriptions-item label="状态">
 									<el-tag  type="warning" v-if="formData.auditstatus==0">待审核</el-tag>
 									<el-tag   v-if="formData.auditstatus==1">已审核待付款</el-tag>
@@ -168,4 +171,19 @@
 	.img-40{width: 40px;
 	height: 40px;flex: none;
 	margin-right: 8px;}
+</style>
+
+<style>
+/* 暗黑模式适配 */
+.dark .el-white-bg {
+  background-color: var(--el-bg-color);
+}
+
+.dark .gird-line-head {
+  border-bottom-color: var(--el-border-color);
+}
+
+.dark .el-descriptions {
+  --el-descriptions-item-bordered-label-background: var(--el-fill-color-light);
+}
 </style>

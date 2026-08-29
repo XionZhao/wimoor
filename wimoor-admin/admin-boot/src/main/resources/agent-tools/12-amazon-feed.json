@@ -1,0 +1,29 @@
+﻿{
+    "module":  "Amazon Feed报告",
+    "description":  "Amazon Feed提交记录查询，查看数据Feed的提交和处理状态",
+    "service":  "wimoor-amazon",
+    "tools":  [
+                  {
+                      "name":  "amz_query_feed_submit_info",
+                      "description":  "根据queueid查询Feed提交记录的处理状态，返回Feed当前的处理进度和结果",
+                      "menu_id":  9,
+                      "endpoint":  "/amazon/api/v0/feed/submitfeedInfo",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "queueid":  {
+                                                     "type":  "string",
+                                                     "description":  "Feed队列ID，即AmzSubmitFeedQueue的主键ID"
+                                                 }
+                                 },
+                      "required":  [
+                                       "queueid"
+                                   ],
+                      "response_fields":  {
+                                              "status":  "状态标识（主键，如_IN_PROGRESS_、_DONE_、_CANCELLED_、_DONE_NO_DATA_等）",
+                                              "name":  "状态中文名称",
+                                              "remark":  "状态备注说明"
+                                          }
+                  }
+              ]
+}

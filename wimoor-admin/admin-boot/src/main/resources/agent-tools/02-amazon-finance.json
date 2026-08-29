@@ -1,0 +1,1453 @@
+﻿{
+    "module":  "Amazon财务管理",
+    "description":  "Amazon财务数据查询、结算报告、SKU结算明细、月度汇总、费用公式、仓储费、赔偿费、汇率管理等财务全链路查询",
+    "service":  "wimoor-amazon",
+    "tools":  [
+                  {
+                      "name":  "fin_data_list",
+                      "description":  "查询财务自定义项目数据列表，支持按店铺分组、站点、SKU、币种、时间范围筛选，返回分页数据",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/amzFinUserItemData/getFinDataList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "itemid":  {
+                                                    "type":  "string",
+                                                    "description":  "财务项目ID"
+                                                },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码，模糊匹配"
+                                             },
+                                     "osku":  {
+                                                  "type":  "string",
+                                                  "description":  "SKU编码，精确匹配"
+                                              },
+                                     "currency":  {
+                                                      "type":  "string",
+                                                      "description":  "币种"
+                                                  },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "记录ID",
+                                              "itemid":  "财务项目ID",
+                                              "groupid":  "店铺分组ID",
+                                              "marketplaceid":  "站点ID",
+                                              "byday":  "日期",
+                                              "sku":  "SKU编码",
+                                              "currency":  "币种",
+                                              "amount":  "金额",
+                                              "opttime":  "操作时间",
+                                              "market":  "站点国家代码",
+                                              "marketname":  "站点名称",
+                                              "groupname":  "店铺分组名称",
+                                              "itemname":  "财务项目名称",
+                                              "pname":  "商品名称",
+                                              "image":  "商品图片URL"
+                                          }
+                  },
+                  {
+                      "name":  "fin_items",
+                      "description":  "查询财务自定义项目列表（分页），展示用户配置的财务项目分类",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/amzFinUserItem/getFinList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "项目ID",
+                                              "name":  "项目名称",
+                                              "shopid":  "店铺ID",
+                                              "creator":  "创建人ID",
+                                              "disable":  "是否禁用",
+                                              "isused":  "是否已使用",
+                                              "createdate":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_item_data",
+                      "description":  "查询财务项目明细数据列表，支持按项目、SKU、时间范围等条件筛选",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/amzFinUserItemData/getFinDataList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "itemid":  {
+                                                    "type":  "string",
+                                                    "description":  "财务项目ID"
+                                                },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码，模糊匹配"
+                                             },
+                                     "osku":  {
+                                                  "type":  "string",
+                                                  "description":  "SKU编码，精确匹配"
+                                              },
+                                     "currency":  {
+                                                      "type":  "string",
+                                                      "description":  "币种"
+                                                  },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "记录ID",
+                                              "itemid":  "财务项目ID",
+                                              "groupid":  "店铺分组ID",
+                                              "marketplaceid":  "站点ID",
+                                              "byday":  "日期",
+                                              "sku":  "SKU编码",
+                                              "currency":  "币种",
+                                              "amount":  "金额",
+                                              "opttime":  "操作时间",
+                                              "market":  "站点国家代码",
+                                              "marketname":  "站点名称",
+                                              "groupname":  "店铺分组名称",
+                                              "itemname":  "财务项目名称",
+                                              "pname":  "商品名称",
+                                              "image":  "商品图片URL"
+                                          }
+                  },
+                  {
+                      "name":  "fin_item_month_data",
+                      "description":  "按月查询财务项目汇总数据，展示各项目每月的汇总金额",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/amzFinUserItemData/getFinDataMonthList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "itemid":  {
+                                                    "type":  "string",
+                                                    "description":  "财务项目ID"
+                                                },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码，模糊匹配"
+                                             },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始月份，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束月份，格式：yyyy-MM-dd"
+                                                 },
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "费用类型，other表示只查自定义项"
+                                               },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "聚合记录ID",
+                                              "itemid":  "财务项目ID",
+                                              "groupid":  "店铺分组ID",
+                                              "marketplaceid":  "站点ID",
+                                              "shopid":  "店铺ID",
+                                              "currency":  "币种",
+                                              "amount":  "月度汇总金额",
+                                              "market":  "站点国家代码",
+                                              "marketname":  "站点名称",
+                                              "groupname":  "店铺分组名称",
+                                              "itemname":  "财务项目名称"
+                                          }
+                  },
+                  {
+                      "name":  "fin_list_without_page",
+                      "description":  "查询财务项目完整列表（不分页），返回所有项目数据",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/amzFinUserItem/getFinListWithoutPage",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "项目ID",
+                                              "name":  "项目名称",
+                                              "shopid":  "店铺ID",
+                                              "creator":  "创建人ID",
+                                              "disable":  "是否禁用",
+                                              "isused":  "是否已使用",
+                                              "createdate":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "find_fin_items_by_user",
+                      "description":  "按当前用户查询财务项目列表，获取用户关联的财务项目",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/amzFinUserItem/findFinItemByUser",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "项目ID",
+                                              "name":  "项目名称",
+                                              "shopid":  "店铺ID",
+                                              "creator":  "创建人ID",
+                                              "disable":  "是否禁用",
+                                              "isused":  "是否已使用",
+                                              "createdate":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_report",
+                      "description":  "查询Amazon月度结算报告，按月份展示结算汇总数据，支持按店铺分组、站点、搜索条件筛选",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlement/getMonthReport",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "marketplace_name":  {
+                                                              "type":  "string",
+                                                              "description":  "站点名称(pointName)"
+                                                          },
+                                     "country":  {
+                                                     "type":  "string",
+                                                     "description":  "国家代码，如US/UK等，用于自动查找站点"
+                                                 },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型，为空按结算日期筛选，非空按到账日期筛选"
+                                                  },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，匹配SKU"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "currency":  "币种",
+                                              "timezone":  "时区",
+                                              "Seller fulfilled product sales":  "卖家自发货销售额",
+                                              "Seller_fulfilled product sale refunds":  "卖家自发货退款",
+                                              "FBA product sales":  "FBA产品销售额",
+                                              "FBA product sale refunds":  "FBA产品退款",
+                                              "FBA inventory credit":  "FBA库存信用",
+                                              "FBA liquidation proceeds":  "FBA清算收入",
+                                              "FBA Liquidations proceeds adjustments":  "FBA清算收入调整",
+                                              "Postage credits":  "运费信用",
+                                              "Delivery credit refunds":  "配送信用退款",
+                                              "Gift wrap credits":  "礼品包装信用",
+                                              "Gift wrap credits refunds":  "礼品包装信用退款",
+                                              "Promotional rebates":  "促销返利",
+                                              "Promotional rebate refunds":  "促销返利退款",
+                                              "Seller_fulfilled selling fees":  "卖家自发货销售费用",
+                                              "FBA selling fees":  "FBA销售费用",
+                                              "Selling fee refunds":  "销售费用退款",
+                                              "Refund for Advertiser":  "广告退款",
+                                              "FBA transaction fees":  "FBA交易费用",
+                                              "FBA transaction fee refunds":  "FBA交易费用退款",
+                                              "Other transaction fees":  "其他交易费用",
+                                              "Other transaction fee refunds":  "其他交易费用退款",
+                                              "FBA inventory and inbound services fees":  "FBA库存和入库服务费",
+                                              "Service fees":  "服务费",
+                                              "Refund administration fees":  "退款管理费",
+                                              "Adjustments":  "调整金额",
+                                              "Cost of Advertising":  "广告费用",
+                                              "Liquidations fees":  "清算费用",
+                                              "Transfers to bank account":  "银行转账金额",
+                                              "Failed transfers to bank account":  "失败的银行转账金额",
+                                              "Product, delivery and gift wrap taxes collected":  "产品配送和礼品包装税费",
+                                              "Total Income Expenses Tax":  "总收入支出税费合计",
+                                              "Others":  "其他费用",
+                                              "各费用字段_rmb(如FBA product sales_rmb)":  "对应费用的人民币金额(自动汇率换算)"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_sku_report",
+                      "description":  "查询SKU维度结算报告，展示各SKU的结算明细数据（销售额、佣金、FBA费、退款等）",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlement/proCommodity",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "currency":  {
+                                                      "type":  "string",
+                                                      "description":  "币种，market表示使用站点原币种"
+                                                  },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，匹配SKU/ASIN/商品名称"
+                                                },
+                                     "ownerid":  {
+                                                     "type":  "string",
+                                                     "description":  "负责人ID"
+                                                 },
+                                     "color":  {
+                                                   "type":  "string",
+                                                   "description":  "标签颜色筛选"
+                                               },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型，sett按结算日期，其他值按到账日期"
+                                                  },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "SKU编码",
+                                              "asin":  "ASIN编码",
+                                              "msku":  "店铺SKU",
+                                              "currency":  "币种",
+                                              "groupname":  "店铺分组名称",
+                                              "marketname":  "站点名称",
+                                              "pname":  "商品名称",
+                                              "ownername":  "负责人名称",
+                                              "image":  "商品图片URL",
+                                              "principal":  "销售额(含税)",
+                                              "sales":  "销量",
+                                              "order_amount":  "订单量",
+                                              "refundsales":  "退货数量",
+                                              "refund":  "退货金额",
+                                              "commission":  "佣金",
+                                              "fbafee":  "FBA费",
+                                              "summary":  "汇总数据"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_month_summary",
+                      "description":  "查询SKU维度月度结算汇总，展示各SKU每月的结算汇总数据，支持多维度分组（SKU/ASIN/负责人/分类等）",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlementSummarySkuMonth/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "marketplace_name":  {
+                                                              "type":  "string",
+                                                              "description":  "站点名称"
+                                                          },
+                                     "currency":  {
+                                                      "type":  "string",
+                                                      "description":  "币种，market表示使用站点原币种"
+                                                  },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始月份，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束月份，格式：yyyy-MM-dd"
+                                                 },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型，为空按结算日期，非空按到账日期"
+                                                  },
+                                     "parentasin":  {
+                                                        "type":  "string",
+                                                        "description":  "父ASIN"
+                                                    },
+                                     "fatype":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索类型，如sku/asin/msku/owner/categoryid等"
+                                                },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                },
+                                     "ownerid":  {
+                                                     "type":  "string",
+                                                     "description":  "负责人ID"
+                                                 },
+                                     "categoryid":  {
+                                                        "type":  "string",
+                                                        "description":  "分类ID"
+                                                    },
+                                     "charttype":  {
+                                                       "type":  "string",
+                                                       "description":  "图表类型，如sku/msku/asin/owner/categoryid/parentasin/month/groupid"
+                                                   },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "SKU编码",
+                                              "asin":  "ASIN编码",
+                                              "msku":  "店铺SKU",
+                                              "currency":  "币种",
+                                              "groupname":  "店铺分组名称",
+                                              "marketname":  "站点名称",
+                                              "pname":  "商品名称",
+                                              "mname":  "型号名称",
+                                              "ownername":  "负责人名称",
+                                              "categoryname":  "分类名称",
+                                              "image":  "商品图片URL",
+                                              "order_amount":  "订单量",
+                                              "sales":  "销量",
+                                              "refundsales":  "退货数量",
+                                              "refundorder":  "退货订单数",
+                                              "principal":  "销售额(含税)",
+                                              "commission":  "佣金",
+                                              "fbafee":  "FBA费",
+                                              "refund":  "退货金额",
+                                              "shipping":  "运费",
+                                              "promotion":  "促销费",
+                                              "otherfee":  "其他费用",
+                                              "setincome":  "结算收入",
+                                              "share_storage_fee":  "仓储费分摊",
+                                              "share_long_storage_fee":  "长期仓储费分摊",
+                                              "share_adv_spend_fee":  "广告费分摊",
+                                              "share_coupon_redemption_fee":  "优惠券费分摊",
+                                              "share_reserve_fee":  "储备金分摊",
+                                              "share_shop_other_fee":  "店铺其他费分摊",
+                                              "share_reimbursement_fee":  "赔偿金分摊"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_account_report",
+                      "description":  "查询结算账户报告，展示账户维度的结算汇总数据",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/fin/settlementAccReport/getSettlementAccReport",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplace_name":  {
+                                                              "type":  "string",
+                                                              "description":  "站点名称"
+                                                          },
+                                     "currency":  {
+                                                      "type":  "string",
+                                                      "description":  "币种"
+                                                  },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型，为空按结算日期，非空按到账日期"
+                                                  },
+                                     "fatype":  {
+                                                    "type":  "string",
+                                                    "description":  "报告类型：finsett=结算报告，其他=财务报告"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "settlement_id":  "结算ID",
+                                              "amazonauthid":  "授权ID",
+                                              "startDate":  "结算开始日期",
+                                              "endDate":  "结算结束日期",
+                                              "totalAmount":  "结算金额",
+                                              "currency":  "币种",
+                                              "marketplace_name":  "站点名称",
+                                              "marketName":  "站点显示名称",
+                                              "groupname":  "店铺分组名称",
+                                              "deposit_date":  "到账日期",
+                                              "fatype":  "报告类型",
+                                              "pstatus":  "处理状态",
+                                              "tstatus":  "转账状态"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_overall",
+                      "description":  "查询结算总体概览，展示各店铺分组/站点维度的结算汇总统计信息",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlement/getSettlementOverAll",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "marketplace_name":  {
+                                                              "type":  "string",
+                                                              "description":  "站点名称"
+                                                          },
+                                     "currency":  {
+                                                      "type":  "string",
+                                                      "description":  "币种，market表示使用站点原币种"
+                                                  },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型"
+                                                  },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "店铺分组ID",
+                                              "pid":  "父级ID(0=顶级分组，非0=子级站点)",
+                                              "name":  "名称(分组名或站点名)",
+                                              "principal":  "销售额(已转换为目标币种)",
+                                              "commission":  "佣金",
+                                              "fbafee":  "FBA费",
+                                              "refund":  "退款金额",
+                                              "advfee":  "广告费",
+                                              "storagefee":  "仓储费",
+                                              "setin":  "结算收入",
+                                              "other":  "其他费用",
+                                              "price":  "采购成本(含其他成本)",
+                                              "profit":  "利润(setin-price)",
+                                              "tocurrency":  "目标币种(转换后的币种)",
+                                              "marketplace_name":  "站点名称(仅子级站点有)",
+                                              "sprincipal":  "总销售额汇总(仅第一条数据有)",
+                                              "scommission":  "总佣金汇总",
+                                              "sfbafee":  "总FBA费汇总",
+                                              "srefund":  "总退款汇总",
+                                              "sadvfee":  "总广告费汇总",
+                                              "sstoragefee":  "总仓储费汇总",
+                                              "ssetin":  "总结算收入汇总",
+                                              "sother":  "总其他费用汇总",
+                                              "sprice":  "总采购成本汇总",
+                                              "sprofit":  "总利润汇总"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_month_report",
+                      "description":  "查询月度结算详情报告，展示指定月份的SKU级别结算明细数据",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlement/getMonthDetail",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，匹配SKU"
+                                                },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型"
+                                                  },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "SKU编码",
+                                              "asin":  "ASIN编码",
+                                              "principal":  "销售额",
+                                              "commission":  "佣金",
+                                              "fbafee":  "FBA费",
+                                              "refund":  "退货金额",
+                                              "currency":  "币种"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_quantity_by_day",
+                      "description":  "按天查询结算数量统计，展示每日结算数量趋势",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlement/quantityByDay",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "marketplace_name":  {
+                                                              "type":  "string",
+                                                              "description":  "站点名称"
+                                                          },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "labels":  "日期标签数组",
+                                              "datas":  "数量数据数组"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_acc_statement",
+                      "description":  "查询结算账户对账单列表，展示已归档的结算对账明细",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlementAccStatement/findAmzSettlementAccStatement",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "对账单ID",
+                                              "startdate":  "开始日期",
+                                              "enddate":  "结束日期",
+                                              "opttime":  "操作时间",
+                                              "currency":  "币种",
+                                              "gname":  "店铺分组名称",
+                                              "uname":  "操作人名称",
+                                              "market":  "站点名称"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_group_market",
+                      "description":  "查询指定店铺分组和站点的详细信息",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlement/getGroupMarket",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "group":  "店铺分组对象（含id/name/shopid等）",
+                                              "market":  "站点对象（含marketplaceid/name/currency/market等）"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_list",
+                      "description":  "查询SKU维度结算汇总列表，展示各SKU的销售额、费用、利润等数据",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlement/getList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "查询月份，格式：yyyy-MM-dd（自动取该月1号到月末）"
+                                                  },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，匹配SKU"
+                                                },
+                                     "order":  {
+                                                   "type":  "string",
+                                                   "description":  "排序方向，asc/desc，默认desc"
+                                               },
+                                     "sort":  {
+                                                  "type":  "string",
+                                                  "description":  "排序字段，默认sku"
+                                              },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+                                       "fromDate"
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "SKU编码",
+                                              "asin":  "ASIN编码",
+                                              "groupname":  "店铺分组名称",
+                                              "marketname":  "站点名称",
+                                              "ownername":  "负责人名称",
+                                              "principal":  "销售额(含税)",
+                                              "principalWithoutTax":  "销售额(不含税)",
+                                              "sales":  "销量",
+                                              "order_amount":  "订单量",
+                                              "refundsales":  "退货数量",
+                                              "refund":  "退货金额",
+                                              "fbafee":  "FBA费",
+                                              "digital":  "数字服务费",
+                                              "commission":  "佣金",
+                                              "reimbursement":  "赔偿金",
+                                              "skuStorageFee":  "仓储费",
+                                              "rpt_adv_spend_fee":  "广告费",
+                                              "fin_sum_fee":  "其他费用",
+                                              "price":  "采购成本",
+                                              "profit":  "利润",
+                                              "profitRate":  "利润率"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_open",
+                      "description":  "查询待结算/未完成的结算数据，展示状态为Open的结算明细",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlementAccStatement/selectSettlementOpen",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "financial_event_group_start":  "账期开始时间",
+                                              "pname":  "商品名称",
+                                              "asin":  "ASIN编码",
+                                              "mname":  "站点显示名称",
+                                              "ftypename":  "费用类型名称",
+                                              "image":  "商品图片URL",
+                                              "posted_date":  "记账日期",
+                                              "amazon_order_id":  "Amazon订单号",
+                                              "marketplace_name":  "站点名称",
+                                              "event_type":  "事件类型",
+                                              "sku":  "SKU编码",
+                                              "ftype":  "费用类型",
+                                              "currency":  "币种",
+                                              "amount":  "金额",
+                                              "quantity":  "数量"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_acc_report_sum",
+                      "description":  "查询结算账户报告汇总数据，展示结算报告和财务报告的汇总金额",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/fin/settlementAccReport/getSettlementAccReportSum",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplace_name":  {
+                                                              "type":  "string",
+                                                              "description":  "站点名称"
+                                                          },
+                                     "currency":  {
+                                                      "type":  "string",
+                                                      "description":  "币种"
+                                                  },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "finacc":  "财务报告汇总金额（带币种符号）",
+                                              "finsett":  "结算报告汇总金额（带币种符号）",
+                                              "finsum":  "合计金额（带币种符号）",
+                                              "totalfailedsummary":  "失败转账汇总金额（带币种符号）"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_summary_month",
+                      "description":  "查询月度结算汇总，展示每月的结算汇总统计，含各费用类型月度趋势",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlement/getSummaryMonth",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "marketplace_name":  {
+                                                              "type":  "string",
+                                                              "description":  "站点名称"
+                                                          },
+                                     "currency":  {
+                                                      "type":  "string",
+                                                      "description":  "币种，market表示使用站点原币种"
+                                                  },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始月份，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束月份，格式：yyyy-MM-dd"
+                                                 },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "maps":  "结算数据月度映射（按费用类型分组的月度数据）",
+                                              "localmaps":  "本地费用月度映射",
+                                              "localName":  "本地费用名称列表",
+                                              "times":  "月份时间轴数组（格式yy-MM）"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_detail",
+                      "description":  "查询结算明细数据，展示指定条件下的结算详情列表",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlement/getDetail",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplace_name":  {
+                                                              "type":  "string",
+                                                              "description":  "站点名称"
+                                                          },
+                                     "currency":  {
+                                                      "type":  "string",
+                                                      "description":  "币种"
+                                                  },
+                                     "settlement_id":  {
+                                                           "type":  "string",
+                                                           "description":  "结算ID"
+                                                       },
+                                     "amazonAuthId":  {
+                                                          "type":  "string",
+                                                          "description":  "Amazon授权ID"
+                                                      },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             },
+                                     "isother":  {
+                                                     "type":  "string",
+                                                     "description":  "是否其他费用"
+                                                 },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "settlement_id":  "结算ID",
+                                              "transaction_type":  "交易类型",
+                                              "order_id":  "订单号",
+                                              "amount_type":  "金额类型",
+                                              "amount_description":  "金额描述",
+                                              "amount":  "金额",
+                                              "sku":  "SKU编码",
+                                              "posted_date":  "记账日期",
+                                              "currency":  "币种",
+                                              "marketplace_name":  "站点名称"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_items_detail",
+                      "description":  "查询单条结算记录的结算详情，展示结算单中各交易类型的汇总",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlement/getSettmentDetail",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "amazonAuthId":  {
+                                                          "type":  "string",
+                                                          "description":  "Amazon授权ID"
+                                                      },
+                                     "settlement_id":  {
+                                                           "type":  "string",
+                                                           "description":  "结算ID"
+                                                       },
+                                     "currency":  {
+                                                      "type":  "string",
+                                                      "description":  "币种"
+                                                  }
+                                 },
+                      "required":  [
+                                       "settlement_id"
+                                   ],
+                      "response_fields":  {
+                                              "settlement_id":  "结算ID",
+                                              "transaction_type":  "交易类型",
+                                              "amount_type":  "金额类型",
+                                              "amount_description":  "金额描述",
+                                              "amount":  "金额",
+                                              "currency":  "币种"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_formula",
+                      "description":  "查询结算公式配置，获取结算金额的计算公式定义",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/fin/settlementFormula/loadformula",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "公式ID",
+                                              "shopid":  "店铺ID",
+                                              "formula":  "公式表达式",
+                                              "field":  "对应字段名",
+                                              "creator":  "创建人ID",
+                                              "createdate":  "创建时间",
+                                              "opttime":  "更新时间"
+                                          }
+                  },
+                  {
+                      "name":  "settlement_formula_title",
+                      "description":  "查询结算公式标题配置，获取公式分类的标题定义",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/fin/settlementFormula/getformulaTitle",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "fieldname":  "字段名称",
+                                              "displayname":  "显示名称"
+                                          }
+                  },
+                  {
+                      "name":  "month_finance",
+                      "description":  "查询月度财务结算数据，展示各月的费用类型汇总趋势（销售额、FBA费、佣金、仓储费等）",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlementSummarySkuMonth/getMonth",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "currency":  {
+                                                      "type":  "string",
+                                                      "description":  "币种，MARKET表示使用站点原币种"
+                                                  },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始月份，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束月份，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "colunmData":  "月份列数据数组，每个元素含label(月份标签如\u002725-01\u0027)和isnow(是否当前月)",
+                                              "tableData":  "费用类型行数据数组，每个元素含name(费用名称)、sum(汇总值)以及按月份label为key的月度值。费用类型依次为：销售额(含税)、销售额、退货金额、FBA费、数字服务费、佣金、赔偿金、仓储费、低价清仓、广告花费、采购成本"
+                                          }
+                  },
+                  {
+                      "name":  "finance_quarter",
+                      "description":  "查询季度财务结算数据，对比当季与上季度的结算金额变化",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/settlementSummarySkuMonth/getQuarter",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "currency":  {
+                                                      "type":  "string",
+                                                      "description":  "目标币种，MARKET表示使用原币种"
+                                                  },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "日期（用于计算所在季度），格式：yyyy-MM-dd"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "amount":  "当季结算金额",
+                                              "oldamount":  "上季度结算金额"
+                                          }
+                  },
+                  {
+                      "name":  "storage_fee",
+                      "description":  "查询FBA长期仓储费用列表，展示各SKU的月度仓储费明细",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/amzStorageFee/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，匹配SKU/ASIN"
+                                                },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始月份，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束月份，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "记录ID",
+                                              "asin":  "ASIN编码",
+                                              "fnsku":  "FNSKU编码",
+                                              "country":  "国家",
+                                              "longest_side":  "最长边",
+                                              "median_side":  "中间边",
+                                              "shortest_side":  "最短边",
+                                              "unit_of_dimension":  "尺寸单位",
+                                              "weight":  "重量",
+                                              "unit_of_weight":  "重量单位",
+                                              "item_volume":  "单件体积",
+                                              "volume_units":  "体积单位",
+                                              "product_size_tier":  "尺寸分段",
+                                              "avg_quantity_on_hand":  "平均在库数量",
+                                              "avg_quantity_pending_removal":  "平均待移除数量",
+                                              "total_item_volume":  "总体积",
+                                              "month":  "月份",
+                                              "storage_rate":  "仓储费率",
+                                              "currency":  "币种",
+                                              "monthly_storage_fee":  "月度仓储费",
+                                              "category":  "商品分类"
+                                          }
+                  },
+                  {
+                      "name":  "storage_fee_detail",
+                      "description":  "查询FBA仓储费用详细列表，按月度汇总展示各SKU的仓储费数据",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/amzStorageFee/storageList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，匹配SKU/ASIN"
+                                                },
+                                     "searchDate":  {
+                                                        "type":  "string",
+                                                        "description":  "查询月份，格式：yyyy-MM-dd"
+                                                    },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "记录ID",
+                                              "asin":  "ASIN编码",
+                                              "fnsku":  "FNSKU编码",
+                                              "sku":  "SKU编码",
+                                              "month":  "月份",
+                                              "storage_fee":  "仓储费",
+                                              "currency":  "币种",
+                                              "image":  "商品图片URL",
+                                              "pname":  "商品名称"
+                                          }
+                  },
+                  {
+                      "name":  "reimbursements_fee",
+                      "description":  "查询Amazon赔偿费用列表，展示FBA库存赔偿记录",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/amzReimbursementsFee/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，匹配SKU/ASIN"
+                                                },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "记录ID",
+                                              "approval_date":  "审批日期",
+                                              "reimbursement_id":  "赔偿ID",
+                                              "case_id":  "案例ID",
+                                              "amazon_order_id":  "Amazon订单号",
+                                              "reason":  "赔偿原因",
+                                              "sku":  "SKU编码",
+                                              "fnsku":  "FNSKU编码",
+                                              "asin":  "ASIN编码",
+                                              "conditions":  "商品状况",
+                                              "currency_unit":  "币种",
+                                              "amount_per_unit":  "单件赔偿金额",
+                                              "amount_total":  "赔偿总金额",
+                                              "quantity_reimbursed_cash":  "现金赔偿数量",
+                                              "quantity_reimbursed_inventory":  "库存赔偿数量",
+                                              "quantity_reimbursed_total":  "赔偿总数量",
+                                              "gname":  "店铺分组名称",
+                                              "marketname":  "站点名称",
+                                              "pname":  "商品名称",
+                                              "image":  "商品图片URL"
+                                          }
+                  },
+                  {
+                      "name":  "exchange_rate",
+                      "description":  "查询用户自定义汇率配置，获取各币种对的汇率信息",
+                      "menu_id":  4,
+                      "endpoint":  "/amazon/api/v1/exchangeRate/getMyCurrencyRate",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "byday":  {
+                                                   "type":  "string",
+                                                   "description":  "查询日期，格式：yyyy-MM-dd，为空则返回最新汇率"
+                                               }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "自定义汇率ID（为空表示未自定义）",
+                                              "name":  "币种名称（如USD/EUR/GBP等）",
+                                              "price":  "系统默认汇率",
+                                              "myprice":  "用户自定义汇率",
+                                              "symbol":  "币种符号",
+                                              "utctime":  "更新时间（不传byday时返回此字段）",
+                                              "byday":  "查询日期（传byday参数时返回此字段，替代utctime）"
+                                          }
+                  }
+              ]
+}

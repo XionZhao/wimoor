@@ -40,7 +40,7 @@
 				<div>
 				<el-button @click="vatVisible = false">关闭</el-button>
 				<el-button v-loading="downloadLoading" @click="downloadVatInfo">下载</el-button>
-				<el-button @click="submitFBAVat" type="primary" title="需在亚马逊后台开启‘我将上传自己的增值税发票’功能才能使用！">上传FBA发票</el-button>
+				<!-- <el-button @click="submitFBAVat" type="primary" title="需在亚马逊后台开启‘我将上传自己的增值税发票’功能才能使用！">上传FBA发票</el-button> -->
 				</div>
 		  	</span>
 		  </template>

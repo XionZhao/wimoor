@@ -176,4 +176,27 @@
 			and ctype = #{ctype,jdbcType=CHAR}
 	</update>
 
+	<!-- 按月统计广告花费，返回yy-MM格式的月份和cost -->
+	<select id="getCostGroupByMonth" resultType="java.util.Map" parameterType="java.util.Map">
+		select DATE_FORMAT(a.byday,'%y-%m') posted_date,
+			sum(a.cost) cost
+		from t_amz_adv_sumpdtads a
+		left join t_amz_adv_profile p on p.id=a.profileid
+		left join t_amz_adv_auth ath on ath.id=p.advauthId and ath.disable = 0
+		where ath.shopid=#{shopid,jdbcType=CHAR}
+		<if test="groupid != null">
+			and ath.groupid=#{groupid,jdbcType=CHAR}
+		</if>
+		<if test="marketplaceId != null">
+			and p.marketplaceId=#{marketplaceId,jdbcType=CHAR}
+		</if>
+		<if test="begin != null">
+			and a.byday&gt;=#{begin,jdbcType=DATE}
+		</if>
+		<if test="end != null">
+			and a.byday&lt;=#{end,jdbcType=DATE}
+		</if>
+		group by DATE_FORMAT(a.byday,'%y-%m')
+	</select>
+
 </mapper>

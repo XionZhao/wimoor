@@ -237,9 +237,9 @@
 						var row14={"name":"其它每单销售固定成本","enname":"Other rate Fee","cost":datas.othersFee,"realcost":null};
 						var row15={"name":"按件收费，适用个人版","enname":"Per-Item Fee","cost":datas.perItemFee,"realcost":null};
 						var row15_1={};
-						if(datas.country=='UK' || datas.country=='DE' || datas.country=='IT' || datas.country=='ES'|| datas.country=='FR'|| datas.country=='NL'){
-							row15_1={"name":"欧洲增值税","enname":"Vat Tax Fee","cost":datas.vatFee,"realcost":maps.order_vat};
-						}
+					if(datas.country=='UK' || datas.country=='DE' || datas.country=='IT' || datas.country=='ES'|| datas.country=='FR'|| datas.country=='NL'|| datas.country=='IE'|| datas.country=='BE'|| datas.country=='SE'|| datas.country=='PL'){
+						row15_1={"name":"欧洲增值税","enname":"Vat Tax Fee","cost":datas.vatFee,"realcost":maps.order_vat};
+					}
 						var row15_2={};
 						var row15_3={};
 						if(datas.country=='IN'){

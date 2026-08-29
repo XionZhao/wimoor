@@ -353,35 +353,4 @@ public class PBCExchangeRateParser {
         return currencyName;
     }
 
-    /**
-     * 测试方法
-     */
-    public static void main(String[] args) {
-        String text = "中国人民银行授权中国外汇交易中心公布，2025年12月12日银行间外汇市场人民币汇率中间价为1美元对人民币7.0638元，1欧元对人民币8.2842元，100日元对人民币4.5344元，1港元对人民币0.90779元，1英镑对人民币9.4468元，1澳大利亚元对人民币4.6996元，1新西兰元对人民币4.0973元，1新加坡元对人民币5.4632元，1瑞士法郎对人民币8.8751元，1加拿大元对人民币5.1203元，人民币1元对1.1354澳门元，人民币1元对0.58198林吉特，人民币1元对11.3115俄罗斯卢布，人民币1元对2.3897南非兰特，人民币1元对208.68韩元，人民币1元对0.52070阿联酋迪拉姆，人民币1元对0.53204沙特里亚尔，人民币1元对46.2421匈牙利福林，人民币1元对0.51022波兰兹罗提，人民币1元对0.9020丹麦克朗，人民币1元对1.3114瑞典克朗，人民币1元对1.4271挪威克朗，人民币1元对6.04510土耳其里拉，人民币1元对2.5557墨西哥比索，人民币1元对4.4861泰铢。";
-
-        List<ExchangeRate> rates = parseExchangeRateText(text);
-
-        System.out.println("\n=== 解析结果 ===");
-        System.out.println("总计: " + rates.size() + " 种汇率");
-
-        for (ExchangeRate rate : rates) {
-            System.out.printf("%-10s %-10s 100%s = %10.4f 人民币\n",
-                    rate.getName(),
-                    rate.getSymbol(),
-                    rate.getSymbol(),
-                    rate.getPrice().doubleValue());
-        }
-
-        // 验证计算结果
-        System.out.println("\n=== 验证计算 ===");
-        System.out.println("1. 美元: 1美元 = 7.0638人民币");
-        System.out.println("   100美元 = 100 * 7.0638 = " + (100 * 7.0638) + " 人民币");
-
-        System.out.println("2. 日元: 100日元 = 4.5344人民币");
-        System.out.println("   100日元 = " + 4.5344 + " 人民币");
-
-        System.out.println("3. 澳门元: 1人民币 = 1.1354澳门元");
-        System.out.println("   1澳门元 = 1 / 1.1354 = " + (1 / 1.1354) + " 人民币");
-        System.out.println("   100澳门元 = 100 / 1.1354 = " + (100 / 1.1354) + " 人民币");
-    }
 }

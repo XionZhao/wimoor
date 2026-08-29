@@ -157,6 +157,7 @@ public class ProfitCfgServiceImpl extends ServiceImpl<ProfitConfigMapper, Profit
 			EUlist.add("DE");
 			EUlist.add("SE");
 			EUlist.add("BE");
+			EUlist.add("IE");
 		}
 		return EUlist.contains(country);
 	}

@@ -35,4 +35,11 @@ public interface IFinJournalAccountService extends IService<FinJournalAccount> {
 
 	public void cancelData(String id, UserInfo userinfo);
 
+	List<Map<String, Object>> findDetailList(Map<String, Object> param);
+
+	/**
+	 * 按opttime日期查询台账记录（用于凭证生成），按groupid筛选
+	 */
+	List<Map<String, Object>> findJournalForVoucher(String groupid, String optDate);
+
 }

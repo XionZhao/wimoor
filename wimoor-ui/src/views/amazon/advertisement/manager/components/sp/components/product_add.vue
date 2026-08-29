@@ -3,7 +3,7 @@
 		<div class="flex-center">
 		 <el-tabs type="border-card" class="p-l"  v-if="isEdit" >
 		    <el-tab-pane label="搜索">
-				<el-input  v-model="queryParams.search" placeholder="请输入" clearable @input="handleQuery" class="input-with-select" >
+				<el-input  v-model="queryParams.search" placeholder="请输入" clearable @clear="handleQuery" v-debounce-input="handleQuery" class="input-with-select" >
 				   <template #prepend>
 				     <el-select v-model="queryParams.searchType" @change='searchTypeChange' placeholder="SKU"  style="width:90px">
 				       <el-option label="SKU" value="sku"></el-option>

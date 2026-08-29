@@ -97,7 +97,7 @@
 									  'A1805IZSGTT6HS','A1C3SOZRARQ6R3',
 									  'A1PA6795UKMFR9','A1RKKUPIHCS9HS',
 									  'A2NODRKZP88ZB9','A33AVAJ2PDY3EV',
-									  'APJ6JRA9NG5V4','ARBP9OOSHTCHU',
+									  'APJ6JRA9NG5V4','ARBP9OOSHTCHU','A2VIGQ35RCS4UG'
 								   </if>
 								 #{marketplaceid,jdbcType=CHAR} 
 						   </foreach>		

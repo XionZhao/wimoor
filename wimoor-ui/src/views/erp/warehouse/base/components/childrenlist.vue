@@ -16,7 +16,7 @@
 					<el-button @click.stop="handleDelete"  :disabled="deleteDisable">删除</el-button>
 					<el-switch @change="showHandle"  v-model="withouthide"   inline-prompt  active-text="未删除"
 						inactive-text="已删除" />
-					<el-input  v-model="queryParams.search" @input="handleQuery" placeholder="仓位名称" style="width: 250px;" class="input-with-select" >
+					<el-input  v-model="queryParams.search" v-debounce-input="handleQuery" placeholder="仓位名称" style="width: 250px;" class="input-with-select" >
 						<template #suffix>
 						  <el-icon style="font-size:16px;" class="el-input__icon" @click="handleQuery"><search/></el-icon>
 					   </template> 
@@ -265,7 +265,7 @@
 		justify-content: space-between;
 		margin:0 16px;
 		font-size: 12px;
-		color: #999;
+		color: var(--el-text-color-secondary);
 	}
 	.demo-tabs{
 		padding-top:0px;

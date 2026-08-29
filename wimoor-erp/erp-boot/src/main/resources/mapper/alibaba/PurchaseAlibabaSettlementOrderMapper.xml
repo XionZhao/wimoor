@@ -16,4 +16,50 @@
         <result column="returnamount" property="returnamount" />
     </resultMap>
 
+    <!-- 已结转汇总：已通过period_rollover_id结转的付款记录 -->
+    <select id="getSettledSummary" resultType="java.util.Map">
+        SELECT
+            COUNT(DISTINCT form.number) as settledCount,
+            IFNULL(SUM(pay.payprice), 0) as settledAmount,
+            IFNULL(SUM(pay.payprice), 0) as settledPaid
+        FROM t_erp_purchase_form_payment pay
+        INNER JOIN t_erp_purchase_form_entry entry ON entry.id = pay.formentryid
+        INNER JOIN t_erp_purchase_form form ON form.id = entry.formid
+        WHERE pay.acct = #{acct,jdbcType=CHAR}
+          AND pay.auditstatus = 1
+          AND pay.period_rollover_id IS NOT NULL
+    </select>
+
+    <!-- 未结转汇总：未通过period_rollover_id结转的付款记录 -->
+    <select id="getUnsettledSummary" resultType="java.util.Map">
+        SELECT
+            COUNT(*) as unsettledCount,
+            IFNULL(SUM(pay.payprice), 0) as unsettledAmount
+        FROM t_erp_purchase_form_payment pay
+        INNER JOIN t_erp_purchase_form_entry entry ON entry.id = pay.formentryid
+        WHERE pay.acct = #{acct,jdbcType=CHAR}
+          AND pay.auditstatus = 1
+          AND pay.period_rollover_id IS NULL
+          <if test="fromDate!=null">
+          AND pay.opttime &gt;= #{fromDate,jdbcType=DATE}
+          </if>
+          <if test="toDate!=null">
+          AND pay.opttime &lt;= #{toDate,jdbcType=DATE}
+          </if>
+    </select>
+
+    <!-- 1688账单明细汇总 -->
+    <select id="getOrderSummary" resultType="java.util.Map">
+        SELECT
+            COUNT(*) as orderCount,
+            IFNULL(SUM(o.payamount), 0) as totalPayAmount,
+            IFNULL(SUM(o.confirmamount), 0) as totalConfirmAmount,
+            IFNULL(SUM(o.returnamount), 0) as totalReturnAmount
+        FROM t_erp_purchase_alibaba_settlement_order o
+        WHERE 1=1
+        <if test="settlementid!=null and settlementid!=''">
+          AND o.settlementid = #{settlementid,jdbcType=CHAR}
+        </if>
+    </select>
+
 </mapper>

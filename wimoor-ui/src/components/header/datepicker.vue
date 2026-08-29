@@ -12,13 +12,31 @@
 			:editable="true"
 	      />
 		  <el-date-picker
-		    v-else-if="datetype==='week'"
-		    v-model="week"
-		    type="week"
-		    format="ww [周]"
-		    :clearable="false"
-			@change = "e=>dateChange(e,'week')"
-		  />
+	    v-else-if="datetype==='week'"
+	    v-model="week"
+	    type="week"
+	    format="ww [周]"
+	    :clearable="false"
+		@change = "e=>dateChange(e,'week')"
+	  />
+	  <el-date-picker
+	    v-else-if="datetype==='month'"
+	    v-model="monthValue"
+	    type="month"
+	    :clearable="false"
+	    placeholder="选择月份"
+		@change = "e=>dateChange(e,'month')"
+	  />
+	  <el-date-picker
+	    v-else-if="datetype==='monthrange'"
+	    v-model="dateValue"
+	    type="monthrange"
+	    :clearable="false"
+	    range-separator="至"
+	    start-placeholder="开始月份"
+	    end-placeholder="结束月份"
+		@change = "e=>dateChange(e,'monthrange')"
+	  />
 </template>
 
 <script>
@@ -53,6 +71,7 @@ import { zIndexContextKey } from 'element-plus';
 		setup(props,context){
 			let beforedays=0;
 			let week = ref("")
+			let monthValue = ref()
 			if(props.days){
 				 beforedays=props.days-1;
 			}else{
@@ -99,8 +118,17 @@ import { zIndexContextKey } from 'element-plus';
 			      return [start, end]
 			    },
 			  },
-			];
-			if(props.longtime){
+				{
+				  text: '上月',
+				  value: () => {
+					const now = new Date()
+					const start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+					const end = new Date(now.getFullYear(), now.getMonth(), 0)
+					return [start, end]
+				  },
+				},
+			  ];
+			  if(props.longtime){
 				shortcuts = [
 				  {
 				    text: '近1个月',
@@ -150,31 +178,65 @@ import { zIndexContextKey } from 'element-plus';
 				getSundayofCurrentWeek();
 			}
 			onMounted(()=>{
-				if(props.shortIndex){
-					 dateValue.value = shortcuts[props.shortIndex].value();
-				}else{
-				     dateValue.value = shortcuts[0].value();
-				}
-					dateChange(dateValue.value,"load");
-			})
+			if(props.datetype==='month'){
+				// 默认选择当月
+				monthValue.value = new Date();
+				dateChange(monthValue.value,"month");
+			}else if(props.datetype==='monthrange'){
+				// 默认选择当月
+				const now = new Date();
+				const start = new Date(now.getFullYear(), now.getMonth(), 1);
+				const end = new Date(now.getFullYear(), now.getMonth(), 1);
+				dateValue.value = [start, end];
+				dateChange(dateValue.value,"monthrange");
+			}else if(props.shortIndex){
+				 dateValue.value = shortcuts[props.shortIndex].value();
+				dateChange(dateValue.value,"load");
+			}else{
+			     dateValue.value = shortcuts[0].value();
+				dateChange(dateValue.value,"load");
+			}
+		})
 		 
 			function dateChange(val,type){
-				if(type==='week'){
-					var value={start:val}
-					value.end = new Date(new Date(value.start).getTime() + 6*24*60*60*1000)
-				}else{
-				var value={start:val[0],end:val[1]};
-				if(val[0].$d){
-					value.start=val[0].$d;
-				}
-				if(val[1].$d){
-					value.end=val[1].$d;
-				}	
-				}
+			if(type==='week'){
+				var value={start:val}
+				value.end = new Date(new Date(value.start).getTime() + 6*24*60*60*1000)
+			}else if(type==='month'){
+				var selectedDate = val.$d ? val.$d : val;
+				// 选择月份的第一天
+				var value={start: new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)};
+				// 选择月份的最后一天
+				value.end = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0, 23, 59, 59);
+				datas.start=value.start.format("yyyy-MM-dd");
+				datas.end=value.end.format("yyyy-MM-dd")+" 23:59:59";
+				datas.month=value.start.format("yyyy-MM");
+				context.emit("changedate",datas,value,type);
+				return;
+			}else if(type==='monthrange'){
+				var startDate = val[0].$d ? val[0].$d : val[0];
+				var endDate = val[1].$d ? val[1].$d : val[1];
+				// 开始月份第一天
+				var value={start: new Date(startDate.getFullYear(), startDate.getMonth(), 1)};
+				// 结束月份最后一天
+				value.end = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0, 23, 59, 59);
 				datas.start=value.start.format("yyyy-MM-dd");
 				datas.end=value.end.format("yyyy-MM-dd")+" 23:59:59";
 				context.emit("changedate",datas,value,type);
+				return;
+			}else{
+			var value={start:val[0],end:val[1]};
+			if(val[0].$d){
+				value.start=val[0].$d;
 			}
+			if(val[1].$d){
+				value.end=val[1].$d;
+			}	
+			}
+			datas.start=value.start.format("yyyy-MM-dd");
+			datas.end=value.end.format("yyyy-MM-dd")+" 23:59:59";
+			context.emit("changedate",datas,value,type);
+		}
 			function getValue(){
 				var mydata={start:"",end:""};
 				mydata.start=dateValue.value[0].format("yyyy-MM-dd");
@@ -188,16 +250,22 @@ import { zIndexContextKey } from 'element-plus';
 				dateChange(dateValue.value);
 			}
 	        function reset(index){
-				if(props.shortIndex){
-					 dateValue.value = shortcuts[props.shortIndex].value();
+			if(props.datetype==='month'){
+				monthValue.value = new Date();
+				dateChange(monthValue.value,"month");
+				return;
+			}
+			if(props.shortIndex){
+				 dateValue.value = shortcuts[props.shortIndex].value();
+			}else{
+				if(index){
+					dateValue.value = shortcuts[index].value();
 				}else{
-					if(index){
-						dateValue.value = shortcuts[index].value();
-					}else{
-						 dateValue.value = shortcuts[0].value();
-					}
+					 dateValue.value = shortcuts[0].value();
 				}
 			}
+			dateChange(dateValue.value);
+		}
 			function setBlank(){
 				 dateValue.value = "";
 			}
@@ -216,7 +284,7 @@ import { zIndexContextKey } from 'element-plus';
 				reset,
 			})
 			return{
-				  dateChange,dateValue,shortcuts,reset,setBlank,getValue,setValue,week,getSundayofCurrentWeek,
+				  dateChange,dateValue,shortcuts,reset,setBlank,getValue,setValue,week,getSundayofCurrentWeek,monthValue,
 			}
 		}
 	}

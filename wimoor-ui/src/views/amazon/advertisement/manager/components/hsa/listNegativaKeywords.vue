@@ -10,7 +10,7 @@
 			      <el-radio-button label="近7天" />
 			      <el-radio-button label="近30天" />
 			    </el-radio-group>
-			<el-input v-model="queryParams.search" @input="handleQuery" placeholder="搜索否定关键词">
+			<el-input v-model="queryParams.search" v-debounce-input="handleQuery" placeholder="搜索否定关键词">
 					 <template #suffix>
 					  <el-icon @click.stop="handleQuery"><Search /></el-icon>
 					 </template>

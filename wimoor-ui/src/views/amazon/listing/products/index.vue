@@ -19,7 +19,7 @@
 					      <el-radio-button label="parentasin" >父ASIN</el-radio-button>
 					    </el-radio-group>
 						</div>
-					<el-input v-model="searchKeywords" clearable @input="changeKeywords"  placeholder="请输入" class="input-with-select">
+					<el-input v-model="searchKeywords" clearable v-debounce-input="changeKeywords" @clear="changeKeywords" placeholder="请输入" class="input-with-select">
 						<template #prepend>
 							<el-select v-model="searchtype" @change='searchTypeChange' placeholder="SKU"
 								style="width: 110px">
@@ -247,7 +247,7 @@
           <el-checkbox-group v-model="syncForm.types" >
             <el-checkbox label="商品信息" value="info" />
             <el-checkbox label="商品价格" value="price" />
-            <el-checkbox label="商品排名" value="rank" />
+            <el-checkbox label="商品排名/图片" value="rank" />
           </el-checkbox-group>
         </el-form-item>
         <el-form-item label="店铺名称" prop="groupid">
@@ -561,8 +561,8 @@ export default{ name:"商品分析" };
 			}
 		}
 		function changeKeywords(val){
-			searchKeywords.value=val;
-			queryParam.search=val;
+			searchKeywords.value=typeof val === 'string' ? val : '';
+			queryParam.search=typeof val === 'string' ? val : '';
 			if(isload==false){
 				refreshTable();
 			}
@@ -756,16 +756,10 @@ export default{ name:"商品分析" };
         pidss.push(item.id);
       });
       syncForm.pidlist=pidss;
-      console.log(syncForm);
       initProductTask(syncForm).then((res)=>{
-        if(res.data){
-          ElMessage.success('操作成功！');
-          syncVisable.value=false;
-        }else{
-          ElMessage.error('操作失败！');
-        }
+        ElMessage.success('操作成功！系统将在2小时内完成同步。');
+        syncVisable.value=false;
       })
-
     }
 		
 		function refreshOwner(){

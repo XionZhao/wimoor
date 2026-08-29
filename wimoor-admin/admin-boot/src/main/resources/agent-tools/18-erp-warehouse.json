@@ -1,0 +1,200 @@
+﻿{
+    "module":  "ERP仓库管理",
+    "description":  "ERP仓库信息查询、仓库地址管理、货架管理、货架库存查询",
+    "service":  "wimoor-erp",
+    "tools":  [
+                  {
+                      "name":  "warehouse_list",
+                      "description":  "查询ERP仓库列表，支持分页和条件筛选，返回仓库基本信息",
+                      "menu_id":  63,
+                      "endpoint":  "/erp/api/v1/warehouse/listpage",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，仓库名称"
+                                                },
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "仓库类型：self_usable(自营可用)、self_unusable(自营不可用)、self_test(测试仓)、oversea(海外仓)"
+                                               },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "仓库ID",
+                                              "name":  "仓库名称",
+                                              "ftype":  "仓库类型（self_usable/self_unusable/self_test/oversea）",
+                                              "flevel":  "仓库层级",
+                                              "number":  "仓库编码",
+                                              "address":  "仓库地址",
+                                              "remark":  "备注",
+                                              "shopid":  "公司ID",
+                                              "fbawareid":  "海外仓ID",
+                                              "groupid":  "店铺ID",
+                                              "country":  "国家",
+                                              "parentid":  "父仓库ID",
+                                              "isdefault":  "是否默认仓库",
+                                              "stockingCycle":  "备货周期（天）",
+                                              "disabled":  "是否禁用",
+                                              "isstocktaking":  "是否正在盘点",
+                                              "mincycle":  "最小补货周期（天）",
+                                              "findex":  "仓库排序",
+                                              "ishungry":  "库存是否允许为负",
+                                              "addressid":  "地址ID",
+                                              "children":  "子仓位列表",
+                                              "isbind":  "是否绑定第三方仓库",
+                                              "operator":  "操作人ID",
+                                              "opttime":  "操作时间"
+                                          }
+                  },
+                  {
+                      "name":  "warehouse_address_list",
+                      "description":  "查询仓库名称列表，用于获取仓库名称和地址的关联信息",
+                      "menu_id":  63,
+                      "endpoint":  "/erp/api/v1/warehouse/getNamelist",
+                      "method":  "GET",
+                      "params":  {
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "仓库类型筛选：self_usable(自营可用)、oversea_usable(海外仓可用)、self_unusable(自营不可用)"
+                                               }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "仓库ID",
+                                              "name":  "仓库名称",
+                                              "ftype":  "仓库类型（self_usable/self_unusable/self_test）",
+                                              "flevel":  "仓库层级",
+                                              "number":  "仓库编码",
+                                              "address":  "仓库地址",
+                                              "remark":  "备注",
+                                              "shopid":  "公司ID",
+                                              "fbawareid":  "海外仓ID",
+                                              "groupid":  "店铺ID",
+                                              "country":  "国家",
+                                              "parentid":  "父仓库ID",
+                                              "parentname":  "父仓库名称",
+                                              "isdefault":  "是否默认仓库",
+                                              "stockingCycle":  "备货周期（天）",
+                                              "disabled":  "是否禁用",
+                                              "isstocktaking":  "是否正在盘点",
+                                              "mincycle":  "最小补货周期（天）",
+                                              "findex":  "仓库排序",
+                                              "ishungry":  "库存是否允许为负",
+                                              "addressid":  "地址ID",
+                                              "children":  "子仓位列表",
+                                              "operator":  "操作人ID",
+                                              "opttime":  "操作时间"
+                                          }
+                  },
+                  {
+                      "name":  "shelf_list",
+                      "description":  "查询指定仓库下的货架列表，支持查看货架层级结构",
+                      "menu_id":  63,
+                      "endpoint":  "/erp/api/v1/warehouse/shelf/list",
+                      "method":  "GET",
+                      "params":  {
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     }
+                                 },
+                      "required":  [
+                                       "warehouseid"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "货架ID",
+                                              "addressid":  "仓库地址ID",
+                                              "name":  "货架名称",
+                                              "number":  "货架编码",
+                                              "capacity":  "容量（长×宽×高，cm³）",
+                                              "length":  "长度（cm）",
+                                              "width":  "宽度（cm）",
+                                              "height":  "高度（cm）",
+                                              "parentid":  "父货架ID",
+                                              "sort":  "排序/位置",
+                                              "treepath":  "货架编码路径（如A01!033!F01）",
+                                              "numbername":  "编码名称",
+                                              "shopid":  "公司ID",
+                                              "iswarn":  "是否报警",
+                                              "isdelete":  "是否逻辑删除",
+                                              "isfrozen":  "是否冻结",
+                                              "isclick":  "是否可点击",
+                                              "operator":  "操作人ID",
+                                              "opttime":  "操作时间",
+                                              "creator":  "创建人ID",
+                                              "creattime":  "创建时间",
+                                              "children":  "子货架列表（WarehouseShelfTreeVo[]）"
+                                          }
+                  },
+                  {
+                      "name":  "shelf_product_list",
+                      "description":  "查询货架库存列表，展示各货架上存放的产品及数量",
+                      "menu_id":  63,
+                      "endpoint":  "/erp/api/v1/warehoue/shelfInventory/getShelfInventoryList",
+                      "method":  "GET",
+                      "params":  {
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "shelfid":  {
+                                                     "type":  "string",
+                                                     "description":  "货架ID"
+                                                 },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持SKU或产品名称"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "货架库存ID",
+                                              "shelfid":  "货架ID",
+                                              "materialid":  "产品ID",
+                                              "shelfname":  "库位名称（含父级名称）",
+                                              "price":  "单价",
+                                              "quantity":  "库位库存数量",
+                                              "size":  "占用尺寸",
+                                              "sku":  "产品SKU",
+                                              "name":  "产品名称",
+                                              "image":  "产品图片URL",
+                                              "amount":  "库存数量别名",
+                                              "overamount":  "超出数量",
+                                              "lossamount":  "缺失数量",
+                                              "warehousequantity":  "仓库总库存",
+                                              "shelfquantity":  "所有库位库存",
+                                              "treepath":  "库位编码层级",
+                                              "warehousename":  "仓库名称",
+                                              "addressname":  "仓库地址名称",
+                                              "warehouseid":  "仓库ID",
+                                              "selected":  "盘点专用",
+                                              "opttime":  "操作时间",
+                                              "putontime":  "最后上架时间",
+                                              "instocktime":  "最后入库时间"
+                                          }
+                  }
+              ]
+}

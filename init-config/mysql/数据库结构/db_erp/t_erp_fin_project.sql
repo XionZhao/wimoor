@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS `t_erp_fin_project` (
   `id` bigint unsigned NOT NULL,
   `name` char(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `issys` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否是系统项目名称',
+  `isdefault` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否默认显示在采购付款页面',
+  `feetype` tinyint(3) NOT NULL DEFAULT '0' COMMENT '费用类型,分为 "0:归属供应商款项" 和 "1:非供应商款项"',
   `shopid` bigint unsigned DEFAULT NULL,
   `createdate` datetime DEFAULT NULL,
   `opttime` datetime DEFAULT NULL,

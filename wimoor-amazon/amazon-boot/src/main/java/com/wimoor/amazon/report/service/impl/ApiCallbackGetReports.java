@@ -21,19 +21,31 @@ public class ApiCallbackGetReports implements ApiCallback<GetReportsResponse> {
 	@Override
 	public void onFailure(ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {
 		// TODO Auto-generated method stub
-           e.printStackTrace();
+		System.out.println("[TransactionReport] getReportsAsync FAILED, statusCode=" + statusCode + ", seller=" + (amazonAuthority!=null ? amazonAuthority.getSellerid() : "null"));
+		System.out.println("[TransactionReport] Error message: " + e.getMessage());
+		System.out.println("[TransactionReport] Error response body: " + e.getResponseBody());
+		System.out.println("[TransactionReport] Error headers: " + responseHeaders);
+		e.printStackTrace();
 	}
 
 	@Override
 	public void onSuccess(GetReportsResponse result, int statusCode, Map<String, List<String>> responseHeaders) {
 		// TODO Auto-generated method stub
+		System.out.println("[TransactionReport] getReportsAsync callback triggered, statusCode=" + statusCode);
 		if(amazonAuthority!=null&&result!=null) {
 			   ReportList list = result.getReports();
-			if(result!=null) {
+			   System.out.println("[TransactionReport] Found " + (list != null ? list.size() : 0) + " reports for seller: " + amazonAuthority.getSellerid());
+			if(list!=null) {
 				for(Report report:list) {
+					  System.out.println("[TransactionReport] Processing reportId=" + report.getReportId() 
+					      + ", status=" + report.getProcessingStatus()
+					      + ", reportType=" + report.getReportType()
+					      + ", documentId=" + report.getReportDocumentId());
 					  reportService.recordReportRequest(amazonAuthority,report);
 				}
 		  }
+	   } else {
+		   System.out.println("[TransactionReport] Callback result is null, amazonAuthority=" + (amazonAuthority!=null));
 	   }
 	}
 

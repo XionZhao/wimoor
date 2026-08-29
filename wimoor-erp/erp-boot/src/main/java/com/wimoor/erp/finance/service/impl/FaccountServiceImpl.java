@@ -1,15 +1,5 @@
 package com.wimoor.erp.finance.service.impl;
 
-import java.math.BigDecimal;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wimoor.common.GeneralUtil;
@@ -26,8 +16,12 @@ import com.wimoor.erp.finance.pojo.entity.FinanceProject;
 import com.wimoor.erp.finance.service.IFaccountService;
 import com.wimoor.erp.purchase.mapper.PurchaseFormPaymentMethodMapper;
 import com.wimoor.erp.purchase.pojo.entity.PurchaseFormPaymentMethod;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.*;
  
 
 @Service("faccountService")
@@ -309,6 +303,7 @@ public class FaccountServiceImpl extends ServiceImpl<FinAccountMapper,FinAccount
 		QueryWrapper<FinAccount> queryWrapper=new QueryWrapper<FinAccount>();
 		queryWrapper.eq("shopid", shopid);
 		queryWrapper.eq("isdelete", false);
+		queryWrapper.orderByAsc("findex");
 		List<FinAccount> list = finAccountMapper.selectList(queryWrapper);
 		for(FinAccount item:list) {
 			PurchaseFormPaymentMethod meth = purchaseFormPaymentMethodMapper.selectById(item.getPaymeth());
@@ -324,6 +319,7 @@ public class FaccountServiceImpl extends ServiceImpl<FinAccountMapper,FinAccount
 		queryWrapper.eq("shopid", shopid);
 		queryWrapper.eq("paymeth", paymethod);
 		queryWrapper.eq("isdefault", true);
+		queryWrapper.last("LIMIT 1");
 		
 		FinAccount acc = finAccountMapper.selectOne(queryWrapper);
 		if(acc==null) {
@@ -331,6 +327,7 @@ public class FaccountServiceImpl extends ServiceImpl<FinAccountMapper,FinAccount
 			queryWrapperName.eq("shopid", shopid);
 			queryWrapperName.eq("paymeth", paymethod);
 			queryWrapperName.eq("name", "系统");
+			queryWrapperName.last("LIMIT 1");
 			FinAccount oldone = finAccountMapper.selectOne(queryWrapperName);
 			if(oldone!=null) {
 				acc=oldone;
@@ -360,6 +357,7 @@ public class FaccountServiceImpl extends ServiceImpl<FinAccountMapper,FinAccount
 					queryWrapperName.eq("shopid", shopid);
 					queryWrapperName.eq("paymeth", paymethod);
 					queryWrapperName.eq("name", "系统");
+					queryWrapperName.last("LIMIT 1");
 					FinAccount oldone = finAccountMapper.selectOne(queryWrapperName);
 					if(oldone!=null) {
 						acc=oldone;
@@ -410,6 +408,17 @@ public class FaccountServiceImpl extends ServiceImpl<FinAccountMapper,FinAccount
 	}
 
 	@Override
+	public void saveAccountIndex(UserInfo user,List<Map<String, Object>> indexlist) {
+		if(indexlist!=null && indexlist.size()>0){
+			for (Map<String, Object> item:indexlist){
+				if(item.get("id")!=null && item.get("findex")!=null) {
+					this.finAccountMapper.saveAccountIndex(item);
+				}
+			}
+		}
+	}
+
+	@Override
 	public Boolean saveAccount(FinAccount fin) {
 		// TODO Auto-generated method stub
 		QueryWrapper<FinAccount> queryWrapperName=new QueryWrapper<FinAccount>();
@@ -426,14 +435,36 @@ public class FaccountServiceImpl extends ServiceImpl<FinAccountMapper,FinAccount
 		queryWrapper.eq("shopid", fin.getShopid());
 		queryWrapper.eq("paymeth", fin.getPaymeth());
 		queryWrapper.eq("isdefault", true);
-		FinAccount acc = finAccountMapper.selectOne(queryWrapper);
-		if(acc!=null) {
-			fin.setIsdefault(false);
+		List<FinAccount> accList = finAccountMapper.selectList(queryWrapper);
+		if(accList!=null&&!accList.isEmpty()) {
+			for(FinAccount acc:accList) {
+				fin.setIsdefault(false);
+				finAccountMapper.updateById(acc);
+			}
 		}else{
 			fin.setIsdefault(true);
 		}
 		return finAccountMapper.insert(fin)>0;
 	}
 
+    // ==================== 台账Feign接口实现 ====================
+    
+    @Override
+    public List<Map<String, Object>> getInventoryLedgerSummary(Map<String, Object> params) {
+        // 进销存台账汇总
+        return this.baseMapper.getInventoryLedgerSummary(params);
+    }
+
+    @Override
+    public List<Map<String, Object>> getInventoryLedgerDetail(Map<String, Object> params) {
+        // 进销存台账明细
+        return this.baseMapper.getInventoryLedgerDetail(params);
+    }
+
+    @Override
+    public long getInventoryLedgerDetailCount(Map<String, Object> params) {
+        // 进销存台账明细总数
+        return this.baseMapper.getInventoryLedgerDetailCount(params);
+    }
 
 }

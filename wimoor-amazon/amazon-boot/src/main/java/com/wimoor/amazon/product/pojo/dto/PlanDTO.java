@@ -52,4 +52,5 @@ public class PlanDTO extends BasePageQuery{
 	List<String> skulist;
 	List<String> pidlist;
 	List<String> tags;
+	Boolean skipPrelist;
 }

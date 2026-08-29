@@ -94,7 +94,7 @@
 						 <h3 class="card-title">系统管理</h3>
 					 </div>
 					 <p class="card-desc">管理系统配置、菜单权限和定时任务</p>
-					 <el-space    :size="48" class="card-buttons" direction="vertical">
+					 <el-space    :size="28" class="card-buttons" direction="vertical">
 						 <el-button type="warning" @click="goPage(menu)">
 							 <el-icon><Menu /></el-icon> 菜单管理
 						 </el-button>
@@ -106,6 +106,9 @@
 						 </el-button>
 						 <el-button type="warning" @click="goPage(notify)">
 							 <el-icon><Bell /></el-icon> 公告发布
+						 </el-button>
+						 <el-button type="success" @click="goPage(fields)">
+							 <el-icon><Setting /></el-icon> 字段管理
 						 </el-button>
 					 </el-space>
 				 </el-card >
@@ -207,6 +210,7 @@ export default{
       const dict = {name:'字典管理', url:'/sys/dict'};
       const task = {name:'系统任务', url:'/sys/task'};
       const notify = {name:'公告发布', url:'/sys/notify'};
+      const fields = {name:'字段管理', url:'/sys/fields'};
       const customer = {name:'客户管理', url:'/sys/customer'};
       const customerOrder = {name:'客户订单', url:'/sys/customer/order'};
       const gen = {name:'代码生成', url:'/sys/gen'};
@@ -360,6 +364,7 @@ export default{
 		  dict,
 		  task,
 		  notify,
+		  fields,
 		  customer,
 		  gen,
 		  tariffpackages,

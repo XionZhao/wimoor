@@ -17,7 +17,7 @@
 				  <Datepicker longtime="ok" ref="datepickers" @changedate="changedate" />
 				 
 				   <Warehouse @changeware="getWarehouse" defaultValue="all"  />
-				 <el-input  v-model="queryParam.search" clearable @input="handleQuery" placeholder="请输入货件编码" class="input-with-select" >
+				 <el-input  v-model="queryParam.search" clearable @clear="handleQuery" v-debounce-input="handleQuery" placeholder="请输入货件编码" class="input-with-select" >
 					<template #append>
 					  <el-button @click="handleQuery">
 						 <el-icon style="font-size: 16px;align-itmes:center">
@@ -273,19 +273,11 @@
 	function handleQuery(){
 		nextTick(()=>{
 			if(state.selecttype=="shipment"){
-				var timer=setTimeout(function(){
-					globalTable.value.loadTable(state.queryParam);
-					clearTimeout(timer);
-				},500)
-				
+				globalTable.value.loadTable(state.queryParam);
 			}else{
-				var timer=setTimeout(function(){
-					skuglobalTable.value.loadTable(state.queryParam);
-					clearTimeout(timer);
-				},500)
+				skuglobalTable.value.loadTable(state.queryParam);
 			}
 		})
-		
 	}
 	 
 	function loadTableData(params){

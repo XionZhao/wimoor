@@ -8,6 +8,7 @@ import com.wimoor.erp.purchase.pojo.entity.PurchaseFormEntry;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 import java.util.Map;
 
 public interface IPurchaseFormEntryService extends IService<PurchaseFormEntry>{
@@ -22,4 +23,6 @@ public interface IPurchaseFormEntryService extends IService<PurchaseFormEntry>{
 	void downloadTimeList(SXSSFWorkbook workbook, PurchaseTimeDTO dto);
 
     Object downloadPurchaseInfoData(Map<String, Object> map, UserInfo userinfo);
+
+	List<Map<String, Object>> summaryProductBySupplier(String shopid, String supplier);
 }

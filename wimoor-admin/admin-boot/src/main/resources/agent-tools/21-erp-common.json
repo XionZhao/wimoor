@@ -1,0 +1,106 @@
+﻿{
+    "module":  "ERP通用功能",
+    "description":  "ERP系统通用功能，包括序列号管理、模板文件下载、Excel导出等基础功能",
+    "service":  "wimoor-erp",
+    "tools":  [
+                  {
+                      "name":  "serial_number_get",
+                      "description":  "根据类型获取各种编码（序列号），如采购单号、组装单号等",
+                      "menu_id":  22,
+                      "endpoint":  "/erp/api/v1/material/getSerialNumber",
+                      "method":  "GET",
+                      "params":  {
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "编码类型：PO(采购单)、MO(组装单)、WO(出库单)、IN(入库单)、TR(调拨单)、ST(盘点单)"
+                                               },
+                                     "isfind":  {
+                                                    "type":  "string",
+                                                    "description":  "是否只查询不生成：true(只查询)、false或空(查询并生成)"
+                                                }
+                                 },
+                      "required":  [
+                                       "ftype"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "编码字符串"
+                                          }
+                  },
+                  {
+                      "name":  "download_report_list",
+                      "description":  "查询用户的异步下载报告列表，展示已生成的Excel下载任务",
+                      "menu_id":  22,
+                      "endpoint":  "/erp/api/v1/common/excelDownload/downloadlist",
+                      "method":  "GET",
+                      "params":  {
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "报告类型筛选"
+                                               }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "data":  "下载报告列表（包含id、ftype、filename、status、createtime、userid、shopid）"
+                                          }
+                  },
+                  {
+                      "name":  "download_report_delete",
+                      "description":  "删除下载报告记录",
+                      "menu_id":  22,
+                      "endpoint":  "/erp/api/v1/common/excelDownload/deletedownload",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "下载报告ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "删除结果"
+                                          }
+                  },
+                  {
+                      "name":  "download_excel",
+                      "description":  "下载已生成的Excel文件",
+                      "menu_id":  22,
+                      "endpoint":  "/erp/api/v1/common/excelDownload/downExcel",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "下载报告ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "Excel文件流"
+                                          }
+                  },
+                  {
+                      "name":  "download_excel_template",
+                      "description":  "下载Excel模板文件",
+                      "menu_id":  22,
+                      "endpoint":  "/erp/api/v1/common/excelDownload/downExcelTemp",
+                      "method":  "GET",
+                      "params":  {
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "模板类型：purchase(采购模板)、assembly(组装模板)、inventory(盘点模板)、material(产品模板)"
+                                               }
+                                 },
+                      "required":  [
+                                       "ftype"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "Excel模板文件流"
+                                          }
+                  }
+              ]
+}

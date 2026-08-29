@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.feishu.mapper.FeishuChatMessageMapper">
+
+    <resultMap id="BaseResultMap" type="com.wimoor.feishu.pojo.entity.FeishuChatMessage">
+        <id column="id" property="id" />
+        <result column="chat_id" property="chatId" />
+        <result column="sender_id" property="senderId" />
+        <result column="sender_name" property="senderName" />
+        <result column="msg_type" property="msgType" />
+        <result column="content" property="content" />
+        <result column="content_text" property="contentText" />
+        <result column="parent_id" property="parentId" />
+        <result column="root_id" property="rootId" />
+        <result column="chat_type" property="chatType" />
+        <result column="mention_users" property="mentionUsers" />
+        <result column="create_time" property="createTime" />
+        <result column="insert_time" property="insertTime" />
+        <result column="app_id" property="appId" />
+    </resultMap>
+
+</mapper>

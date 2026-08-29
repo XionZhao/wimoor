@@ -30,7 +30,6 @@ public class AuthController {
     @ApiOperation("获取飞书绑定信息")
     public Result<Auth> getBindInfo() {
         UserInfo userinfo = UserInfoContext.get();
-        // 这里应该根据当前店铺ID查询，暂时使用默认逻辑
         Auth auth = authService.lambdaQuery().eq(Auth::getShopid, userinfo.getCompanyid()).one();
         return Result.success(auth);
     }
@@ -43,7 +42,6 @@ public class AuthController {
     public Result<String> save(@RequestBody Auth auth) {
         auth.setOpttime(new Date());
         UserInfo userinfo = UserInfoContext.get();
-        // 设置操作人和店铺ID，这里需要从上下文获取
         auth.setOperator(userinfo.getId());
         auth.setShopid(userinfo.getCompanyid());
         Auth old = authService.lambdaQuery().eq(Auth::getShopid, auth.getShopid()).one();
@@ -70,9 +68,7 @@ public class AuthController {
     @ApiOperation("更新飞书绑定信息")
     public Result<String> update(@RequestBody Auth auth) {
         auth.setOpttime(new Date());
-        // 设置操作人和店铺ID，这里需要从上下文获取
         UserInfo userinfo = UserInfoContext.get();
-        // 设置操作人和店铺ID，这里需要从上下文获取
         auth.setOperator(userinfo.getId());
         auth.setShopid(userinfo.getCompanyid());
         auth.setAppId(auth.getAppId().trim());

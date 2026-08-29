@@ -484,7 +484,7 @@
 			"hasDeclaredValue": false,
 			"declaredValue": 0.0000,
 			"gstrate": 0.00,
-			"sellingGSTRate": 0.00,
+			"sellingGSTRate": 10.00,
 			"corporateInRate": 0.00,
 			"amonthBigDecimal": 1},
     "IN":{  "country": "IN",

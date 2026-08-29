@@ -15,7 +15,7 @@
 					                end-placeholder="结束上架日期"
 					                :shortcuts="shortcuts"
 					              />
-	    			<el-input v-model="localParams.searchKeywords"  clearable  @input="handleQuery"  placeholder="请输入" class="input-with-select">
+	    			<el-input v-model="localParams.searchKeywords"  clearable @clear="handleQuery"  v-debounce-input="handleQuery"  placeholder="请输入" class="input-with-select">
 	    				<template #prepend>
 	    					<el-select v-model="localParams.selectlabel" @change="handleQuery"  placeholder="SKU"
 	    						style="width: 110px">

@@ -329,6 +329,10 @@ public class PurchaseFormController {
 				}
 			}
 			param.put("shopid",userinfo.getCompanyid());
+			String sortOrder = dto.getSortOrder();
+			if (GeneralUtil.isNotEmpty(sortOrder)) {
+				param.put("sortOrder", sortOrder);
+			}
 		    IPage<Map<String, Object>> list = purchaseFormService.getPurchaseFormEntry(dto.getPage(), param);
 			if (GeneralUtil.isNotEmpty(formid) && list.getRecords() != null && list.getSize() > 0) {
 				if (entrylist == null) {
@@ -423,6 +427,10 @@ public class PurchaseFormController {
 		if (user.isLimit(UserLimitDataType.owner)) {
 			param.put("myself", user.getId());
 		}
+		String sortOrder = dto.getSortOrder();
+		if (StrUtil.isNotEmpty(sortOrder)) {
+			param.put("sortOrder", sortOrder);
+		}
 		return Result.success(purchaseFormService.getPurchaseForm(dto.getPage(),param));
 	}
 	
@@ -454,7 +462,12 @@ public class PurchaseFormController {
 			param.put("fromDate", fromDate);
 		}
 		if (StrUtil.isNotBlank(condition.getToDate())) {
-			param.put("endDate", condition.getToDate().trim()+" 23:59:59");
+			// 前端Datepicker已经拼接了" 23:59:59"，不再重复拼接
+			String to = condition.getToDate().trim();
+			if (!to.contains("23:59:59")) {
+				to = to + " 23:59:59";
+			}
+			param.put("endDate", to);
 		} else {
 			String toDate = GeneralUtil.formatDate(new Date(), sdf);
 			param.put("endDate", toDate+" 23:59:59");
@@ -489,6 +502,17 @@ public class PurchaseFormController {
 		}else {
 			param.put("projectid", null);
 		}
+		if (StrUtil.isNotBlank(condition.getGroupid())) {
+			param.put("groupid", condition.getGroupid());
+		}else {
+			param.put("groupid", null);
+		}
+		if (StrUtil.isNotBlank(condition.getAcct())) {
+			param.put("acct", condition.getAcct());
+		}else {
+			param.put("acct", null);
+		}
+		param.put("showSettled", condition.getShowSettled() != null ? condition.getShowSettled() : true);
 		Page<PurchaseFormReceiveVo> page=condition.getPage();
 		IPage<Map<String,Object>> list = iPurchaseFormPaymentService.getPaymentReport(page,param);
 		return Result.success(list);
@@ -553,6 +577,11 @@ public class PurchaseFormController {
 			param.put("projectid", condition.getProjectid());
 		}else {
 			param.put("projectid", null);
+		}
+		if (StrUtil.isNotBlank(condition.getGroupid())) {
+			param.put("groupid", condition.getGroupid());
+		}else {
+			param.put("groupid", null);
 		}
 		try {
 			iPurchaseFormPaymentService.setPaymentReportExcel(workbook, param);

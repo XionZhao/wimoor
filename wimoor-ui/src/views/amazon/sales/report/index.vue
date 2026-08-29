@@ -89,7 +89,7 @@
 		    <el-space >
 		  <Group @change="getGroup"></Group>
 		  <Datepicker ref="datepickers" :days="1" :shortIndex="1"  @changedate="changeDate" />
-		 <el-input  v-model="queryParam.search" @input="handleQuery" clearable placeholder="请输入SKU" style="width: 250px;" class="input-with-select" >
+		 <el-input  v-model="queryParam.search" v-debounce-input="handleQuery" clearable @clear="handleQuery" placeholder="请输入SKU" style="width: 250px;" class="input-with-select" >
 		    <template #append>
 		      <el-button @click="handleQuery" >
 		         <el-icon class="ic-cen font-medium">
@@ -500,7 +500,7 @@
 		float:right
 	}
 	.text-black{
-		color:#333;
+		color: var(--el-text-color-primary);
 	}
 	.cell-b{
 		margin-bottom:8px;

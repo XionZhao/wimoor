@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<el-row>
 		<el-space>
 			<el-select v-model="adstate" placeholder="广告状态" @change="handleQuery"  >
@@ -10,7 +10,7 @@
 			      <el-radio-button label="近7天" />
 			      <el-radio-button label="近30天" />
 			    </el-radio-group>
-			<el-input v-model="queryParams.search" @input="handleQuery" placeholder="搜索投放搜索">
+			<el-input v-model="queryParams.search" v-debounce-input="handleQuery" placeholder="搜索投放搜索">
 					 <template #suffix>
 					  <el-icon @click.stop="handleQuery"><Search /></el-icon>
 					 </template>

@@ -6,7 +6,7 @@
 	   <Category @change="changeCategory" ref="categoryRef" :type="type"></Category>
 	   <Tags @change="changeTags"  v-if="type=='product'" ref="tagsRef"></Tags>
 	   <Warehouse @changeware="getWarehouse"  v-if="type=='consumable'"  defaultValue="only"    />
-	   <el-input  v-model="searchKeywords" clearable @input="changeData" placeholder="请输入" class="input-with-select" >
+	   <el-input  v-model="searchKeywords" clearable @clear="changeData" v-debounce-input="changeData" placeholder="请输入" class="input-with-select" >
 	      <template #prepend>
 	        <el-select v-model="searchType" placeholder="SKU" style="width: 110px">
 	          <el-option label="SKU" value="sku"></el-option>
@@ -1218,6 +1218,6 @@
 <style scoped>
 	.font-large{
 		font-size: 48px;
-		color: #999;
+		color: var(--el-text-color-secondary);
 	}
 </style>

@@ -390,6 +390,15 @@ public class ApiBuildService implements InitializingBean {
         return api;
 	}
 
+	public FeesApi getFeesApi(AmazonAuthority auth){
+		FeesApi api=new FeesApi.Builder()
+				.lwaAuthorizationCredentials(getLWAAuthorizationCredentials(auth))
+				.endpoint(getEndPoint(auth.getAWSRegion()))
+				.rateLimitConfigurationOnRequests(auth)
+				.build();
+		return api;
+	}
+
 	public MessagingApi getMessageApi(AmazonAuthority auth){
 		MessagingApi api=new MessagingApi.Builder()
 				.lwaAuthorizationCredentials(getLWAAuthorizationCredentials(auth))

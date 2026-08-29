@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.ledger.mapper.FinSupplierLedgerMapper">
+
+    <!-- 供应商发票明细（按销方名称过滤） -->
+    <select id="selectSupplierLedgerInvoices" resultType="java.util.Map">
+        SELECT
+            fi.id AS invoiceId,
+            fi.invoice_no AS invoiceNo,
+            fi.invoice_kind AS invoiceType,
+            fi.supplier_id AS supplierId,
+            fi.seller_name AS sellerName,
+            fi.seller_tax_no AS sellerTaxNo,
+            fi.invoice_date AS invoiceDate,
+            fi.amount_with_tax AS amountWithTax,
+            fi.amount_without_tax AS amountWithoutTax,
+            fi.tax_amount AS taxAmount,
+            fi.currency AS currency,
+            fi.status AS status,
+            fi.posting_status AS postingStatus,
+            fi.reconcile_status AS reconcileStatus,
+            fi.created_time AS createdTime
+        FROM fin_invoice fi
+        <where>
+            <choose>
+                <when test="groupid != null and groupid != ''">
+                    fi.groupid = #{groupid}
+                </when>
+                <when test="groupids != null and groupids.size() > 0">
+                    fi.groupid IN
+                    <foreach collection="groupids" item="gid" open="(" separator="," close=")">
+                        #{gid}
+                    </foreach>
+                </when>
+            </choose>
+            <if test="startDate != null">
+                AND fi.invoice_date &gt;= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND fi.invoice_date &lt;= #{endDate}
+            </if>
+            <if test="supplierName != null and supplierName != ''">
+                AND fi.seller_name = #{supplierName}
+            </if>
+        </where>
+        ORDER BY fi.invoice_date DESC
+    </select>
+
+    <!-- 按销方名称+groupid查询发票金额汇总（日期必填） -->
+    <select id="selectInvoiceAmountByNames" resultType="java.util.Map">
+        SELECT
+            fi.seller_name AS sellerName,
+            SUM(fi.amount_with_tax) AS totalInvoicedAmount
+        FROM fin_invoice fi
+        WHERE fi.groupid = #{groupid}
+        AND fi.invoice_date &gt;= #{startDate}
+        AND fi.invoice_date &lt;= #{endDate}
+        AND fi.seller_name IN
+        <foreach collection="sellerNames" item="name" open="(" separator="," close=")">
+            #{name}
+        </foreach>
+        GROUP BY fi.seller_name
+    </select>
+
+    <!-- 按销方名称列表查询发票明细（只显示匹配到供应商的发票） -->
+    <select id="selectSupplierLedgerInvoicesByNames" resultType="java.util.Map">
+        SELECT
+            fi.id AS invoiceId,
+            fi.invoice_no AS invoiceNo,
+            fi.invoice_kind AS invoiceType,
+            fi.supplier_id AS supplierId,
+            fi.seller_name AS sellerName,
+            fi.seller_tax_no AS sellerTaxNo,
+            fi.invoice_date AS invoiceDate,
+            fi.amount_with_tax AS amountWithTax,
+            fi.amount_without_tax AS amountWithoutTax,
+            fi.tax_amount AS taxAmount,
+            fi.currency AS currency,
+            fi.status AS status,
+            fi.posting_status AS postingStatus,
+            fi.reconcile_status AS reconcileStatus,
+            fi.created_time AS createdTime
+        FROM fin_invoice fi
+        <where>
+            fi.groupid = #{groupid}
+            <if test="startDate != null">
+                AND fi.invoice_date &gt;= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND fi.invoice_date &lt;= #{endDate}
+            </if>
+            <if test="sellerNames != null and sellerNames.size() > 0">
+                AND fi.seller_name IN
+                <foreach collection="sellerNames" item="name" open="(" separator="," close=")">
+                    #{name}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY fi.invoice_date DESC
+    </select>
+
+    <!-- 更新对账状态 -->
+    <update id="updateReconcileStatus">
+        UPDATE fin_invoice
+        SET reconcile_status = 1,
+            reconcile_time = NOW(),
+            reconcile_by = #{operator}
+        WHERE groupid = #{groupid}
+        AND supplier_id = #{supplierId}
+        AND reconcile_status = 0
+    </update>
+
+    <!-- 按销方名称列表更新对账状态（支持反复对账） -->
+    <update id="updateReconcileStatusByNames">
+        UPDATE fin_invoice
+        SET reconcile_status = 1,
+            reconcile_time = NOW(),
+            reconcile_by = #{operator}
+        WHERE groupid = #{groupid}
+        AND seller_name IN
+        <foreach collection="sellerNames" item="name" open="(" separator="," close=")">
+            #{name}
+        </foreach>
+    </update>
+
+    <!-- 插入对账记录 -->
+    <insert id="insertReconcileRecord" parameterType="com.wimoor.finance.ledger.domain.FinSupplierReconcileRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO fin_supplier_reconcile_record (
+            groupid, supplier_id, supplier_name, company_name, reconcile_month,
+            order_count, total_order_amount, total_received,
+            total_paid_amount, total_unpaid_amount,
+            total_invoiced_amount, total_uninvoiced_amount,
+            reconcile_by, reconcile_time
+        ) VALUES (
+            #{groupid}, #{supplierId}, #{supplierName}, #{companyName}, #{reconcileMonth},
+            #{orderCount}, #{totalOrderAmount}, #{totalReceived},
+            #{totalPaidAmount}, #{totalUnpaidAmount},
+            #{totalInvoicedAmount}, #{totalUninvoicedAmount},
+            #{reconcileBy}, #{reconcileTime}
+        )
+    </insert>
+
+    <!-- 更新对账记录 -->
+    <update id="updateReconcileRecord" parameterType="com.wimoor.finance.ledger.domain.FinSupplierReconcileRecord">
+        UPDATE fin_supplier_reconcile_record
+        SET supplier_name = #{supplierName},
+            company_name = #{companyName},
+            order_count = #{orderCount},
+            total_order_amount = #{totalOrderAmount},
+            total_received = #{totalReceived},
+            total_paid_amount = #{totalPaidAmount},
+            total_unpaid_amount = #{totalUnpaidAmount},
+            total_invoiced_amount = #{totalInvoicedAmount},
+            total_uninvoiced_amount = #{totalUninvoicedAmount},
+            reconcile_by = #{reconcileBy},
+            reconcile_time = #{reconcileTime}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 查询对账记录（按供应商+月份） -->
+    <select id="selectReconcileRecord" resultType="com.wimoor.finance.ledger.domain.FinSupplierReconcileRecord">
+        SELECT id, groupid, supplier_id AS supplierId, supplier_name AS supplierName,
+               company_name AS companyName, reconcile_month AS reconcileMonth,
+               order_count AS orderCount, total_order_amount AS totalOrderAmount,
+               total_received AS totalReceived,
+               total_paid_amount AS totalPaidAmount, total_unpaid_amount AS totalUnpaidAmount,
+               total_invoiced_amount AS totalInvoicedAmount, total_uninvoiced_amount AS totalUninvoicedAmount,
+               reconcile_by AS reconcileBy, reconcile_time AS reconcileTime,
+               created_time AS createdTime, updated_time AS updatedTime
+        FROM fin_supplier_reconcile_record
+        WHERE groupid = #{groupid}
+        AND supplier_id = #{supplierId}
+        AND reconcile_month = #{reconcileMonth}
+        ORDER BY reconcile_time DESC
+        LIMIT 1
+    </select>
+
+    <!-- 查询最新的对账记录（按供应商） -->
+    <select id="selectLatestReconcileRecord" resultType="com.wimoor.finance.ledger.domain.FinSupplierReconcileRecord">
+        SELECT id, groupid, supplier_id AS supplierId, supplier_name AS supplierName,
+               company_name AS companyName, reconcile_month AS reconcileMonth,
+               order_count AS orderCount, total_order_amount AS totalOrderAmount,
+               total_received AS totalReceived,
+               total_paid_amount AS totalPaidAmount, total_unpaid_amount AS totalUnpaidAmount,
+               total_invoiced_amount AS totalInvoicedAmount, total_uninvoiced_amount AS totalUninvoicedAmount,
+               reconcile_by AS reconcileBy, reconcile_time AS reconcileTime,
+               created_time AS createdTime, updated_time AS updatedTime
+        FROM fin_supplier_reconcile_record
+        WHERE groupid = #{groupid}
+        AND supplier_id = #{supplierId}
+        ORDER BY reconcile_time DESC
+        LIMIT 1
+    </select>
+
+</mapper>

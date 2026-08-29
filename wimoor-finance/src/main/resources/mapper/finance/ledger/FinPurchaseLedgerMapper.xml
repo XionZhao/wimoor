@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.ledger.mapper.FinPurchaseLedgerMapper">
+
+    <!-- 查询采购订单列表 -->
+    <select id="selectPurchaseLedgerList" parameterType="com.wimoor.finance.ledger.domain.dto.FinPurchaseLedgerQuery" resultType="java.util.Map">
+        SELECT
+            fe.id AS entryId,
+            fe.formid AS formId,
+            pf.number AS formNumber,
+            fe.supplier AS supplierId,
+            c.name AS supplierName,
+            fe.materialid AS materialId,
+            fe.amount AS amount,
+            fe.itemprice AS itemPrice,
+            fe.orderprice AS orderPrice,
+            fe.auditstatus AS auditStatus,
+            fe.paystatus AS payStatus,
+            COALESCE(fe.totalpay, 0) AS totalPay,
+            (fe.orderprice - COALESCE(fe.totalpay, 0)) AS unpaidAmount,
+            fe.opttime AS createTime,
+            fe.deliverydate AS deliveryDate,
+            fe.closepaydate AS closePayDate,
+            fe.remark AS remark,
+            pf.groupid AS groupid
+        FROM db_erp.t_erp_purchase_form_entry fe
+        LEFT JOIN db_erp.t_erp_purchase_form pf ON fe.formid = pf.id
+        LEFT JOIN db_erp.t_erp_customer c ON fe.supplier = c.id AND c.shopid = pf.shopid
+        <where>
+            pf.groupid = #{groupid}
+            AND fe.auditstatus != 0
+            <if test="supplier != null and supplier != ''">
+                AND fe.supplier = #{supplier}
+            </if>
+            <if test="auditstatus != null">
+                AND fe.auditstatus = #{auditstatus}
+            </if>
+            <if test="paystatus != null">
+                AND fe.paystatus = #{paystatus}
+            </if>
+            <if test="fromDate != null">
+                AND fe.opttime &gt;= #{fromDate}
+            </if>
+            <if test="toDate != null">
+                AND fe.opttime &lt;= #{toDate}
+            </if>
+            <if test="formNumber != null and formNumber != ''">
+                AND pf.number = #{formNumber}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (pf.number LIKE CONCAT('%', #{keyword}, '%')
+                     OR c.name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY fe.opttime DESC
+    </select>
+
+    <!-- 统计订单总额、已付总额、未付总额 -->
+    <select id="selectPurchaseLedgerStatistics" parameterType="com.wimoor.finance.ledger.domain.dto.FinPurchaseLedgerQuery" resultType="java.util.Map">
+        SELECT
+            COALESCE(SUM(fe.orderprice), 0) AS totalOrderAmount,
+            COALESCE(SUM(fe.totalpay), 0) AS totalPaidAmount,
+            COALESCE(SUM(fe.orderprice - COALESCE(fe.totalpay, 0)), 0) AS totalUnpaidAmount,
+            COUNT(fe.id) AS totalCount
+        FROM db_erp.t_erp_purchase_form_entry fe
+        LEFT JOIN db_erp.t_erp_purchase_form pf ON fe.formid = pf.id
+        LEFT JOIN db_erp.t_erp_customer c ON fe.supplier = c.id AND c.shopid = pf.shopid
+        <where>
+            pf.groupid = #{groupid}
+            AND fe.auditstatus != 0
+            <if test="supplier != null and supplier != ''">
+                AND fe.supplier = #{supplier}
+            </if>
+            <if test="auditstatus != null">
+                AND fe.auditstatus = #{auditstatus}
+            </if>
+            <if test="paystatus != null">
+                AND fe.paystatus = #{paystatus}
+            </if>
+            <if test="fromDate != null">
+                AND fe.opttime &gt;= #{fromDate}
+            </if>
+            <if test="toDate != null">
+                AND fe.opttime &lt;= #{toDate}
+            </if>
+            <if test="formNumber != null and formNumber != ''">
+                AND pf.number = #{formNumber}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (pf.number LIKE CONCAT('%', #{keyword}, '%')
+                     OR c.name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 查询所有采购账户及余额 -->
+    <select id="selectAccounts" resultType="java.util.Map">
+        SELECT
+            a.id AS accountId,
+            a.name AS accountName,
+            a.balance AS balance,
+            a.paymeth AS payMethod,
+            a.isdefault AS isDefault
+        FROM db_erp.t_erp_fin_account a
+        WHERE a.shopid = #{groupid}
+          AND (a.isdelete = 0 OR a.isdelete IS NULL)
+        ORDER BY a.isdefault DESC, a.createdate ASC
+    </select>
+
+    <!-- 查询某个订单的付款明细 -->
+    <select id="selectPayments" resultType="java.util.Map">
+        SELECT
+            p.id AS paymentId,
+            p.formentryid AS entryId,
+            p.payprice AS payPrice,
+            p.acct AS accountId,
+            a.name AS accountName,
+            p.projectid AS projectId,
+            fp.name AS projectName,
+            p.remark AS remark,
+            p.createdate AS createDate,
+            p.opttime AS optTime,
+            p.auditstatus AS auditStatus,
+            p.payment_method AS paymentMethod
+        FROM db_erp.t_erp_purchase_form_payment p
+        LEFT JOIN db_erp.t_erp_fin_account a ON p.acct = a.id
+        LEFT JOIN db_erp.t_erp_fin_project fp ON p.projectid = fp.id
+        WHERE p.formentryid = #{entryId}
+        ORDER BY p.createdate DESC
+    </select>
+
+    <!-- 新增付款记录 -->
+    <insert id="insertPayment" parameterType="java.util.Map">
+        INSERT INTO db_erp.t_erp_purchase_form_payment (
+            id, formentryid, projectid, acct, payprice, remark,
+            createdate, opttime, operator, auditstatus, payment_method
+        ) VALUES (
+            #{id}, #{formentryid}, #{projectid}, #{acct}, #{payprice}, #{remark},
+            #{createdate}, #{opttime}, #{operator}, #{auditstatus}, #{payment_method}
+        )
+    </insert>
+
+    <!-- 更新采购订单的已付总额和付款状态 -->
+    <update id="updateEntryPayStatus">
+        UPDATE db_erp.t_erp_purchase_form_entry
+        SET totalpay = (
+            SELECT COALESCE(SUM(payprice), 0)
+            FROM db_erp.t_erp_purchase_form_payment
+            WHERE formentryid = #{entryId}
+              AND (auditstatus = 1 OR auditstatus IS NULL)
+        ),
+        paystatus = CASE
+            WHEN orderprice &lt;= (
+                SELECT COALESCE(SUM(payprice), 0)
+                FROM db_erp.t_erp_purchase_form_payment
+                WHERE formentryid = #{entryId}
+                  AND (auditstatus = 1 OR auditstatus IS NULL)
+            ) THEN 2
+            WHEN (
+                SELECT COALESCE(SUM(payprice), 0)
+                FROM db_erp.t_erp_purchase_form_payment
+                WHERE formentryid = #{entryId}
+                  AND (auditstatus = 1 OR auditstatus IS NULL)
+            ) > 0 THEN 1
+            ELSE 0
+        END
+        WHERE id = #{entryId}
+    </update>
+
+    <!-- 更新账户余额（扣减） -->
+    <update id="updateAccountBalance">
+        UPDATE db_erp.t_erp_fin_account
+        SET balance = balance - #{payprice}
+        WHERE id = #{acct}
+    </update>
+
+</mapper>

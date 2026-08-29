@@ -2,7 +2,7 @@ package com.wimoor.amazon.product.service;
 
 import com.amazon.spapi.model.customerfeedback.*;
 import com.wimoor.amazon.auth.pojo.entity.AmazonAuthority;
-import com.wimoor.amazon.product.pojo.entity.AmzProductRefresh;
+import com.wimoor.amazon.product.pojo.entity.AmzProductRefreshType;
 import com.wimoor.amazon.product.pojo.entity.ProductInReview;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -12,7 +12,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2025-07-09 17:29:52
 */
 public interface IProductInReviewService extends IService<ProductInReview> {
-    void capture(AmazonAuthority amazonAuthority, AmzProductRefresh skuRefresh);
+    void capture(AmazonAuthority amazonAuthority, AmzProductRefreshType skuRefresh);
     public ItemReviewTopicsResponse       getItemReviewTopics(String  amazonauthid, String asin, String marketplaceid, String sortBy);
     public ItemReviewTrendsResponse       getItemReviewTrends(String  amazonauthid, String asin, String marketplaceid);
     public BrowseNodeResponse             getItemBrowseNode(String amazonauthid, String asin, String marketplaceid);

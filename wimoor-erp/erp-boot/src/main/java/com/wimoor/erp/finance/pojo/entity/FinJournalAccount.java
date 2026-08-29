@@ -48,6 +48,9 @@ public class FinJournalAccount extends ErpBaseEntity{
     @TableField(value= "shopid")
     private String shopid;
 
+    @TableField(value= "groupid")
+    private String groupid;
+
     @TableField(value= "acct")
     private String acct;
 	 

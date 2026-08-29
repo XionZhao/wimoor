@@ -24,38 +24,22 @@
 			<Plus v-else />
 		</el-icon>
 		</el-upload>
-		<el-button v-if="dataForms.location || showPkgImage" link type="info" style="position: relative;top: -60px;margin-left: 15px;margin-right: 10px;">扩展图片</el-button>
+		<el-button link type="info" style="position: relative;top: -60px;margin-left: 15px;margin-right: 10px;" @click.stop="openAttachmentUpload">附件{{attachmentList.length > 0 ? '('+attachmentList.length+')' : ''}}</el-button>
 		<div class="image-list">
-
-		<el-upload
-		v-if="dataForms.location || showPkgImage"
-		    action="#"
-		    list-type="picture-card"
-			:show-file-list="false"
-			:limit="1"
-			:multiple="false"
-			accept=".png,.jpeg,.jpg,.bmp"
-			:headers="headers" 
-			:http-request="uploadFiles2"
-			:before-upload="beforeUpload2" 
-			:on-exceed="handleExceed2"
-			 ref="pkguploadRef"
-			auto-upload="true"
-		>
-
-		<div v-if="dataForms.id" >
-			<img  width="130" height="130" v-if="dataForms.location && dataForms.location!=undefined"   :src="dataForms.location" alt="产品带包装图片" />
-			<img width="130" height="130" v-else   :src="$require('empty/noimage40.png')" alt="暂无图片" />
-		</div>
-		<el-icon v-else>
-			<img  width="130" height="130" v-if="dataForms.location && dataForms.location!=undefined"   :src="dataForms.location" alt="产品带包装图片" />
-			<Plus v-else />
-		</el-icon>
-		</el-upload>
-      <div class="delete-btn" v-if="dataForms.location && dataForms.location!=undefined" @click="handleImageDelete(dataForms)">
-        <el-icon><Delete /></el-icon>
-      </div>
+			<div v-for="(item, index) in attachmentList" :key="item.id" class="image-item">
+				<img v-if="item.fileType && item.fileType.startsWith('image')" :src="item.filePath" width="130" height="130" style="object-fit:cover;display:block;" />
+				<div v-else class="file-icon-box" @click.stop="downloadFile(item)">
+					<el-icon style="font-size:40px;color:#909399;"><Document /></el-icon>
+					<div class="file-name">{{item.fileName}}</div>
 				</div>
+				<div class="image-item-delete" @click.stop="handleDeleteAttachment(item, index)">
+					<el-icon><Delete /></el-icon>
+				</div>
+			</div>
+			<div class="image-item image-item-add" @click.stop="openAttachmentUpload">
+				<el-icon style="font-size: 28px; color: #909399;"><Plus /></el-icon>
+			</div>
+		</div>
 	</el-form-item>
 	<el-form-item prop="baseforms.name" :rules="{ required: true,  message: '名称不能为空',  }" label="产品名称" >
 		  <el-input v-model="dataForms.name"  placeholder="产品名称"> </el-input>
@@ -128,15 +112,12 @@
 	<el-form-item label="备注">
 		<el-input v-model="dataForms.remark" maxlength="2000" placeholder="产品备注" show-word-limit type="textarea" />
 	</el-form-item>
-	<el-form-item label="" v-if="!dataForms.location"> 
-		<el-button   link type="info" @click.stop="showPkgImage=true" >添加扩展图片</el-button>
-	</el-form-item>
- 
-	
+	<UploadDialog ref="attachmentUploadRef" @change="handleAttachmentChange" type="material" :file-type="[]"></UploadDialog>
+
 </template>
 
 <script  setup>
-	import {ArrowDown,Edit,Delete,Download,ZoomIn} from '@element-plus/icons-vue'
+	import {ArrowDown,Edit,Delete,Download,ZoomIn,Document} from '@element-plus/icons-vue'
 	import {Plus} from '@icon-park/vue-next';
 	import { ref,reactive,onMounted,watch ,toRefs,computed} from 'vue'
 	import {useRouter } from 'vue-router'
@@ -147,16 +128,14 @@
 	import {getAllTags} from '@/api/sys/admin/tag.js';
 	import OwnerAll from '@/components/header/ownerAll.vue';
   import Group from '@/components/header/group_select.vue';
-	import { ElMessage } from 'element-plus';
+	import { ElMessage, ElMessageBox } from 'element-plus';
   import $require from '@/utils/system/require.js';
 	import {CheckInputFloat,CheckInputInt,spaceCharInput} from '@/utils/index.js';
+	import UploadDialog from "@/components/FileUpload/UploadDialog.vue";
 	let headers=ref({"Content-Type": "multipart/form-data" });
-	let tagsRef=ref();
-	        onMounted(()=>{
-	        	   setTimeout(function(){editTags();},300);
-	        })
+		let tagsRef=ref();
+		let attachmentUploadRef=ref();
 			let uploadRef=ref();
-			let pkguploadRef=ref();
 			let router = useRouter()
 			const iscopy=router.currentRoute.value.query.iscopy;
 			const type=router.currentRoute.value.query.type;
@@ -164,6 +143,14 @@
 	          dataForms:Object,
 			  tagsValue:[],
 	        })
+	        onMounted(()=>{
+	        	   setTimeout(function(){editTags();},300);
+	        })
+			watch(()=>props.dataForms.id,(newVal)=>{
+				if(newVal){
+					loadAttachments();
+				}
+			},{immediate:true});
 			let state=reactive({
 				brandlist:[],
 				catelist:[],
@@ -177,15 +164,17 @@
 				 tagsNodes:[],
 				 copypage:iscopy,
 				 showPkgImage:false,
+				 attachmentList:[],
 			});
 			defineExpose({
-			  loadBrandCateList
+			  loadBrandCateList,
+			  loadAttachments
 			})
 			 let {dataForms,tagsValue} =toRefs(props);
 			 let {
 				tags,brandlist,catelist,units,
 			    imgfile,tagsList,pkgimgfile,
-			    markVisable,markprops,checktags,tagsNodes,copypage,showPkgImage
+			    markVisable,markprops,checktags,tagsNodes,copypage,showPkgImage,attachmentList
 				} =toRefs(state);
 			//选中标签
 			function openPopover(){
@@ -204,9 +193,75 @@
 					})
 				})
 			}
-      function handleImageDelete(dataForms){
-        dataForms.location=null;
-      }
+		//加载附件列表
+		function loadAttachments(){
+			if(props.dataForms.id){
+				materialApi.getAttachments(props.dataForms.id).then((res)=>{
+					if(res.data){
+						state.attachmentList=res.data;
+					}
+				});
+			}
+		}
+		//打开附件上传弹窗
+		function openAttachmentUpload(){
+			if(!props.dataForms.id){
+				ElMessage.warning('请先保存产品信息后再上传扩展图片');
+				return;
+			}
+			let files=[];
+			state.attachmentList.forEach(item=>{
+				files.push({fileName:item.fileName, filePath:item.filePath, fileType:item.fileType});
+			});
+			attachmentUploadRef.value.show(files);
+		}
+		//附件变更回调
+		function handleAttachmentChange(files){
+			let newAttachments=[];
+			files.forEach(file=>{
+				let exists=state.attachmentList.find(a=>a.filePath===file.filePath);
+				if(!exists){
+					newAttachments.push({
+						fileName: file.fileName,
+						filePath: file.filePath,
+						fileType: file.fileType,
+						fileid: file.fileId
+					});
+				}
+			});
+			if(newAttachments.length>0){
+				materialApi.saveAttachments(props.dataForms.id, newAttachments).then(()=>{
+					ElMessage.success('上传成功');
+					loadAttachments();
+					attachmentUploadRef.value.hide();
+				});
+			}else{
+				attachmentUploadRef.value.hide();
+			}
+		}
+		//删除附件
+		function handleDeleteAttachment(item, index){
+			ElMessageBox.confirm('确定删除该附件吗？', '提示', {
+				confirmButtonText: '确定',
+				cancelButtonText: '取消',
+				type: 'warning',
+			}).then(() => {
+				materialApi.deleteAttachment(item.id).then(()=>{
+					ElMessage.success('删除成功');
+					state.attachmentList.splice(index, 1);
+				});
+			}).catch(()=>{});
+		}
+		//下载文件
+		function downloadFile(item){
+			const link=document.createElement('a');
+			link.href=item.filePath;
+			link.download=item.fileName;
+			link.target='_blank';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		}
 			//跳转到品牌管理
 			function jumpBrand(){
 				router.push({
@@ -270,34 +325,10 @@
 				}
 			}
 		}
-		//文件上传之前
-		function beforeUpload2(file){
-			if (file.type != "" || file.type != null || file.type != undefined){
-			    //截取文件的后缀，判断文件类型
-				//const FileExt = file.name.replace(/.+\./, "").toLowerCase();
-				//计算文件的大小
-				const isLt5Mpkg = file.size / 1024  < 5000; //这里做文件大小限制
-				//如果大于50M
-				if (!isLt5Mpkg) {
-					ElMessage.error('上传文件大小不能超过 5000KB!!');
-					return false;
-				}
-				else {
-				   props.dataForms.location=URL.createObjectURL(file);
-				   props.dataForms.pkgimage=URL.createObjectURL(file);
-				   return true;
-				}
-			}
-		}
 		function uploadFiles(item){
 			//上传文件的需要formdata类型;所以要转
 			state.imgfile=item.file;
 			props.dataForms.imgfile=item.file;
-		}
-		function uploadFiles2(item){
-			//上传文件的需要formdata类型;所以要转
-			state.pkgimgfile=item.file;
-			props.dataForms.pkgimgfile=item.file;
 		}
 		function handleExceed(files){
 			uploadRef.value.clearFiles();//清空图片list
@@ -306,15 +337,6 @@
 			uploadRef.value.handleStart(file);//手动选择图片
 			props.dataForms.image=URL.createObjectURL(file);
 			uploadRef.value.submit();//上传图片
-		}
-		function handleExceed2(files){
-			pkguploadRef.value.clearFiles();//清空图片list
-			const file2=files[0];
-			file2.uid = genFileId();
-			pkguploadRef.value.handleStart(file2);//手动选择图片
-			props.dataForms.pkgimage=URL.createObjectURL(file2);
-			props.dataForms.location=URL.createObjectURL(file2);
-			pkguploadRef.value.submit();//上传图片
 		}
 		function Addtag(){
 			router.push({
@@ -384,16 +406,71 @@
   .image-list {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
   }
   .image-item {
     position: relative;
-    width: 150px;
-    height: 150px;
+    width: 130px;
+    height: 130px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #dcdfe6;
   }
-  .delete-btn {
+  .image-item:hover .image-item-delete {
+    opacity: 1;
+  }
+  .image-item-delete {
     position: absolute;
-    top: 125px;
-    left: 370px;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .image-item-delete .el-icon {
+    color: #fff;
+    font-size: 12px;
+  }
+  .image-item-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-style: dashed;
+    border-color: #c0c4cc;
+    transition: border-color 0.2s;
+  }
+  .image-item-add:hover {
+    border-color: #409eff;
+  }
+  .file-icon-box {
+    width: 130px;
+    height: 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: #f5f7fa;
+    gap: 4px;
+  }
+  .file-name {
+    width: 110px;
+    font-size: 11px;
+    color: #606266;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .image-item-add:hover {
+    border-color: #409eff;
   }
 </style>

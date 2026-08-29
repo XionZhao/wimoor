@@ -20,7 +20,7 @@
 			      />
 			    </el-select>
 			<OwnerAll @owner="changeOwner" notAll="isAll"  alltitle="全部操作人"></OwnerAll>
-			<el-input  v-model="searchKeywords" placeholder="请输入" clearable @input="handleQuery" class="input-with-select" >
+			<el-input  v-model="searchKeywords" placeholder="请输入" clearable @clear="handleQuery" v-debounce-input="handleQuery" class="input-with-select" >
 			   <template #prepend>
 			     <el-select v-model="searchtype" @change='handleQuery' placeholder="SKU" style="width:90px">
 			       <el-option label="SKU" value="sku"></el-option>
@@ -232,6 +232,6 @@
 <style scoped="scoped">
  .font-large{
 	 font-size:32px;
-	 color:#999;
+	 color: var(--el-text-color-secondary);
  }
 </style>

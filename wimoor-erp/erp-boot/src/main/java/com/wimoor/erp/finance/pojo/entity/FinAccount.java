@@ -42,6 +42,9 @@ public class FinAccount extends BaseEntity{
 	@TableField(value="isdelete")
     private Boolean isdelete;
 	
+	@TableField(value="findex")
+    private Integer findex;
+	
 	@TableField(value="name")
     private String name;
 	

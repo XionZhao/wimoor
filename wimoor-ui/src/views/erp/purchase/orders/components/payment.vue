@@ -101,27 +101,29 @@
 							    </el-radio-group>
 						</el-form-item>
 						<el-row :gutter="24">
-						 <el-col :span="12">
-						<el-form-item  >
-							<template #label>
-								<div class="pointer" @click.stop="showPayIndexDialog" >账户类型<el-icon class="font-extraSmall"><Sort /></el-icon></div>
-							</template>
-							<el-select v-model="formData.paymethod" @change="loadPaymentAccount(formData.paymethod)">
-								 <el-option  v-for="item in payMethodList"   :key="item.id"  :label="item.name" :value="item.id"  ></el-option>
-							</el-select>
-						</el-form-item>
-						</el-col>
-						<el-col :span="12">
-						<el-form-item    class="pointer" >
-							<template #label>
-								<div class="pointer" @click.stop="toPaymentPage">支付账户 </div>
-							</template>
-							<el-select v-model="formData.payacc">
-								 <el-option  v-for="item in payAccList"   :key="item.id"  :label="item.name+'['+item.paymethName+']'" :value="item.id"  >
-								 </el-option>
-							</el-select>
-						</el-form-item>
-						</el-col>
+						 <el-col :span="24">
+
+			<el-form-item    class="pointer pay-method-item" label="账户">
+				<template #label>
+					<div class="pointer  flex-between " >
+            <div class="flex-center">
+              <span class="font-bold" style="margin-right: 8px;">账户:</span>
+              <el-radio-group v-model="formData.paymethod" @change="loadPaymentAccount(formData.paymethod)" class="pay-method-radio">
+                <el-radio v-for="item in payMethodList" :key="item.id" :label="item.id">{{ item.name }}</el-radio>
+              </el-radio-group>
+            </div>
+           <div style="padding-top:4px;padding-left:2px;"> <el-icon @click.stop="showPayIndexDialog"  class="font-extraSmall"><Sort /></el-icon></div>
+
+					</div>
+				</template>
+				<el-select v-model="formData.payacc" @change="onPayAccChange" style="width:260px">
+					 <el-option  v-for="item in payAccList"   :key="item.id"  :label="item.name" :value="item.id"  >
+					 </el-option>
+				</el-select>
+        <el-icon @click.stop="showPayaccIndexDialog"  style="padding-left:2px" ><Sort /></el-icon>
+        <div v-if="isCashType && selectedAccountBalance !== null" style=" padding-left:6px;" class="font-extraSmall">￥{{ formatFloat(selectedAccountBalance) }}</div>
+			</el-form-item>
+			</el-col>
 						</el-row>
 						<el-form-item label="备注">
 							<el-input v-model="formData.remark"  :rows="2"
@@ -131,7 +133,7 @@
 						<el-button type="primary" v-if="queryParams.entry.paystatus==1" disabled >{{operateType.tabsType}}</el-button>
 						<el-button type="primary" v-else @click.stop="payment" >{{operateType.tabsType}}</el-button>
 						<el-button type="info" v-if="queryParams.entry.paystatus==1" disabled >申请{{operateType.tabsType}}</el-button>
-						<el-button type="info" v-else @click.stop="applypayment" >申请{{operateType.tabsType}}</el-button>
+						<el-button type="info" v-else @click.stop="applypayment" style="background-color: #fff; color: #606266; border-color: #dcdfe6;">申请{{operateType.tabsType}}</el-button>
 						</el-form-item>
 					</el-form>
 				</el-card>	
@@ -154,6 +156,7 @@
 	</el-dialog>
 	<FinItem ref="finItemRef" @change="loadFacProject()"></FinItem>
 	<PaymethodIndex ref="paymentIndexRef" @change="loadPaymentMethod"></PaymethodIndex>
+	<PayaccIndex ref="payaccIndexRef" @change="refreshPayAccList"></PayaccIndex>
 </template>
 
 <script setup>
@@ -166,6 +169,7 @@
 	import faccountApi from '@/api/erp/finances/faccountApi.js';
 	import FinItem from '@/views/erp/finance/account/components/finItem.vue';
 	import PaymethodIndex from "@/views/erp/finance/account/components/paymethod_index_dialog.vue";
+	import PayaccIndex from "@/views/erp/finance/account/components/payacc_index_dialog.vue";
 	import { ElMessage, ElMessageBox } from 'element-plus';
 	import {CheckInputFloat,CheckInputInt,dateFormat,dateTimesFormat,formatFloat} from '@/utils/index.js';
 	import {useRouter } from 'vue-router'
@@ -176,6 +180,7 @@
 	const finItemRef=ref();
 	const orderRecordRef=ref();
 	const paymentIndexRef=ref();
+	const payaccIndexRef=ref();
 	const router = useRouter();
 	const state = reactive({
 		operateType:{
@@ -233,6 +238,19 @@
 		return [...fixedRows, ...otherRows];
 	})
 
+	// 判断当前选中的账户类型是否为现金
+	const isCashType = computed(() => {
+		const selectedMethod = state.payMethodList.find(item => item.id === state.formData.paymethod);
+		return selectedMethod && selectedMethod.name === '现金';
+	})
+
+	// 获取当前选中支付账户的余额
+	const selectedAccountBalance = computed(() => {
+		if (!state.formData.payacc) return null;
+		const selectedAccount = state.payAccList.find(item => item.id === state.formData.payacc);
+		return selectedAccount ? selectedAccount.balance : null;
+	})
+
 	function gotoFinPage(){
 		//跳转至fin页面
 		finItemRef.value.show();
@@ -257,31 +275,56 @@
 	function showPayIndexDialog(){
 		paymentIndexRef.value.show();
 	}
+	function showPayaccIndexDialog(){
+		payaccIndexRef.value.show();
+	}
+	function refreshPayAccList(){
+		// 清空缓存，重新加载支付账户列表
+		state.payAccList=[];
+		loadPaymentAccount(state.formData.paymethod);
+	}
+
+	function onPayAccChange(accId){
+		// 选择账户时，反向联动更新账户类型
+		const selectedAcc = state.payAccList.find(item => item.id === accId);
+		if(selectedAcc && selectedAcc.paymeth){
+			state.formData.paymethod = selectedAcc.paymeth;
+		}
+	}
 
 	function handleAdd(){
 		state.otherFeeData.push({
 			name:'',
-			price:'',
+			amount:'',
+			objectid:'',
 		})
 	}
     
 	function handleDelete(index){
-		// 因为表格前两行是固定行（货物费用、运费），所以需要减去2得到实际的otherFeeData索引
-		const actualIndex = index - 2;
+		// 减去系统固定行数量，得到otherFeeData中的实际索引
+		const sysCount = tableFeeData.value.filter(item => item.isFixed).length;
+		const actualIndex = index - sysCount;
 		if (actualIndex >= 0) {
 			state.otherFeeData.splice(actualIndex, 1);
 		}
 	}
 	function loadFacProject(){
-		var list=[];
 		faccountApi.getProject().then((res)=>{
 			if(res.data && res.data.length>0){
-				res.data.forEach(function(item){
-					if(item.issys==false){
-						list.push(item);
-					}
-				});
-				state.finlist=list;
+				// 下拉列表：非系统的费用项（包含默认项和用户手动添加项）
+				state.finlist = res.data.filter(item => !item.issys);
+				// 非系统默认项自动填充到表格（仅首次加载时）
+				if(!state._defaultFeeLoaded){
+					const defaultNonSys = res.data.filter(item => !item.issys && item.isdefault);
+					defaultNonSys.forEach(item => {
+						state.otherFeeData.push({
+							name: item.name,
+							amount: '',
+							objectid: item.id,
+						});
+					});
+					state._defaultFeeLoaded = true;
+				}
 			}
 		});
 	}
@@ -339,12 +382,10 @@
 			ElMessage.error( '当前付款状态已完结！' );
 			return;
 		}
-		if(state.formData.cost<=0){
-			ElMessage.error('货物费用不能小于等于0');
-			return;
-		}
 		var data={};
+		var sumpay=0;
 		data.paymethod=state.formData.paymethod;
+    data.payacc=state.formData.payacc;
 		data.logisiter=null;
 		data.status="0";
 		data.payid=null;
@@ -354,8 +395,14 @@
 			data.deliverydatestr=payMap.deliverydate;
 		}
 		data.remark=state.formData.remark;
-		data.shipamount=state.formData.ship?parseFloat(state.formData.ship):0;
-		data.costamount=state.formData.cost?parseFloat(state.formData.cost):0;
+		// 动态获取系统费用项金额
+		const costRow = tableFeeData.value.find(item => item.isFixed && item.field === 'cost');
+		const shipRow = tableFeeData.value.find(item => item.isFixed && item.field === 'ship');
+		data.costamount = costRow && costRow.amount ? parseFloat(costRow.amount) : 0;
+		data.shipamount = shipRow && shipRow.amount ? parseFloat(shipRow.amount) : 0;
+
+		if(data.costamount > 0) sumpay += data.costamount;
+		if(data.shipamount > 0) sumpay += data.shipamount;
 		data.entryid=state.queryParams.entry.id;
 		if(state.operateType.tabsType=="付款"){
 			data.paytype="out";
@@ -363,21 +410,26 @@
 			data.paytype="in";
 		}
 		if(data.paytype=="in"){
-			if(state.formData.ship>0){
-				data.shipamount=(-1)*parseFloat(state.formData.ship);
-			}
-			if(state.formData.cost>0){
-				data.costamount=(-1)*parseFloat(state.formData.cost);
-			}
+			if(data.shipamount > 0) data.shipamount = (-1) * data.shipamount;
+			if(data.costamount > 0) data.costamount = (-1) * data.costamount;
 		}
-		if(state.otherFeeData && state.otherFeeData.length>0){
+		if(tableFeeData.value && tableFeeData.value.length>0){
 			var feeList=[];
-			state.otherFeeData.forEach(function(item){
-				if((item.amount!=undefined && item.amount!="" && parseFloat(item.amount)>0) && item.objectid){
-					feeList.push(JSON.stringify(item));
+			tableFeeData.value.forEach(function(item){
+				if(!item.isFixed && (item.amount!=undefined && item.amount!="" && parseFloat(item.amount)>0) && item.objectid){
+				    sumpay=sumpay+parseFloat(item.amount);
+				    var feeItem = {...item};
+					if(data.paytype=="in"){
+						feeItem.amount=(-1)*parseFloat(item.amount);
+					}
+					feeList.push(JSON.stringify(feeItem));
 				}
 			});
 			data.feelist=feeList.toString();
+		}
+		if(sumpay<=0.000001){
+			ElMessage.error('费用不能小于等于0');
+			return;
 		}
 		purchaselistApi.paymentApply(data).then((res)=>{
 			if(res.data){
@@ -409,15 +461,14 @@
 			data.deliverydatestr=payMap.deliverydate;
 		}
 		data.remark=state.formData.remark;
-		data.shipamount=state.formData.ship?parseFloat(state.formData.ship):0;
-		data.costamount=state.formData.cost?parseFloat(state.formData.cost):0;
-		
-		if(state.formData.cost){
-			sumpay=sumpay+parseFloat(state.formData.cost);
-		}
-		if(state.formData.ship){
-			sumpay=sumpay+parseFloat(state.formData.ship);
-		}
+		// 动态获取系统费用项金额
+		const costRow = tableFeeData.value.find(item => item.isFixed && item.field === 'cost');
+		const shipRow = tableFeeData.value.find(item => item.isFixed && item.field === 'ship');
+		data.costamount = costRow && costRow.amount ? parseFloat(costRow.amount) : 0;
+		data.shipamount = shipRow && shipRow.amount ? parseFloat(shipRow.amount) : 0;
+
+		if(data.costamount > 0) sumpay += data.costamount;
+		if(data.shipamount > 0) sumpay += data.shipamount;
 		data.entryid=state.queryParams.entry.id;
 		if(state.operateType.tabsType=="付款"){
 			data.paytype="out";
@@ -425,27 +476,24 @@
 			data.paytype="in";
 		}
 		if(data.paytype=="in"){
-			if(state.formData.ship>0){
-				data.shipamount=(-1)*parseFloat(state.formData.ship);
-			}
-			if(state.formData.cost>0){
-				data.costamount=(-1)*parseFloat(state.formData.cost);
-			}
+			if(data.shipamount > 0) data.shipamount = (-1) * data.shipamount;
+			if(data.costamount > 0) data.costamount = (-1) * data.costamount;
 		}
-		if(state.otherFeeData && state.otherFeeData.length>0){
+		if(tableFeeData.value && tableFeeData.value.length>0){
 			var feeList=[];
-			state.otherFeeData.forEach(function(item){
-				if((item.amount!=undefined && item.amount!="" && parseFloat(item.amount)>0) && item.objectid){
+			tableFeeData.value.forEach(function(item){
+				if(!item.isFixed && (item.amount!=undefined && item.amount!="" && parseFloat(item.amount)>0) && item.objectid){
 				    sumpay=sumpay+parseFloat(item.amount);
+				    var feeItem = {...item};
 					if(data.paytype=="in"){
-						item.amount=(-1)*parseFloat(item.amount);
+						feeItem.amount=(-1)*parseFloat(item.amount);
 					}
-					feeList.push(JSON.stringify(item));
+					feeList.push(JSON.stringify(feeItem));
 				}
 			});
 			data.feelist=feeList.toString();
 		}
-		
+
 		if(sumpay<=0.000001){
 			ElMessage.error('费用不能小于等于0');
 			return;
@@ -568,6 +616,8 @@
 	
 	function show(type,entry){
 		state.queryParams.entry=entry;
+		state.otherFeeData = [];
+		state._defaultFeeLoaded = false;
 		if(type=="pay"){
 			state.operateType.dialogTitle = "采购付款"
 			state.operateType.tabsType  ="付款"
@@ -667,4 +717,29 @@ color:var(--el-color-blue)
 .img-40{width: 40px;
 height: 40px;flex: none;
 margin-right: 8px;}
+.payacc-label {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+}
+.balance-text {
+	font-size: 12px;
+	color: #999;
+}
+.pay-method-item :deep(.el-form-item__label) {
+	padding-bottom: 0 !important;
+}
+.pay-method-radio {
+	margin-left: 4px;
+}
+.pay-method-radio :deep(.el-radio) {
+	margin-right: 8px;
+	height: 24px;
+	line-height: 24px;
+}
+.pay-method-radio :deep(.el-radio__label) {
+	padding-left: 4px;
+	font-size: 13px;
+}
 </style>

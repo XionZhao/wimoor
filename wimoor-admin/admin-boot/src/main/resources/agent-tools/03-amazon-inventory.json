@@ -1,0 +1,534 @@
+﻿{
+    "module":  "Amazon FBA库存",
+    "description":  "Amazon FBA库存查询、库存报告、库存规划、库存成本、库存日明细等库存管理",
+    "tools":  [
+                  {
+                      "name":  "amz_query_fba_inventory",
+                      "description":  "查询单个SKU的Amazon FBA库存详情，包括库存规划数据和各仓库库存数量（可售、预留、入库中、不可售等）",
+                      "menu_id":  142,
+                      "endpoint":  "/amazon/api/v0/inventry/findFBA",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，如ATVPDKIKX0DER(US)、A1F83G8C2ARO7P(UK)，可通过amz_query_market_list获取"
+                                                       },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码，精确匹配"
+                                             }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "marketplaceid",
+                                       "sku"
+                                   ],
+                      "response_fields":  {
+                                              "invplandata":  "库存规划数据（AmzInventoryPlanning对象），包含库存龄、销量、预警等",
+                                              "fbainv.groupid":  "店铺分组ID",
+                                              "fbainv.groupname":  "店铺分组名称",
+                                              "fbainv.warehouse":  "仓库名称",
+                                              "fbainv.sku":  "SKU编码",
+                                              "fbainv.pname":  "商品名称",
+                                              "fbainv.image":  "商品图片URL",
+                                              "fbainv.afnWarehouseQuantity":  "FBA仓库总数量",
+                                              "fbainv.afnFulfillableQuantity":  "FBA可售数量",
+                                              "fbainv.afnReservedQuantity":  "FBA预留数量",
+                                              "fbainv.afnInboundWorkingQuantity":  "入库处理中数量",
+                                              "fbainv.afnInboundShippedQuantity":  "已发货入库数量",
+                                              "fbainv.afnInboundReceivingQuantity":  "入库接收中数量",
+                                              "fbainv.afnUnsellableQuantity":  "不可售数量",
+                                              "fbainv.afnResearchingQuantity":  "调查中数量",
+                                              "fbainv.afnTotalQuantity":  "FBA总数量",
+                                              "fbainv.stockingCycle":  "安全库存周期（天）",
+                                              "fbainv.minCycle":  "最小发货周期（天）",
+                                              "fbainv.firstLegCharges":  "头程运输成本"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_fba_inventory_supply",
+                      "description":  "通过Amazon SP-API实时查询FBA库存供应信息，返回指定SKU的InventorySummary数据",
+                      "menu_id":  142,
+                      "endpoint":  "/amazon/api/v0/inventry/getInventorySupply",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "skuStr":  {
+                                                    "type":  "string",
+                                                    "description":  "SKU编码，多个SKU用逗号分隔"
+                                                }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "marketplaceid",
+                                       "skuStr"
+                                   ],
+                      "response_fields":  {
+                                              "sku.asin":  "ASIN编码",
+                                              "sku.fnsku":  "FNSKU编码",
+                                              "sku.sellerSku":  "卖家SKU",
+                                              "sku.condition":  "商品状态",
+                                              "sku.totalSupplyQuantity":  "总供应数量",
+                                              "sku.inStockSupplyQuantity":  "在库供应数量",
+                                              "sku.inboundSupplyQuantity":  "入库供应数量",
+                                              "sku.reservedQuantity":  "预留数量"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_fba_inventory_report",
+                      "description":  "查询FBA库存报告列表，按SKU查看各站点的库存数量、安全库存周期、头程运费等信息",
+                      "menu_id":  142,
+                      "endpoint":  "/amazon/api/v1/inventoryRpt/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码（母SKU），精确匹配"
+                                             }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "gname":  "店铺分组名称",
+                                              "groupid":  "店铺分组ID",
+                                              "amazonauthid":  "Amazon授权ID",
+                                              "sku":  "SKU编码",
+                                              "marketplaceid":  "站点ID",
+                                              "name":  "站点/仓库名称",
+                                              "stockingCycle":  "安全库存周期（天）",
+                                              "mincycle":  "最小发货周期（天）",
+                                              "firstlegcharges":  "头程运输成本",
+                                              "afnFulfillableQuantity":  "FBA可售数量",
+                                              "afnReservedQuantity":  "FBA预留数量",
+                                              "afnInboundWorkingQuantity":  "入库处理中数量",
+                                              "afnInboundShippedQuantity":  "已发货入库数量",
+                                              "afnInboundReceivingQuantity":  "入库接收中数量",
+                                              "afnUnsellableQuantity":  "不可售数量"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_fba_inventory_planning",
+                      "description":  "查询FBA库存规划（滞销报表）分页列表，包含库存龄分布、销量统计、建议操作、仓储费用等规划数据",
+                      "menu_id":  142,
+                      "endpoint":  "/amazon/api/v1/inventoryRpt/planninglist",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "SKU模糊搜索关键字"
+                                                },
+                                     "field":  {
+                                                   "type":  "string",
+                                                   "description":  "筛选字段名，如invAge365PlusDays，仅返回该字段大于0的记录"
+                                               },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "snapshotDate":  "快照日期",
+                                              "sku":  "SKU编码",
+                                              "msku":  "映射SKU（母SKU）",
+                                              "fnsku":  "FNSKU编码",
+                                              "asin":  "ASIN编码",
+                                              "condition":  "商品状态",
+                                              "available":  "可用数量",
+                                              "countrycode":  "国家代码",
+                                              "currency":  "货币",
+                                              "invAge0To30Days":  "0-30天库存数量",
+                                              "invAge31To60Days":  "31-60天库存数量",
+                                              "invAge61To90Days":  "61-90天库存数量",
+                                              "invAge91To180Days":  "91-180天库存数量",
+                                              "invAge181To270Days":  "181-270天库存数量",
+                                              "invAge271To365Days":  "271-365天库存数量",
+                                              "invAge365PlusDays":  "365天以上库存数量",
+                                              "unitsShippedT7":  "近7天发货量",
+                                              "unitsShippedT30":  "近30天发货量",
+                                              "unitsShippedT60":  "近60天发货量",
+                                              "unitsShippedT90":  "近90天发货量",
+                                              "salesShippedLast7Days":  "近7天销售额",
+                                              "salesShippedLast30Days":  "近30天销售额",
+                                              "salesShippedLast60Days":  "近60天销售额",
+                                              "salesShippedLast90Days":  "近90天销售额",
+                                              "alert":  "库存预警状态",
+                                              "yourPrice":  "商品售价",
+                                              "salesPrice":  "促销价",
+                                              "daysOfSupply":  "可售天数",
+                                              "estimatedExcessQuantity":  "预计过剩数量",
+                                              "weeksOfCoverT30":  "按30天计算的可售周数",
+                                              "weeksOfCoverT90":  "按90天计算的可售周数",
+                                              "sellThrough":  "售罄率",
+                                              "estimatedLtsfNextCharge":  "预计下月长期仓储费",
+                                              "estimatedStorageCostNextMonth":  "预计下月存储成本",
+                                              "inboundQuantity":  "入库总数量",
+                                              "inboundWorking":  "入库处理中",
+                                              "inboundShipped":  "已发货入库",
+                                              "inboundReceived":  "已接收入库",
+                                              "reservedQuantity":  "预留数量",
+                                              "unfulfillableQuantity":  "不可履约数量",
+                                              "noSaleLast6Months":  "近6个月零销量",
+                                              "recommendedAction":  "建议操作",
+                                              "healthyInventoryLevel":  "健康库存水平",
+                                              "gname":  "店铺分组名称",
+                                              "market":  "站点名称",
+                                              "pname":  "商品名称",
+                                              "image":  "商品图片URL",
+                                              "skuname":  "母SKU名称",
+                                              "owner":  "负责人"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_fba_inventory_day_detail",
+                      "description":  "查询FBA库存日明细数据，按日期维度查看各SKU在各站点的库存变化详情",
+                      "menu_id":  142,
+                      "endpoint":  "/amazon/api/v1/inventoryRpt/getFBAInvDayDetail",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "warehouse":  {
+                                                       "type":  "string",
+                                                       "description":  "站点ID（marketplaceid），可通过amz_query_market_list获取"
+                                                   },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码，支持模糊搜索"
+                                             },
+                                     "fromdate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd，默认近7天"
+                                                  },
+                                     "enddate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd，默认今天"
+                                                 },
+                                     "notlike":  {
+                                                     "type":  "boolean",
+                                                     "description":  "是否精确匹配SKU，true为精确匹配，false或不传为模糊搜索"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "SKU编码",
+                                              "warehouse":  "仓库名称（如FBA-US、FBA-欧洲等）",
+                                              "v{yyyy-MM-dd}":  "动态日期列，格式为v+日期（如v2026-07-09），值为该日FBA仓库总数量",
+                                              "image":  "商品图片URL",
+                                              "pname":  "商品名称",
+                                              "summary":  "首页汇总数据（仅currentpage=1时返回），包含各日期列的合计值"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_fba_inventory_cost",
+                      "description":  "查询FBA库存成本数据，包括采购单价、可用库存、预留库存、待入库、货值、头程运费、其他采购成本等",
+                      "menu_id":  142,
+                      "endpoint":  "/amazon/api/v1/inventoryRpt/inventoryCostFBA",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取，传IEU表示欧洲"
+                                                       },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码，模糊搜索"
+                                             },
+                                     "byday":  {
+                                                   "type":  "string",
+                                                   "description":  "查询日期，格式：yyyy-MM-dd，为库存快照日期"
+                                               },
+                                     "isAvgPrice":  {
+                                                        "type":  "string",
+                                                        "description":  "是否使用加权平均价，\u0027true\u0027为使用加权平均价，否则使用采购价"
+                                                    },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "SKU编码",
+                                              "price":  "采购单价",
+                                              "remark":  "备注",
+                                              "fulfillable":  "可用库存数量",
+                                              "reserved":  "预留库存数量",
+                                              "quantity":  "总库存数量（可用+预留+入库中）",
+                                              "inbound":  "待入库数量（已发货+接收中）",
+                                              "totalprice":  "货值",
+                                              "otherFeer":  "其他采购成本",
+                                              "firstLegCharges":  "头程运费"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_inv_eu_fba",
+                      "description":  "查询欧洲联合FBA库存信息，查看指定授权店铺下SKU在欧盟各国的库存分布",
+                      "menu_id":  142,
+                      "endpoint":  "/amazon/api/v0/inventry/findEUFBA",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "authid":  {
+                                                    "type":  "string",
+                                                    "description":  "Amazon授权ID，可通过店铺授权相关接口获取"
+                                                },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码，精确匹配"
+                                             }
+                                 },
+                      "required":  [
+                                       "authid"
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "SKU编码",
+                                              "fnsku":  "FNSKU编码",
+                                              "asin":  "ASIN编码",
+                                              "fcondition":  "商品状态（New/Used等）",
+                                              "country":  "国家代码（如GB、DE、FR、IT、ES等）",
+                                              "quantity":  "该国家库存数量"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_inv_summary_planning",
+                      "description":  "查询FBA库存规划汇总数据，汇总指定条件下所有SKU的库存龄、销量、仓储费用等合计数据",
+                      "menu_id":  142,
+                      "endpoint":  "/amazon/api/v1/inventoryRpt/summaryPlanning",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "SKU模糊搜索关键字"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "currency":  "货币",
+                                              "available":  "可用数量合计",
+                                              "pendingRemovalQuantity":  "待移除数量合计",
+                                              "invAge0To90Days":  "0-90天库存合计",
+                                              "invAge91To180Days":  "91-180天库存合计",
+                                              "invAge181To270Days":  "181-270天库存合计",
+                                              "invAge271To365Days":  "271-365天库存合计",
+                                              "invAge365PlusDays":  "365天以上库存合计",
+                                              "unitsShippedT7":  "近7天发货量合计",
+                                              "unitsShippedT30":  "近30天发货量合计",
+                                              "unitsShippedT60":  "近60天发货量合计",
+                                              "unitsShippedT90":  "近90天发货量合计",
+                                              "estimatedExcessQuantity":  "预计过剩数量合计",
+                                              "salesShippedLast7Days":  "近7天销售额合计",
+                                              "salesShippedLast30Days":  "近30天销售额合计",
+                                              "salesShippedLast60Days":  "近60天销售额合计",
+                                              "salesShippedLast90Days":  "近90天销售额合计",
+                                              "estimatedLtsfNextCharge":  "预计下月长期仓储费合计",
+                                              "estimatedStorageCostNextMonth":  "预计下月存储成本合计",
+                                              "inboundQuantity":  "入库总数量合计",
+                                              "inboundWorking":  "入库处理中合计",
+                                              "inboundShipped":  "已发货入库合计",
+                                              "inboundReceived":  "已接收入库合计",
+                                              "reservedQuantity":  "预留数量合计",
+                                              "unfulfillableQuantity":  "不可履约数量合计",
+                                              "noSaleLast6Months":  "近6个月零销量合计"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_inv_warehouse",
+                      "description":  "查询FBA仓库库存分布，按仓库维度查看各SKU的库存数量（可售、预留、入库中、不可售等）",
+                      "menu_id":  142,
+                      "endpoint":  "/amazon/api/v1/inventoryRpt/getWarehouse",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取，传IEU表示欧洲"
+                                                       },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "SKU模糊搜索关键字"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "groupid":  "店铺分组ID",
+                                              "groupname":  "店铺分组名称",
+                                              "marketplaceid":  "站点ID",
+                                              "warehouse":  "仓库名称（如FBA-US、FBA-欧洲等）",
+                                              "sku":  "SKU编码",
+                                              "pname":  "商品名称",
+                                              "image":  "商品图片URL",
+                                              "afnWarehouseQuantity":  "FBA仓库总数量",
+                                              "afnFulfillableQuantity":  "FBA可售数量",
+                                              "afnReservedQuantity":  "FBA预留数量",
+                                              "afnInboundWorkingQuantity":  "入库处理中数量",
+                                              "afnInboundShippedQuantity":  "已发货入库数量",
+                                              "afnInboundReceivingQuantity":  "入库接收中数量",
+                                              "afnUnsellableQuantity":  "不可售数量",
+                                              "afnResearchingQuantity":  "调查中数量",
+                                              "afnTotalQuantity":  "FBA总数量",
+                                              "stockingCycle":  "安全库存周期（天）",
+                                              "minCycle":  "最小发货周期（天）",
+                                              "firstLegCharges":  "头程运输成本",
+                                              "summary":  "首页汇总数据（仅currentpage=1时返回）"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_inv_fba_country",
+                      "description":  "查询FBA库存按欧洲国家分布数据，查看各SKU在英国、德国、法国、意大利、西班牙、波兰等国的库存数量",
+                      "menu_id":  142,
+                      "endpoint":  "/amazon/api/v1/inventoryRpt/getFBACountry",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "SKU模糊搜索关键字"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "groupname":  "店铺分组名称",
+                                              "sku":  "SKU编码",
+                                              "name":  "商品名称",
+                                              "image":  "商品图片URL",
+                                              "GB":  "英国库存数量",
+                                              "IT":  "意大利库存数量",
+                                              "FR":  "法国库存数量",
+                                              "DE":  "德国库存数量",
+                                              "PL":  "波兰库存数量",
+                                              "ES":  "西班牙库存数量"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_inv_day_detail_field",
+                      "description":  "查询FBA库存日明细可用字段列表，用于获取日明细报表中可选的汇总字段信息",
+                      "menu_id":  142,
+                      "endpoint":  "/amazon/api/v1/inventoryRpt/getFBAInvDayDetailField",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "fromdate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd，默认近7天"
+                                                  },
+                                     "enddate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd，默认今天"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "byday":  "日期值（如2026-07-09）",
+                                              "field":  "字段编码（如v2026-07-09），用于动态列名"
+                                          }
+                  }
+              ]
+}

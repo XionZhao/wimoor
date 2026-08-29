@@ -236,89 +236,89 @@
 		</if>
 			and a.groupid=#{groupid,jdbcType=CHAR} limit 0,1
 	</select>
-	
+
 	<select id="selectDetialByAuth" resultType="com.wimoor.amazon.product.pojo.vo.AmzProductListVo" parameterType="java.util.Map">
 		<if test="param.paralist !=null and param.paralist!=''">
-		   select * from (
+			select * from (
 		</if>
 		select
-		    op.profitid,t.id,ifnull(op.msku,t.sku) msku,t.invalid, em.id mid,em.price mprice,t.asin, t.sku,t.marketplaceid,a.sellerid, m.point_name, t.name,t.parentAsin,
-			em.color skucolor,date_format( openDate,'%Y-%m-%d') opendate, fulfillchannel, binding,a.region region,m.region mregion,
-			(select min(`rank`) `rank` from t_product_rank  where product_id = t.id) `rank`,
-			ifnull(pf.flownumber,t.totalOfferCount) totalOfferCount,
-			ifnull(pf.flownumber,0) followcount,case when ifnull(pf.flownumber,0)>1 and ifnull(pf.isread,0)=0 then 1 else 0 end notread,
-			manufacturer, pgroup, typename,ifnull(p.location,p.url) image,
-			ifnull(op.buyprice,t.price) landed_amount,
-			m.currency landed_currency,ir.afn_fulfillable_quantity, 
-			ifnull(op.buyprice,t.price) changeprice, 
-			t.amazonAuthId,sy.avgsales averageSalesDay,sy.daynum averageSalesWeek, sy.oldavgsales averageSalesMonth,
-			
-			ifnull(ir.afn_fulfillable_quantity,0)+ifnull(irr.reserved_fc_transfers,0)
-			+ifnull(irr.reserved_fc_processing,0) fulfillquantity,
-			
-			case when m.region='EU' then
-			(ifnull(ir.afn_fulfillable_quantity,0)+ifnull(irr.reserved_fc_transfers,0)
-			+ifnull(irr.reserved_fc_processing,0)) /
-			(select case when ifnull(sum(ttemp.avgsales),0)=0 then 0.0001 ELSE sum(ttemp.avgsales) END  
-			from t_product_info tptemp
-			left join t_product_in_order ttemp on tptemp.id=ttemp.pid
-			left join t_marketplace mtemp on tptemp.marketplaceid=mtemp.marketplaceId
-			where sku=t.sku and mtemp.region='EU')
-			else
-			(ifnull(ir.afn_fulfillable_quantity,0)+ifnull(irr.reserved_fc_transfers,0)
-			+ifnull(irr.reserved_fc_processing,0))/(case when ifnull(sy.avgsales,0)=0 then 0.0001 ELSE sy.avgsales END) end as dayfulfilla,
-			
-			case when m.region='EU' then
-			(ifnull(ir.afn_inbound_working_quantity,0)+ifnull(ir.afn_inbound_shipped_quantity,0)
-			+ifnull(ir.afn_inbound_receiving_quantity,0)) /ifnull(
-			(
-			select sum(ttemp.avgsales)
-			from t_product_info tptemp
-			left join t_product_in_order ttemp on tptemp.id=ttemp.pid
-			left join t_marketplace mtemp on tptemp.marketplaceid=mtemp.marketplaceId
-			where sku=t.sku and mtemp.region='EU'
-			),ir.afn_total_quantity+1) 
-			else
-			(ifnull(ir.afn_inbound_working_quantity,0)+ifnull(ir.afn_inbound_shipped_quantity,0)
-			+ifnull(ir.afn_inbound_receiving_quantity,0))/ifnull(sy.avgsales,ir.afn_total_quantity+1) end as dayinbound,
-			m.currency listing_currency, sy.sales_seven sumweek,sy.sales_month summonth,sy.order_week orderweek,sy.sales_fifteen sales15,
-			sy.order_month ordermonth, isparent,op.remark,op.disable, pf.flownumber flownnumber,pf.id followid,
-			pf.lastupdateTime,pf.isread, ses.session_day7 sessions,ses.session_rate7 sessionrate,ses.units_ordered7 unitsordered7,
-			adv.adv_impr7 advimpr,adv.adv_sales7 advsales,
-			adv.adv_cpc7 advcpc,adv.adv_clicks7 advclick,
-			adv.adv_spc7 advspc,adv.adv_spend7 advspend,
-			adv.adv_ctr7 advctr,adv.adv_acos7 advacos,
-			ses.buybox_rate7 buybox, profit.margin_week prorate, sy.price_week priceweek,
-			ifnull(profit.margin_week,0) profitrate,
-			case when ifnull(sy.price_week,0) =0 then 0 else
-			ifnull(adv.adv_spend7,0)/sy.price_week end acoas,
-			ifnull(profit.profit_week,0) profits,
-			ifnull(profit.profit_week,0)-ifnull(adv.adv_spend7 ,0) profitall,
-			case when ifnull(sy.price_week,0)=0 then 0 else
-			(ifnull(profit.profit_week,0)-ifnull(adv.adv_spend7 ,0))/sy.price_week end proprate,
-			a.groupid,m.name marketplacename,gro.name groupname,
-			ROUND(case when review2.reviewnum > 0 then ifnull(review2.starofrate,0) else ifnull(review1.starofrate,0) end,2) positive_feedback_rating,
-		    case when review2.reviewnum > 0 then review2.reviewnum else review1.reviewnum end feedback_count,
-			case when review2.reviewnum > 0 then review2.negative else review1.negative end negative,
-			case when review2.reviewnum > 0 then review2.id else review1.id end revid,
-			case when (review1.refreshtime is null and review2.refreshtime is null) then '--'
-			when  (review1.refreshtime is not null and review2.refreshtime is null) then review1.refreshtime
-			when  (review1.refreshtime is null and review2.refreshtime is not null) then review2.refreshtime
-			else  case when(review1.refreshtime > review2.refreshtime) then review1.refreshtime else review2.refreshtime end end revrefreshtime,
-			profit.margin newprorate,
-		    profit.costDetail costDetail,
-			op.status optstatus,sd.name optstatusname,sd.color optstatuscolor,m.findex marketindex,op.priceremark
-			,lo.endtime lockedtime,case when NOW()&lt;lo.endtime then 1 ELSE 0 END haslocked,m.market country,
-			(SELECT GROUP_CONCAT(tagid) FROM t_product_in_tags WHERE  pid=t.id) tagids,
-			t.inSnl,
-			op.fulfillment_availability,
-			(select max(plan.fba_inventory_level_health_status) from t_amz_inventory_planning plan
-			 where plan.sku=t.sku and plan.amazonauthid=t.amazonAuthId and plan.condition='New'
-			       and plan.countrycode=m.market
-			) fbahealth,
-			ifnull(op.owner,em.owner) owner,
-		   sy.sales_return_month salesreturnmonth,
-		   sy.order_return_month orderReturnMonth
+		op.profitid,t.id,ifnull(op.msku,t.sku) msku,t.invalid, em.id mid,em.price mprice,t.asin, t.sku,t.marketplaceid,a.sellerid, m.point_name, t.name,t.parentAsin,
+		em.color skucolor,date_format( openDate,'%Y-%m-%d') opendate, fulfillchannel, binding,a.region region,m.region mregion,
+		(select min(`rank`) `rank` from t_product_rank  where product_id = t.id) `rank`,
+		ifnull(pf.flownumber,t.totalOfferCount) totalOfferCount,
+		ifnull(pf.flownumber,0) followcount,case when ifnull(pf.flownumber,0)>1 and ifnull(pf.isread,0)=0 then 1 else 0 end notread,
+		manufacturer, pgroup, typename,ifnull(p.location,p.url) image,
+		ifnull(op.buyprice,t.price) landed_amount,
+		m.currency landed_currency,ir.afn_fulfillable_quantity,
+		ifnull(op.buyprice,t.price) changeprice,
+		t.amazonAuthId,sy.avgsales averageSalesDay,sy.daynum averageSalesWeek, sy.oldavgsales averageSalesMonth,
+
+		ifnull(ir.afn_fulfillable_quantity,0)+ifnull(irr.reserved_fc_transfers,0)
+		+ifnull(irr.reserved_fc_processing,0) fulfillquantity,
+
+		case when m.region='EU' then
+		(ifnull(ir.afn_fulfillable_quantity,0)+ifnull(irr.reserved_fc_transfers,0)
+		+ifnull(irr.reserved_fc_processing,0)) /
+		(select case when ifnull(sum(ttemp.avgsales),0)=0 then 0.0001 ELSE sum(ttemp.avgsales) END
+		from t_product_info tptemp
+		left join t_product_in_order ttemp on tptemp.id=ttemp.pid
+		left join t_marketplace mtemp on tptemp.marketplaceid=mtemp.marketplaceId
+		where sku=t.sku and mtemp.region='EU')
+		else
+		(ifnull(ir.afn_fulfillable_quantity,0)+ifnull(irr.reserved_fc_transfers,0)
+		+ifnull(irr.reserved_fc_processing,0))/(case when ifnull(sy.avgsales,0)=0 then 0.0001 ELSE sy.avgsales END) end as dayfulfilla,
+
+		case when m.region='EU' then
+		(ifnull(ir.afn_inbound_working_quantity,0)+ifnull(ir.afn_inbound_shipped_quantity,0)
+		+ifnull(ir.afn_inbound_receiving_quantity,0)) /ifnull(
+		(
+		select sum(ttemp.avgsales)
+		from t_product_info tptemp
+		left join t_product_in_order ttemp on tptemp.id=ttemp.pid
+		left join t_marketplace mtemp on tptemp.marketplaceid=mtemp.marketplaceId
+		where sku=t.sku and mtemp.region='EU'
+		),ir.afn_total_quantity+1)
+		else
+		(ifnull(ir.afn_inbound_working_quantity,0)+ifnull(ir.afn_inbound_shipped_quantity,0)
+		+ifnull(ir.afn_inbound_receiving_quantity,0))/ifnull(sy.avgsales,ir.afn_total_quantity+1) end as dayinbound,
+		m.currency listing_currency, sy.sales_seven sumweek,sy.sales_month summonth,sy.order_week orderweek,sy.sales_fifteen sales15,
+		sy.order_month ordermonth, isparent,op.remark,op.disable, pf.flownumber flownnumber,pf.id followid,
+		pf.lastupdateTime,pf.isread, ses.session_day7 sessions,ses.session_rate7 sessionrate,ses.units_ordered7 unitsordered7,
+		adv.adv_impr7 advimpr,adv.adv_sales7 advsales,
+		adv.adv_cpc7 advcpc,adv.adv_clicks7 advclick,
+		adv.adv_spc7 advspc,adv.adv_spend7 advspend,
+		adv.adv_ctr7 advctr,adv.adv_acos7 advacos,
+		ses.buybox_rate7 buybox, profit.margin_week prorate, sy.price_week priceweek,
+		ifnull(profit.margin_week,0) profitrate,
+		case when ifnull(sy.price_week,0) =0 then 0 else
+		ifnull(adv.adv_spend7,0)/sy.price_week end acoas,
+		ifnull(profit.profit_week,0) profits,
+		ifnull(profit.profit_week,0)-ifnull(adv.adv_spend7 ,0) profitall,
+		case when ifnull(sy.price_week,0)=0 then 0 else
+		(ifnull(profit.profit_week,0)-ifnull(adv.adv_spend7 ,0))/sy.price_week end proprate,
+		a.groupid,m.name marketplacename,gro.name groupname,
+		ROUND(case when review2.reviewnum > 0 then ifnull(review2.starofrate,0) else ifnull(review1.starofrate,0) end,2) positive_feedback_rating,
+		case when review2.reviewnum > 0 then review2.reviewnum else review1.reviewnum end feedback_count,
+		case when review2.reviewnum > 0 then review2.negative else review1.negative end negative,
+		case when review2.reviewnum > 0 then review2.id else review1.id end revid,
+		case when (review1.refreshtime is null and review2.refreshtime is null) then '--'
+		when  (review1.refreshtime is not null and review2.refreshtime is null) then review1.refreshtime
+		when  (review1.refreshtime is null and review2.refreshtime is not null) then review2.refreshtime
+		else  case when(review1.refreshtime > review2.refreshtime) then review1.refreshtime else review2.refreshtime end end revrefreshtime,
+		profit.margin newprorate,
+		profit.costDetail costDetail,
+		op.status optstatus,sd.name optstatusname,sd.color optstatuscolor,m.findex marketindex,op.priceremark
+		,lo.endtime lockedtime,case when NOW()&lt;lo.endtime then 1 ELSE 0 END haslocked,m.market country,
+		(SELECT GROUP_CONCAT(tagid) FROM t_product_in_tags WHERE  pid=t.id) tagids,
+		t.inSnl,
+		op.fulfillment_availability,
+		(select max(plan.fba_inventory_level_health_status) from t_amz_inventory_planning plan
+		where plan.sku=t.sku and plan.amazonauthid=t.amazonAuthId and plan.condition='New'
+		and plan.countrycode=m.market
+		) fbahealth,
+		ifnull(op.owner,em.owner) owner,
+		sy.sales_return_month salesreturnmonth,
+		sy.order_return_month orderReturnMonth
 		from t_product_info t
 		left join t_amazon_auth a on a.id=t.amazonAuthId
 		left join t_amazon_group gro on a.groupid=gro.id
@@ -332,8 +332,8 @@
 		left join t_marketplace m on m.marketplaceId=t.marketplaceid
 		left join t_erp_material em on em.sku=ifnull(op.msku,t.sku) and em.shopid=a.shop_id and em.isdelete=false
 		left join t_inventory_report ir on ir.marketplaceid = case when m.region='EU' then 'EU' else t.marketplaceid end and t.sku=ir.sku and ir.amazonAuthId=t.amazonAuthId
-		left join t_inventory_reserved_report irr on irr.marketplaceid=case when m.region='EU' then 'EU' else t.marketplaceid end and t.sku=irr.sku and irr.amazonAuthId=t.amazonAuthId  
-		left join t_product_follow pf on t.marketplaceid=pf.MarketplaceId and pf.amazonAuthId=t.amazonAuthId and t.asin=pf.asin 
+		left join t_inventory_reserved_report irr on irr.marketplaceid=case when m.region='EU' then 'EU' else t.marketplaceid end and t.sku=irr.sku and irr.amazonAuthId=t.amazonAuthId
+		left join t_product_follow pf on t.marketplaceid=pf.MarketplaceId and pf.amazonAuthId=t.amazonAuthId and t.asin=pf.asin
 		left join t_product_in_review review1 on review1.asin=t.asin and review1.marketplaceid=t.marketplaceid
 		left join t_product_in_review review2 on review2.asin=t.parentAsin and review2.marketplaceid=t.marketplaceid
 		left JOIN t_product_price_locked lo ON lo.pid=t.id AND lo.`disable`=1
@@ -341,33 +341,33 @@
 		<if test="param.sku != null">
 			and (t.sku like #{param.sku,jdbcType=CHAR})
 		</if>
-	    <if test="param.amazonAuthId != null">
+		<if test="param.amazonAuthId != null">
 			and  t.amazonAuthId= #{param.amazonAuthId,jdbcType=CHAR}
 		</if>
-		
+
 		<if test="param.name !=null and param.name !=''">
-				and (UPPER(t.name) like #{param.name,jdbcType=CHAR})
-		 </if>
-		 <if test="param.category !=null">
-				and (em.categoryid = #{param.category,jdbcType=CHAR})
-		 </if>
-		 <if test="param.isbadreview !=null">
-				and (review1.negative=1 or review2.negative=1)
-		 </if>
-		 <if test="param.remark!=null and param.remark!=''">
-				and (op.remark like #{param.remark,jdbcType=CHAR})
-			</if>
+			and (UPPER(t.name) like #{param.name,jdbcType=CHAR})
+		</if>
+		<if test="param.category !=null">
+			and (em.categoryid = #{param.category,jdbcType=CHAR})
+		</if>
+		<if test="param.isbadreview !=null">
+			and (review1.negative=1 or review2.negative=1)
+		</if>
+		<if test="param.remark!=null and param.remark!=''">
+			and (op.remark like #{param.remark,jdbcType=CHAR})
+		</if>
 		<if test="param.marketplace != null and param.marketplace!='IEU'">
 			and (t.marketplaceid = #{param.marketplace,jdbcType=CHAR})
 		</if>
-	     <if test="param.marketplace == 'IEU'">
-		    and  m.region='EU'
+		<if test="param.marketplace == 'IEU'">
+			and  m.region='EU'
 		</if>
 		<if test="param.pidlist!=null">
 			and t.id in (
-				<foreach collection="param.pidlist" item="tags" index="index" separator=",">
-					#{tags,jdbcType=CHAR} 
-			    </foreach>			
+			<foreach collection="param.pidlist" item="tags" index="index" separator=",">
+				#{tags,jdbcType=CHAR}
+			</foreach>
 			)
 		</if>
 		<if test="param.groupid !=null">
@@ -376,7 +376,7 @@
 		<if test="param.groupList !=null">
 			and a.groupid in(
 			<foreach collection="param.groupList" item="grop" index="index" separator=",">
-				#{grop,jdbcType=BIGINT} 
+				#{grop,jdbcType=BIGINT}
 			</foreach>
 			)
 		</if>
@@ -412,13 +412,13 @@
 			<if test="param.searchtype =='childasin'">
 				<if test="param.isparent == null">
 					and t.parentasin in (SELECT t1.parentAsin FROM t_product_info t1 WHERE t1.amazonAuthId=t.amazonAuthId
-					 and  t1.asin like #{param.search,jdbcType=CHAR} AND t1.invalid=0 )
+					and  t1.asin like #{param.search,jdbcType=CHAR} AND t1.invalid=0 )
 				</if>
 			</if>
 			<if test="param.searchtype =='childsku'">
 				<if test="param.isparent == null">
 					and t.parentasin in  (select  t1.parentAsin FROM t_product_info t1 WHERE t1.amazonAuthId=t.amazonAuthId
-					 and  t1.sku like #{param.search,jdbcType=CHAR} AND t1.invalid=0)
+					and  t1.sku like #{param.search,jdbcType=CHAR} AND t1.invalid=0)
 				</if>
 			</if>
 			<if test="param.searchtype =='sku'">
@@ -468,14 +468,14 @@
 		<if test="param.disable == 'invalid'">
 			and (t.invalid = 1)
 		</if>
-		 <if test="param.salestatus != null">
-		    <if test="param.salestatus!='none'">
-			  	and (op.status =#{param.salestatus,jdbcType=INTEGER} )
-			   </if>
-			 <if test="param.salestatus=='none'">
-		       and op.status is null
-		   </if>
-		
+		<if test="param.salestatus != null">
+			<if test="param.salestatus!='none'">
+				and (op.status =#{param.salestatus,jdbcType=INTEGER} )
+			</if>
+			<if test="param.salestatus=='none'">
+				and op.status is null
+			</if>
+
 		</if>
 		<if test="param.isparent != null">
 			and (t.isparent = 1 )
@@ -487,12 +487,12 @@
 			and (t.parentAsin = #{param.parentasin,jdbcType=CHAR})
 		</if>
 		<if test="param.color != null">
-			   <if test="param.color!='none'">
-			   and em.color=#{param.color,jdbcType=CHAR}
-			   </if>
-			 <if test="param.color=='none'">
-		       and em.color is null
-		   </if>
+			<if test="param.color!='none'">
+				and em.color=#{param.color,jdbcType=CHAR}
+			</if>
+			<if test="param.color=='none'">
+				and em.color is null
+			</if>
 		</if>
 		<if test="param.paralist !=null ">
 			) v

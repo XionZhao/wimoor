@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.amazon.product.mapper.AmzProductRefreshTypeMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.wimoor.amazon.product.pojo.entity.AmzProductRefreshType">
+        <id column="pid" property="pid" />
+        <result column="amazonauthid" property="amazonauthid" />
+        <result column="type" property="type" />
+        <result column="refresh_time" property="refreshTime" />
+    </resultMap>
+
+    <!-- 查询待刷新详情的记录 -->
+    <select id="findForDetailRefresh" resultType="com.wimoor.amazon.product.pojo.entity.AmzProductRefreshType" parameterType="java.lang.String">
+        SELECT r.pid, r.amazonauthid, r.type, r.refresh_time
+        FROM t_amz_product_refresh_type r
+        WHERE r.amazonauthid = #{amazonauthid,jdbcType=CHAR}
+          AND r.type = 1
+        and (r.refresh_time is null or r.refresh_time &lt; current_date() )
+        ORDER BY r.refresh_time ASC
+        LIMIT 1
+    </select>
+
+    <!-- 查询待刷新目录的记录列表 -->
+    <select id="findForCatalogRefresh" resultType="com.wimoor.amazon.product.pojo.entity.AmzProductRefreshType" parameterType="java.lang.String">
+        SELECT r.pid, r.amazonauthid, r.type, r.refresh_time
+        FROM t_amz_product_refresh_type r
+        WHERE r.amazonauthid = #{amazonauthid,jdbcType=CHAR}
+          AND r.type = 3
+          and (r.refresh_time is null or r.refresh_time &lt; current_date() )
+        ORDER BY r.refresh_time ASC
+        LIMIT 1
+    </select>
+
+    <!-- 查询待刷新价格的记录列表 -->
+    <select id="findForPriceRefresh" resultType="com.wimoor.amazon.product.pojo.entity.AmzProductRefreshType" parameterType="java.lang.String">
+        SELECT r.pid, r.amazonauthid, r.type, r.refresh_time
+        FROM t_amz_product_refresh_type r
+        WHERE r.amazonauthid = #{amazonauthid,jdbcType=CHAR}
+          AND r.type = 2
+          and (r.refresh_time is null or r.refresh_time &lt; current_date() )
+        ORDER BY r.refresh_time
+        LIMIT 20
+    </select>
+
+    <!-- 清理无效数据：删除产品无效或授权失效的记录 -->
+    <delete id="deleteInvalid">
+        DELETE r FROM t_amz_product_refresh_type r
+        LEFT JOIN t_product_info p ON r.pid = p.id
+        WHERE p.id IS NULL                          -- 产品已删除
+           OR p.invalid = 1                         -- 产品已标记无效
+           OR p.amazonAuthId IN (                   -- 授权已禁用或失效
+              SELECT id FROM t_amazon_auth WHERE `disable` = 1 OR STATUS = 'invalid'
+           )
+    </delete>
+
+    <!-- 插入默认刷新记录 -->
+    <insert id="insertDefault">
+        INSERT IGNORE INTO t_amz_product_refresh_type (pid, amazonauthid, type, refresh_time)
+        SELECT i.id, i.amazonauthid, t.type, NULL
+        FROM t_product_info i
+        CROSS JOIN (
+            SELECT 1 as type UNION ALL
+            SELECT 2 UNION ALL
+            SELECT 3
+        ) t
+        LEFT JOIN t_amz_product_refresh_type r ON r.pid = i.id AND r.type = t.type
+        LEFT JOIN t_amazon_auth a ON a.id = i.amazonauthid
+        WHERE a.`disable` = 0
+          AND i.invalid = 0
+          AND r.pid IS NULL
+    </insert>
+
+    <!-- 同步产品信息，重置刷新时间 -->
+    <update id="syncProductInfo" parameterType="com.wimoor.amazon.product.pojo.dto.ProductAsyncInitDTO">
+        UPDATE t_amz_product_refresh_type r
+        LEFT JOIN t_amazon_auth a ON a.id = r.amazonauthid
+        SET r.refresh_time = NULL
+        WHERE a.shop_id = #{dto.shopid,jdbcType=CHAR}
+          AND r.refresh_time IS NOT NULL
+          <if test="dto.groupid != null">
+              AND a.groupid = #{dto.groupid,jdbcType=CHAR}
+          </if>
+          <if test="dto.marketplaceid != null">
+              AND r.pid IN (
+                  SELECT id FROM t_product_info WHERE marketplaceid = #{dto.marketplaceid,jdbcType=CHAR}
+              )
+          </if>
+          <if test="dto.types != null and dto.types.size() > 0">
+              AND r.type IN
+              <foreach collection="dto.types" item="type" open="(" separator="," close=")">
+                  <if test="type == 'info'">1</if>
+                  <if test="type == 'price'">2</if>
+                  <if test="type == 'rank'">3</if>
+              </foreach>
+          </if>
+          <if test="dto.range == 'local'">
+              AND r.pid IN
+              <foreach collection="dto.pidlist" item="pid" open="(" separator="," close=")">
+                  #{pid,jdbcType=CHAR}
+              </foreach>
+          </if>
+    </update>
+</mapper>

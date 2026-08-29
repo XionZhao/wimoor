@@ -1,0 +1,88 @@
+﻿{
+    "module":  "ERP项目管理",
+    "description":  "ERP财务项目查询与管理，用于财务收支的项目分类管理",
+    "service":  "wimoor-erp",
+    "tools":  [
+                  {
+                      "name":  "project_list",
+                      "description":  "查询财务费用类型（项目）列表，展示系统中配置的所有费用项目分类",
+                      "menu_id":  1012188,
+                      "endpoint":  "/erp/api/v1/fin/project/getProject",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "项目ID",
+                                              "name":  "项目名称",
+                                              "remark":  "备注",
+                                              "shopid":  "店铺ID"
+                                          }
+                  },
+                  {
+                      "name":  "project_save",
+                      "description":  "保存财务项目，新增费用项目分类",
+                      "menu_id":  1012188,
+                      "endpoint":  "/erp/api/v1/fin/project/saveProject",
+                      "method":  "GET",
+                      "params":  {
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "项目名称"
+                                              }
+                                 },
+                      "required":  [
+                                       "name"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "保存结果"
+                                          }
+                  },
+                  {
+                      "name":  "project_update",
+                      "description":  "更新财务项目名称",
+                      "menu_id":  1012188,
+                      "endpoint":  "/erp/api/v1/fin/project/updateProject",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "项目ID"
+                                            },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "新项目名称"
+                                              }
+                                 },
+                      "required":  [
+                                       "id",
+                                       "name"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "更新结果"
+                                          }
+                  },
+                  {
+                      "name":  "project_delete",
+                      "description":  "删除财务项目",
+                      "menu_id":  1012188,
+                      "endpoint":  "/erp/api/v1/fin/project/delProject",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "项目ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "删除结果"
+                                          }
+                  }
+              ]
+}

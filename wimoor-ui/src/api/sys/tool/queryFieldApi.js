@@ -23,10 +23,23 @@ function getVersionFieldById(data){
 	 return request.get('/admin/api/v1/sysQueryField/getVersionFieldById',{params:data});
 }
 
-
-
+// 管理员接口
+function getQueryNames(){
+	 return request.get('/admin/api/v1/sysQueryField/admin/getQueryNames');
+}
+function getFields(data){
+	 return request.get('/admin/api/v1/sysQueryField/admin/getFields',{params:data});
+}
+function saveField(data){
+	 return request.post('/admin/api/v1/sysQueryField/admin/saveField',data);
+}
+function deleteField(data){
+	 return request.delete('/admin/api/v1/sysQueryField/admin/deleteField',{params:data});
+}
 
 export default{
 	 getMyVersionFieldByUser,deleteMyVersionField,getVersionFieldById,
 	 saveMyVersionFieldWithName,loadfield,saveMyVersionField,getVersionFieldByUserQueryName,
+	 // 管理员接口
+	 getQueryNames,getFields,saveField,deleteField,
 }

@@ -1,0 +1,3117 @@
+{
+    "module":  "财务模块",
+    "description":  "财务会计管理，包括凭证、科目、账簿、报表、结账模板、台账等财务全模块查询",
+    "service":  "wimoor-finance",
+    "tools":  [
+                  {
+                      "name":  "fin_voucher_list",
+                      "description":  "查询记账凭证列表，支持按期间、凭证字、制单人、审核人等条件筛选",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/vouchers/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户/公司分组ID"
+                                                 },
+                                     "startPeriod":  {
+                                                         "type":  "string",
+                                                         "description":  "开始期间，格式：202401"
+                                                     },
+                                     "endPeriod":  {
+                                                       "type":  "string",
+                                                       "description":  "结束期间，格式：202401"
+                                                   },
+                                     "voucherType":  {
+                                                         "type":  "string",
+                                                         "description":  "凭证字，如记、收、付"
+                                                     },
+                                     "voucherNo":  {
+                                                       "type":  "string",
+                                                       "description":  "凭证号"
+                                                   },
+                                     "summary":  {
+                                                     "type":  "string",
+                                                     "description":  "摘要关键字"
+                                                 },
+                                     "preparerBy":  {
+                                                        "type":  "string",
+                                                        "description":  "制单人"
+                                                    },
+                                     "auditorBy":  {
+                                                       "type":  "string",
+                                                       "description":  "审核人"
+                                                   },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "voucherId":  "凭证ID",
+                                              "groupid":  "租户ID",
+                                              "periodId":  "会计期间ID",
+                                              "voucherNo":  "凭证号",
+                                              "voucherType":  "凭证字",
+                                              "voucherDate":  "凭证日期",
+                                              "attachmentCount":  "附件数",
+                                              "totalAmount":  "总金额",
+                                              "voucherStatus":  "凭证状态",
+                                              "dataSource":  "数据来源",
+                                              "preparerBy":  "制单人",
+                                              "auditorBy":  "审核人",
+                                              "postTime":  "过账时间",
+                                              "remark":  "备注",
+                                              "createdTime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_voucher_detail",
+                      "description":  "查询单个记账凭证的详细信息，包括分录明细和附件",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/vouchers/{voucherId}",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "voucherId":  {
+                                                       "type":  "string",
+                                                       "description":  "凭证ID"
+                                                   }
+                                 },
+                      "required":  [
+                                       "voucherId"
+                                   ],
+                      "response_fields":  {
+                                              "voucherId":  "凭证ID",
+                                              "groupid":  "租户ID",
+                                              "voucherNo":  "凭证号",
+                                              "voucherType":  "凭证字",
+                                              "voucherDate":  "凭证日期",
+                                              "attachmentCount":  "附件数",
+                                              "totalAmount":  "总金额",
+                                              "voucherStatus":  "凭证状态",
+                                              "preparerBy":  "制单人",
+                                              "auditorBy":  "审核人",
+                                              "entries":  "分录列表(entryId, entryNo, subjectId, subjectName, summary, debitAmount, creditAmount, currency, exchangeRate)",
+                                              "files":  "附件列表",
+                                              "remark":  "备注"
+                                          }
+                  },
+                  {
+                      "name":  "fin_entry_list",
+                      "description":  "查询凭证分录明细列表，支持按科目、摘要等条件筛选",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/entries/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "voucherId":  {
+                                                       "type":  "string",
+                                                       "description":  "凭证ID"
+                                                   },
+                                     "subjectId":  {
+                                                       "type":  "string",
+                                                       "description":  "会计科目ID"
+                                                   },
+                                     "summary":  {
+                                                     "type":  "string",
+                                                     "description":  "摘要关键字"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "entryId":  "分录ID",
+                                              "groupid":  "租户ID",
+                                              "voucherId":  "凭证ID",
+                                              "entryNo":  "分录序号",
+                                              "subjectId":  "科目ID",
+                                              "subjectName":  "科目名称",
+                                              "summary":  "摘要",
+                                              "debitAmount":  "借方金额",
+                                              "creditAmount":  "贷方金额",
+                                              "currency":  "币种",
+                                              "exchangeRate":  "汇率",
+                                              "quantity":  "数量",
+                                              "unitPrice":  "单价",
+                                              "originalAmount":  "原币金额",
+                                              "createdTime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_entries_by_voucher",
+                      "description":  "根据凭证ID查询该凭证的所有分录明细",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/entries/getEntries",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "voucherId":  {
+                                                       "type":  "string",
+                                                       "description":  "凭证ID"
+                                                   }
+                                 },
+                      "required":  [
+                                       "voucherId"
+                                   ],
+                      "response_fields":  {
+                                              "entryId":  "分录ID",
+                                              "entryNo":  "分录序号",
+                                              "subjectId":  "科目ID",
+                                              "subjectName":  "科目名称",
+                                              "summary":  "摘要",
+                                              "debitAmount":  "借方金额",
+                                              "creditAmount":  "贷方金额",
+                                              "currency":  "币种",
+                                              "exchangeRate":  "汇率"
+                                          }
+                  },
+                  {
+                      "name":  "fin_voucher_log_list",
+                      "description":  "查询凭证修改日志列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/vouchers/log/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "voucherId":  {
+                                                       "type":  "string",
+                                                       "description":  "凭证ID"
+                                                   },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "logId":  "日志ID",
+                                              "groupid":  "租户ID",
+                                              "voucherId":  "凭证ID",
+                                              "modifyType":  "修改类型：1-新增，2-修改，3-删除",
+                                              "beforeData":  "修改前数据",
+                                              "afterData":  "修改后数据",
+                                              "modifyBy":  "修改人",
+                                              "modifyTime":  "修改时间",
+                                              "reason":  "修改原因"
+                                          }
+                  },
+                  {
+                      "name":  "fin_template_type_list",
+                      "description":  "查询凭证模版分类列表（分页）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/voucher-template-type/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "分类名称"
+                                              },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "分类ID",
+                                              "name":  "分类名称",
+                                              "groupid":  "租户ID",
+                                              "createBy":  "创建人",
+                                              "createdTime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_template_type_all",
+                      "description":  "查询所有凭证模版分类（不分页，用于下拉选择）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/voucher-template-type/all",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "分类ID",
+                                              "name":  "分类名称"
+                                          }
+                  },
+                  {
+                      "name":  "fin_template_list",
+                      "description":  "查询凭证模版列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/voucher-template/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "模版名称"
+                                              },
+                                     "typeId":  {
+                                                    "type":  "string",
+                                                    "description":  "模版分类ID"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "模版ID",
+                                              "name":  "模版名称",
+                                              "typeId":  "分类ID",
+                                              "groupid":  "租户ID",
+                                              "createBy":  "创建人",
+                                              "createdTime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_template_detail",
+                      "description":  "查询凭证模版详细信息（包含分录和辅助核算）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/voucher-template/detail/{id}",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "模版ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "template":  "模版基本信息(id, name, typeId)",
+                                              "entries":  "模版分录列表(entryId, templateId, entryNo, subjectId, summary, debitAmount, creditAmount, auxiliaryList)"
+                                          }
+                  },
+                  {
+                      "name":  "fin_summary_list",
+                      "description":  "查询凭证摘要列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/summary/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "summary":  {
+                                                     "type":  "string",
+                                                     "description":  "摘要内容关键字"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "摘要ID",
+                                              "summary":  "摘要内容",
+                                              "groupid":  "租户ID",
+                                              "createBy":  "创建人",
+                                              "createdTime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_type_list",
+                      "description":  "查询凭证字列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/type/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "凭证字名称"
+                                              },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "凭证字ID",
+                                              "name":  "凭证字名称",
+                                              "groupid":  "租户ID",
+                                              "opttime":  "操作时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_subject_list",
+                      "description":  "查询会计科目列表（树形结构），支持按科目类型筛选",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/subjects/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "subjectCode":  {
+                                                         "type":  "string",
+                                                         "description":  "科目编码"
+                                                     },
+                                     "subjectName":  {
+                                                         "type":  "string",
+                                                         "description":  "科目名称（模糊搜索）"
+                                                     },
+                                     "subjectLevel":  {
+                                                          "type":  "integer",
+                                                          "description":  "科目级别"
+                                                      },
+                                     "subjectType":  {
+                                                         "type":  "integer",
+                                                         "description":  "科目类型：1-资产，2-负债，3-权益，4-成本，5-损益"
+                                                     },
+                                     "direction":  {
+                                                       "type":  "integer",
+                                                       "description":  "余额方向：1-借方，2-贷方"
+                                                   },
+                                     "status":  {
+                                                    "type":  "integer",
+                                                    "description":  "状态：0-停用，1-启用"
+                                                }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "subjectId":  "科目ID",
+                                              "subjectCode":  "科目编码",
+                                              "subjectName":  "科目名称",
+                                              "subjectLevel":  "科目级别",
+                                              "parentCode":  "父级科目编码",
+                                              "subjectType":  "科目类型",
+                                              "subjectTypeName":  "科目类型名称",
+                                              "direction":  "余额方向(1-借,2-贷)",
+                                              "isLeaf":  "是否末级科目",
+                                              "status":  "状态",
+                                              "isForeignCurrency":  "是否外币核算",
+                                              "isQuantity":  "是否数量核算",
+                                              "isCash":  "是否现金科目",
+                                              "auxiliaryType":  "辅助核算类型",
+                                              "children":  "子科目列表"
+                                          }
+                  },
+                  {
+                      "name":  "fin_subject_list_all",
+                      "description":  "查询所有会计科目（不分页，名称带层级前缀，用于下拉选择）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/subjects/listAll",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "subjectCode":  {
+                                                         "type":  "string",
+                                                         "description":  "科目编码"
+                                                     },
+                                     "subjectName":  {
+                                                         "type":  "string",
+                                                         "description":  "科目名称"
+                                                     },
+                                     "status":  {
+                                                    "type":  "integer",
+                                                    "description":  "状态：0-停用，1-启用"
+                                                }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "subjectId":  "科目ID",
+                                              "subjectCode":  "科目编码",
+                                              "subjectName":  "科目名称",
+                                              "subjectLevel":  "科目级别",
+                                              "parentCode":  "父级科目编码",
+                                              "direction":  "余额方向",
+                                              "isLeaf":  "是否末级科目"
+                                          }
+                  },
+                  {
+                      "name":  "fin_subject_detail",
+                      "description":  "查询单个会计科目详细信息",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/subjects/{subjectId}",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "subjectId":  {
+                                                       "type":  "string",
+                                                       "description":  "科目ID"
+                                                   }
+                                 },
+                      "required":  [
+                                       "subjectId"
+                                   ],
+                      "response_fields":  {
+                                              "subjectId":  "科目ID",
+                                              "subjectCode":  "科目编码",
+                                              "subjectName":  "科目名称",
+                                              "subjectLevel":  "科目级别",
+                                              "parentCode":  "父级科目编码",
+                                              "subjectType":  "科目类型",
+                                              "direction":  "余额方向",
+                                              "isLeaf":  "是否末级科目",
+                                              "isForeignCurrency":  "是否外币核算",
+                                              "isQuantity":  "是否数量核算",
+                                              "isCash":  "是否现金科目",
+                                              "auxiliaryType":  "辅助核算类型",
+                                              "status":  "状态"
+                                          }
+                  },
+                  {
+                      "name":  "fin_subject_type_list",
+                      "description":  "查询科目类别列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/subjectType/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "类别名称"
+                                              },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "类别ID",
+                                              "code":  "类别编码",
+                                              "name":  "类别名称",
+                                              "parentCode":  "父级编码",
+                                              "categoryType":  "分类类型(ASSET/LIAB/EQUITY/COST/PL)",
+                                              "level":  "层级",
+                                              "sortOrder":  "排序号",
+                                              "isFixed":  "是否系统固定"
+                                          }
+                  },
+                  {
+                      "name":  "fin_subject_type_by_category",
+                      "description":  "根据分类类型查询科目类别列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/subjectType/byCategoryType/{categoryType}",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "categoryType":  {
+                                                          "type":  "string",
+                                                          "description":  "分类类型，如ASSET/LIAB/EQUITY/COST/PL"
+                                                      }
+                                 },
+                      "required":  [
+                                       "categoryType"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "类别ID",
+                                              "name":  "类别名称",
+                                              "categoryType":  "分类类型"
+                                          }
+                  },
+                  {
+                      "name":  "fin_balance_tree",
+                      "description":  "查询科目余额表（树形结构），支持按期间、科目类型等条件筛选",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/report/subject-balance/tree",
+                      "service":  "wimoor-finance",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "beginPeriod":  {
+                                                         "type":  "string",
+                                                         "description":  "开始期间，格式：202401"
+                                                     },
+                                     "endPeriod":  {
+                                                       "type":  "string",
+                                                       "description":  "结束期间，格式：202401"
+                                                   },
+                                     "period":  {
+                                                    "type":  "string",
+                                                    "description":  "单期间查询，格式：202401"
+                                                },
+                                     "subjectCode":  {
+                                                         "type":  "string",
+                                                         "description":  "科目编码（模糊查询）"
+                                                     },
+                                     "subjectName":  {
+                                                         "type":  "string",
+                                                         "description":  "科目名称（模糊查询）"
+                                                     },
+                                     "subjectType":  {
+                                                         "type":  "integer",
+                                                         "description":  "科目类型"
+                                                     },
+                                     "leafOnly":  {
+                                                      "type":  "boolean",
+                                                      "description":  "是否只查询末级科目"
+                                                  },
+                                     "level":  {
+                                                   "type":  "integer",
+                                                   "description":  "层级过滤"
+                                               },
+                                     "isFilterZero":  {
+                                                          "type":  "boolean",
+                                                          "description":  "是否过滤零余额"
+                                                      }
+                                 },
+                      "required":  [
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "subjectCode":  "科目编码",
+                                              "subjectName":  "科目名称",
+                                              "subjectLevel":  "科目级别",
+                                              "direction":  "余额方向",
+                                              "beginDebit":  "期初借方余额",
+                                              "beginCredit":  "期初贷方余额",
+                                              "beginBalance":  "期初余额",
+                                              "beginDirection":  "期初余额方向",
+                                              "debitAmount":  "本期借方发生额",
+                                              "creditAmount":  "本期贷方发生额",
+                                              "endDebit":  "期末借方余额",
+                                              "endCredit":  "期末贷方余额",
+                                              "endBalance":  "期末余额",
+                                              "endDirection":  "期末余额方向",
+                                              "yearDebitAmount":  "本年借方累计",
+                                              "yearCreditAmount":  "本年贷方累计",
+                                              "children":  "子科目列表"
+                                          }
+                  },
+                  {
+                      "name":  "fin_balance_summary",
+                      "description":  "查询科目余额汇总信息",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/report/subject-balance/summary",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "period":  {
+                                                    "type":  "string",
+                                                    "description":  "会计期间，格式：202401"
+                                                }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "period"
+                                   ],
+                      "response_fields":  {
+                                              "totalDebit":  "借方合计",
+                                              "totalCredit":  "贷方合计",
+                                              "totalOpening":  "期初余额合计",
+                                              "totalClosing":  "期末余额合计"
+                                          }
+                  },
+                  {
+                      "name":  "fin_subject_balance",
+                      "description":  "查询单个科目余额",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/subject/balance",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "period":  {
+                                                    "type":  "string",
+                                                    "description":  "会计期间，格式：202401"
+                                                },
+                                     "subjectCode":  {
+                                                         "type":  "string",
+                                                         "description":  "科目编码"
+                                                     },
+                                     "amountType":  {
+                                                        "type":  "string",
+                                                        "description":  "金额类型，默认END_BALANCE"
+                                                    }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "period",
+                                       "subjectCode"
+                                   ],
+                      "response_fields":  {
+                                              "balance":  "科目余额（BigDecimal）"
+                                          }
+                  },
+                  {
+                      "name":  "fin_auxiliary_setting_list",
+                      "description":  "查询会计科目对应辅助核算分类设置列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/setting/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "subjectId":  {
+                                                       "type":  "string",
+                                                       "description":  "会计科目ID"
+                                                   },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "设置ID",
+                                              "subjectId":  "科目ID",
+                                              "auxiliaryTypeId":  "辅助核算类别ID",
+                                              "typeName":  "辅助核算类别名称",
+                                              "typeCode":  "辅助核算类别编码",
+                                              "groupid":  "租户ID",
+                                              "createdTime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_auxiliary_items_list",
+                      "description":  "查询辅助核算项目列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/auxiliary/items/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "typeId":  {
+                                                    "type":  "string",
+                                                    "description":  "辅助核算类别ID"
+                                                },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "项目名称关键字"
+                                              },
+                                     "code":  {
+                                                  "type":  "string",
+                                                  "description":  "项目编码"
+                                              },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "itemId":  "项目ID",
+                                              "typeId":  "类别ID",
+                                              "itemCode":  "项目编码",
+                                              "itemName":  "项目名称",
+                                              "status":  "状态",
+                                              "createdTime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_auxiliary_types_list",
+                      "description":  "查询辅助核算类别列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/auxiliary/types/list",
+                      "service":  "wimoor-finance",
+                      "method":  "POST",
+                      "params":  {
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "类别名称"
+                                              },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "typeId":  "类别ID",
+                                              "typeName":  "类别名称",
+                                              "typeCode":  "类别编码",
+                                              "groupid":  "租户ID",
+                                              "status":  "状态"
+                                          }
+                  },
+                  {
+                      "name":  "fin_detail_ledger_list",
+                      "description":  "查询明细账表列表，支持按科目、期间等条件筛选",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/detail_ledger/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "subjectId":  {
+                                                       "type":  "string",
+                                                       "description":  "科目ID"
+                                                   },
+                                     "subjectCode":  {
+                                                         "type":  "string",
+                                                         "description":  "科目编码"
+                                                     },
+                                     "startPeriod":  {
+                                                         "type":  "string",
+                                                         "description":  "开始期间，格式：202401"
+                                                     },
+                                     "endPeriod":  {
+                                                       "type":  "string",
+                                                       "description":  "结束期间，格式：202401"
+                                                   },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "detailId":  "记录ID",
+                                              "groupid":  "租户ID",
+                                              "subjectId":  "科目ID",
+                                              "voucherId":  "凭证ID",
+                                              "voucherDate":  "凭证日期",
+                                              "voucherNo":  "凭证号",
+                                              "summary":  "摘要",
+                                              "debitAmount":  "借方金额",
+                                              "creditAmount":  "贷方金额",
+                                              "balance":  "余额",
+                                              "balanceDirection":  "余额方向(1-借,2-贷)"
+                                          }
+                  },
+                  {
+                      "name":  "fin_detail_ledger_info",
+                      "description":  "查询明细账表详细信息列表（含期初余额、月度汇总行）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/detail_ledger/listInfo",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "subjectId":  {
+                                                       "type":  "string",
+                                                       "description":  "科目ID"
+                                                   },
+                                     "subjectCode":  {
+                                                         "type":  "string",
+                                                         "description":  "科目编码"
+                                                     },
+                                     "startPeriod":  {
+                                                         "type":  "string",
+                                                         "description":  "开始期间，格式：202401"
+                                                     },
+                                     "endPeriod":  {
+                                                       "type":  "string",
+                                                       "description":  "结束期间，格式：202401"
+                                                   },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "groupid":  "租户ID",
+                                              "subjectId":  "科目ID",
+                                              "subjectName":  "科目名称",
+                                              "voucherDate":  "凭证日期",
+                                              "summary":  "摘要",
+                                              "debitAmount":  "借方金额",
+                                              "creditAmount":  "贷方金额",
+                                              "balance":  "余额",
+                                              "balanceDirection":  "余额方向"
+                                          }
+                  },
+                  {
+                      "name":  "fin_detail_ledger_subjects_tree",
+                      "description":  "查询明细账中使用的科目树（包含父科目）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/detail_ledger/treeSubjects",
+                      "service":  "wimoor-finance",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "subjectId":  {
+                                                       "type":  "string",
+                                                       "description":  "科目ID"
+                                                   },
+                                     "subjectCode":  {
+                                                         "type":  "string",
+                                                         "description":  "科目编码"
+                                                     },
+                                     "startPeriod":  {
+                                                         "type":  "string",
+                                                         "description":  "开始期间，格式：202401"
+                                                     },
+                                     "endPeriod":  {
+                                                       "type":  "string",
+                                                       "description":  "结束期间，格式：202401"
+                                                   }
+                                 },
+                      "required":  [
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "subjectCode":  "科目编码",
+                                              "subjectName":  "科目名称",
+                                              "parentCode":  "父级科目编码",
+                                              "children":  "子科目列表"
+                                          }
+                  },
+                  {
+                      "name":  "fin_general_ledger_list",
+                      "description":  "查询总账列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/ledger/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "subjectId":  {
+                                                       "type":  "string",
+                                                       "description":  "科目ID"
+                                                   },
+                                     "period":  {
+                                                    "type":  "string",
+                                                    "description":  "会计期间"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "ledgerId":  "记录ID",
+                                              "groupid":  "租户ID",
+                                              "subjectId":  "科目ID",
+                                              "period":  "会计期间",
+                                              "beginBalance":  "期初余额",
+                                              "beginDirection":  "期初余额方向(1-借,2-贷)",
+                                              "debitTotal":  "本期借方合计",
+                                              "creditTotal":  "本期贷方合计",
+                                              "endBalance":  "期末余额",
+                                              "endDirection":  "期末余额方向(1-借,2-贷)"
+                                          }
+                  },
+                  {
+                      "name":  "fin_general_ledger_info",
+                      "description":  "查询总账详情列表（含科目名称）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/ledger/listInfo",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "subjectId":  {
+                                                       "type":  "string",
+                                                       "description":  "科目ID"
+                                                   },
+                                     "subjectCode":  {
+                                                         "type":  "string",
+                                                         "description":  "科目编码"
+                                                     },
+                                     "startPeriod":  {
+                                                         "type":  "string",
+                                                         "description":  "开始期间，格式：202401"
+                                                     },
+                                     "endPeriod":  {
+                                                       "type":  "string",
+                                                       "description":  "结束期间，格式：202401"
+                                                   },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "subjectId":  "科目ID",
+                                              "subjectName":  "科目名称",
+                                              "period":  "会计期间",
+                                              "beginBalance":  "期初余额",
+                                              "beginDirection":  "期初余额方向(1-借,2-贷)",
+                                              "debitTotal":  "本期借方合计",
+                                              "creditTotal":  "本期贷方合计",
+                                              "endBalance":  "期末余额",
+                                              "endDirection":  "期末余额方向(1-借,2-贷)"
+                                          }
+                  },
+                  {
+                      "name":  "fin_general_ledger_top_summary",
+                      "description":  "查询顶级科目总账汇总",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/ledger/topLevelSummary",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "startPeriod":  {
+                                                         "type":  "string",
+                                                         "description":  "开始期间，格式：202401"
+                                                     },
+                                     "endPeriod":  {
+                                                       "type":  "string",
+                                                       "description":  "结束期间，格式：202401"
+                                                   }
+                                 },
+                      "required":  [
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "subjectId":  "科目ID",
+                                              "subjectCode":  "科目编码",
+                                              "subjectName":  "科目名称",
+                                              "period":  "会计期间",
+                                              "beginBalance":  "期初余额",
+                                              "beginDirection":  "期初余额方向(1-借,2-贷,0-平)",
+                                              "debitTotal":  "本期借方合计",
+                                              "creditTotal":  "本期贷方合计",
+                                              "endBalance":  "期末余额",
+                                              "endDirection":  "期末余额方向(1-借,2-贷,0-平)"
+                                          }
+                  },
+                  {
+                      "name":  "fin_general_ledger_top_summary_full",
+                      "description":  "查询顶级科目总账汇总（完整数据，包含期初余额、本期合计、本年累计）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/ledger/topLevelSummaryFull",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "startPeriod":  {
+                                                         "type":  "string",
+                                                         "description":  "开始期间，格式：202401"
+                                                     },
+                                     "endPeriod":  {
+                                                       "type":  "string",
+                                                       "description":  "结束期间，格式：202401"
+                                                   }
+                                 },
+                      "required":  [
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "subjectCode":  "科目编码",
+                                              "subjectName":  "科目名称",
+                                              "period":  "会计期间",
+                                              "summary":  "行摘要(期初余额/本期合计/本年累计)",
+                                              "debitTotal":  "借方合计",
+                                              "creditTotal":  "贷方合计",
+                                              "direction":  "余额方向(1-借,2-贷,0-平)",
+                                              "balance":  "余额",
+                                              "rowType":  "行类型(begin-期初/period-本期/year-本年累计)"
+                                          }
+                  },
+                  {
+                      "name":  "fin_general_ledger_verify",
+                      "description":  "验证总账公式：期初余额 + 本期借方 - 本期贷方 = 期末余额",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/ledger/verify",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 }
+                                 },
+                      "required":  [
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "message":  "验证结果消息",
+                                              "errors":  "不满足公式的记录列表"
+                                          }
+                  },
+                  {
+                      "name":  "fin_report_generate",
+                      "description":  "生成财务报告（利润表、资产负债表等）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/report/generate",
+                      "service":  "wimoor-finance",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "templateCode":  {
+                                                          "type":  "string",
+                                                          "description":  "模板编码"
+                                                      },
+                                     "period":  {
+                                                    "type":  "string",
+                                                    "description":  "报告期间，格式：202401"
+                                                },
+                                     "comparePeriod":  {
+                                                           "type":  "string",
+                                                           "description":  "对比期间"
+                                                       },
+                                     "amountUnit":  {
+                                                        "type":  "integer",
+                                                        "description":  "金额单位：1-元，1000-千元，10000-万元"
+                                                    },
+                                     "includeComparison":  {
+                                                               "type":  "boolean",
+                                                               "description":  "是否包含对比数据"
+                                                           },
+                                     "includeChartData":  {
+                                                              "type":  "boolean",
+                                                              "description":  "是否包含图表数据"
+                                                          }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "templateCode",
+                                       "period"
+                                   ],
+                      "response_fields":  {
+                                              "reportData":  "报告数据",
+                                              "items":  "报表项目列表",
+                                              "period":  "报告期间",
+                                              "templateCode":  "模板编码"
+                                          }
+                  },
+                  {
+                      "name":  "fin_report_templates_api",
+                      "description":  "获取财务报告模板列表（按租户）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/report/templates",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 }
+                                 },
+                      "required":  [
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "code":  "模板编码",
+                                              "name":  "模板名称",
+                                              "type":  "模板类型",
+                                              "description":  "描述"
+                                          }
+                  },
+                  {
+                      "name":  "fin_report_template_list",
+                      "description":  "查询财务报表模板管理列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/report/templates/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "模板名称"
+                                              },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "templateId":  "模板ID",
+                                              "templateName":  "模板名称",
+                                              "templateCode":  "模板编码",
+                                              "templateType":  "模板类型",
+                                              "description":  "描述",
+                                              "groupid":  "租户ID",
+                                              "createdTime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_report_template_detail",
+                      "description":  "查询财务报表模板详细信息",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/report/templates/{templateId}",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "templateId":  {
+                                                        "type":  "string",
+                                                        "description":  "模板ID"
+                                                    }
+                                 },
+                      "required":  [
+                                       "templateId"
+                                   ],
+                      "response_fields":  {
+                                              "templateId":  "模板ID",
+                                              "templateName":  "模板名称",
+                                              "templateCode":  "模板编码",
+                                              "templateType":  "模板类型",
+                                              "description":  "描述",
+                                              "groupid":  "租户ID"
+                                          }
+                  },
+                  {
+                      "name":  "fin_report_item_list",
+                      "description":  "查询报表项目列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/report/items/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "templateId":  {
+                                                        "type":  "string",
+                                                        "description":  "模板ID"
+                                                    },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "项目名称"
+                                              },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "itemId":  "项目ID",
+                                              "itemCode":  "项目编码",
+                                              "itemName":  "项目名称",
+                                              "templateId":  "所属模板ID",
+                                              "parentCode":  "父级项目编码",
+                                              "formulaType":  "公式类型(DIRECT-直接取值/FORMULA-公式计算)",
+                                              "formulaContent":  "公式内容",
+                                              "sortOrder":  "排序号",
+                                              "direction":  "金额方向",
+                                              "status":  "状态"
+                                          }
+                  },
+                  {
+                      "name":  "fin_report_item_parent",
+                      "description":  "查询所有父级报表项目列表（用于下拉选择）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/report/items/parent-items/{templateId}",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "templateId":  {
+                                                        "type":  "string",
+                                                        "description":  "模板ID"
+                                                    }
+                                 },
+                      "required":  [
+                                       "templateId"
+                                   ],
+                      "response_fields":  {
+                                              "itemId":  "项目ID",
+                                              "itemCode":  "项目编码",
+                                              "itemName":  "项目名称"
+                                          }
+                  },
+                  {
+                      "name":  "fin_period_list",
+                      "description":  "查询会计期间管理列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/periods/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "periodCode":  {
+                                                        "type":  "string",
+                                                        "description":  "期间编码，格式：202401"
+                                                    },
+                                     "periodName":  {
+                                                        "type":  "string",
+                                                        "description":  "期间名称"
+                                                    },
+                                     "periodStatus":  {
+                                                          "type":  "integer",
+                                                          "description":  "期间状态：1-开启，2-未开启，3-已关闭"
+                                                      },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "periodId":  "期间ID",
+                                              "groupid":  "租户ID",
+                                              "periodCode":  "期间编码(202401)",
+                                              "periodName":  "期间名称",
+                                              "startDate":  "开始日期",
+                                              "endDate":  "结束日期",
+                                              "periodStatus":  "期间状态(1-开启,2-未开启,3-已关闭)",
+                                              "isCurrent":  "是否当前期间",
+                                              "closeTime":  "关闭时间",
+                                              "createdTime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_period_current",
+                      "description":  "获取当前会计期间",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/periods/current",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupId":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 }
+                                 },
+                      "required":  [
+                                       "groupId"
+                                   ],
+                      "response_fields":  {
+                                              "periodId":  "期间ID",
+                                              "groupid":  "租户ID",
+                                              "periodCode":  "期间编码",
+                                              "periodName":  "期间名称",
+                                              "startDate":  "开始日期",
+                                              "endDate":  "结束日期",
+                                              "periodStatus":  "期间状态",
+                                              "isCurrent":  "是否当前期间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_period_groups",
+                      "description":  "查询会计期间分组列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/periods/groups",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "分组ID",
+                                              "name":  "店铺名称",
+                                              "company":  "公司名称"
+                                          }
+                  },
+                  {
+                      "name":  "fin_period_closing",
+                      "description":  "会计期间结账操作",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/periods/closing",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupId":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "period":  {
+                                                    "type":  "string",
+                                                    "description":  "会计期间，格式：202401"
+                                                }
+                                 },
+                      "required":  [
+                                       "groupId",
+                                       "period"
+                                   ],
+                      "response_fields":  {
+                                              "message":  "结账结果消息"
+                                          }
+                  },
+                  {
+                      "name":  "fin_period_unclosing",
+                      "description":  "会计期间反结账操作",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/periods/unclosing",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupId":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "period":  {
+                                                    "type":  "string",
+                                                    "description":  "会计期间，格式：202401"
+                                                },
+                                     "reason":  {
+                                                    "type":  "string",
+                                                    "description":  "反结账原因"
+                                                }
+                                 },
+                      "required":  [
+                                       "groupId",
+                                       "period",
+                                       "reason"
+                                   ],
+                      "response_fields":  {
+                                              "message":  "反结账结果消息"
+                                          }
+                  },
+                  {
+                      "name":  "fin_period_open",
+                      "description":  "会计期间开期操作",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/periods/open",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupId":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "period":  {
+                                                    "type":  "string",
+                                                    "description":  "会计期间，格式：202401"
+                                                }
+                                 },
+                      "required":  [
+                                       "groupId",
+                                       "period"
+                                   ],
+                      "response_fields":  {
+                                              "message":  "开期结果消息"
+                                          }
+                  },
+                  {
+                      "name":  "fin_period_post",
+                      "description":  "会计期间过账操作",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/periods/post",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupId":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "period":  {
+                                                    "type":  "string",
+                                                    "description":  "会计期间，格式：202401"
+                                                }
+                                 },
+                      "required":  [
+                                       "groupId",
+                                       "period"
+                                   ],
+                      "response_fields":  {
+                                              "message":  "过账结果消息"
+                                          }
+                  },
+                  {
+                      "name":  "fin_currency_list",
+                      "description":  "查询币种列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/currency/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "code":  {
+                                                  "type":  "string",
+                                                  "description":  "币种编码"
+                                              },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "币种名称"
+                                              },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "code":  "币种编码",
+                                              "name":  "币种名称",
+                                              "rate":  "汇率",
+                                              "islocal":  "是否本位币(1-是)",
+                                              "isauto":  "是否自动更新汇率"
+                                          }
+                  },
+                  {
+                      "name":  "fin_currency_info",
+                      "description":  "根据币种编码查询币种详细信息",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/currency/getInfo",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "code":  {
+                                                  "type":  "string",
+                                                  "description":  "币种编码"
+                                              },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 }
+                                 },
+                      "required":  [
+                                       "code",
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "code":  "币种编码",
+                                              "name":  "币种名称",
+                                              "rate":  "汇率",
+                                              "islocal":  "是否本位币"
+                                          }
+                  },
+                  {
+                      "name":  "fin_mapping_rule_list",
+                      "description":  "查询报表映射规则列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/report/mapping-rules/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "templateType":  {
+                                                          "type":  "string",
+                                                          "description":  "模板类型"
+                                                      },
+                                     "itemCode":  {
+                                                      "type":  "string",
+                                                      "description":  "项目编码"
+                                                  },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "ruleId":  "规则ID",
+                                              "templateType":  "模板类型",
+                                              "itemCode":  "项目编码",
+                                              "itemName":  "项目名称",
+                                              "subjectCode":  "科目编码",
+                                              "subjectName":  "科目名称",
+                                              "direction":  "方向(debit/credit)",
+                                              "formula":  "公式",
+                                              "groupid":  "租户ID"
+                                          }
+                  },
+                  {
+                      "name":  "fin_mapping_rule_by_type",
+                      "description":  "根据模板类型查询映射规则列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/report/mapping-rules/list/{templateType}",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "templateType":  {
+                                                          "type":  "string",
+                                                          "description":  "模板类型"
+                                                      },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 }
+                                 },
+                      "required":  [
+                                       "templateType",
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "ruleId":  "规则ID",
+                                              "itemCode":  "项目编码",
+                                              "itemName":  "项目名称",
+                                              "subjectCode":  "科目编码",
+                                              "subjectName":  "科目名称",
+                                              "direction":  "方向",
+                                              "formula":  "公式"
+                                          }
+                  },
+                  {
+                      "name":  "fin_mapping_rule_by_code",
+                      "description":  "根据项目编码查询映射规则列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/report/mapping-rules/list/item/{itemCode}",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "itemCode":  {
+                                                      "type":  "string",
+                                                      "description":  "项目编码"
+                                                  },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 }
+                                 },
+                      "required":  [
+                                       "itemCode",
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "ruleId":  "规则ID",
+                                              "ruleType":  "规则类型",
+                                              "ruleName":  "规则名称",
+                                              "matchType":  "匹配类型",
+                                              "matchValue":  "匹配值",
+                                              "operator":  "操作符",
+                                              "direction":  "余额方向",
+                                              "priority":  "优先级",
+                                              "status":  "状态"
+                                          }
+                  },
+                  {
+                      "name":  "fin_erp_inventory_list",
+                      "description":  "查询存货科目映射规则列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/erpMappingInventory/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "名称关键字"
+                                              }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "规则ID",
+                                              "groupid":  "租户ID",
+                                              "warehouseCode":  "仓库编码",
+                                              "warehouseType":  "仓库类型(1-本地仓,2-FBA仓,3-海外仓)",
+                                              "orderSourceType":  "采购来源(1-境内采购,2-跨境直采,3-1688先采后付)",
+                                              "stage":  "阶段(1-在途确认,2-入库验收)",
+                                              "debitSubjectId":  "借方科目ID",
+                                              "creditSubjectId":  "贷方科目ID",
+                                              "debitAuxiliaryType":  "借方辅助核算",
+                                              "creditAuxiliaryType":  "贷方辅助核算",
+                                              "isEnabled":  "是否启用(1-启用,0-停用)",
+                                              "priority":  "优先级",
+                                              "debitSubjectName":  "借方科目名称",
+                                              "creditSubjectName":  "贷方科目名称",
+                                              "createdTime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_erp_account_mapping_list",
+                      "description":  "查询费用类型-科目映射规则列表（费用类型→科目）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/erpMappingAccount/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "feeTypeId":  {
+                                                       "type":  "string",
+                                                       "description":  "费用类型ID"
+                                                   },
+                                     "subjectId":  {
+                                                       "type":  "string",
+                                                       "description":  "科目ID"
+                                                   }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "规则ID",
+                                              "groupid":  "租户ID",
+                                              "feeTypeId":  "费用类型ID",
+                                              "feeTypeName":  "费用类型名称",
+                                              "subjectId":  "科目ID",
+                                              "subjectName":  "科目名称"
+                                          }
+                  },
+                  {
+                      "name":  "fin_erp_feetype_mapping_list",
+                      "description":  "查询采购账户-科目映射规则列表（采购账户→科目）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/erpMappingFeetype/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "accountId":  {
+                                                       "type":  "string",
+                                                       "description":  "采购账户ID"
+                                                   },
+                                     "subjectId":  {
+                                                       "type":  "string",
+                                                       "description":  "科目ID"
+                                                   }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "规则ID",
+                                              "groupid":  "租户ID",
+                                              "accountId":  "采购账户ID",
+                                              "accountName":  "采购账户名称",
+                                              "subjectId":  "科目ID",
+                                              "subjectName":  "科目名称"
+                                          }
+                  },
+                  {
+                      "name":  "fin_inventory_ledger_summary",
+                      "description":  "查询进销存台账汇总账（按SKU+仓库维度）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/inventory/ledger/summary",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "materialid":  {
+                                                        "type":  "string",
+                                                        "description":  "产品物料ID"
+                                                    },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "产品名称关键字"
+                                              },
+                                     "startPeriod":  {
+                                                         "type":  "string",
+                                                         "description":  "开始期间，格式：202401"
+                                                     },
+                                     "endPeriod":  {
+                                                       "type":  "string",
+                                                       "description":  "结束期间，格式：202401"
+                                                   },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "SKU编码",
+                                              "name":  "产品名称",
+                                              "warehouseName":  "仓库名称",
+                                              "warehouseid":  "仓库ID",
+                                              "materialid":  "产品物料ID",
+                                              "openingQty":  "期初数量",
+                                              "openingAmount":  "期初金额",
+                                              "inboundQty":  "入库数量",
+                                              "inboundAmount":  "入库金额",
+                                              "outboundQty":  "出库数量",
+                                              "outboundAmount":  "出库金额",
+                                              "closingQty":  "期末数量",
+                                              "closingAmount":  "期末金额",
+                                              "unitCost":  "移动平均单价"
+                                          }
+                  },
+                  {
+                      "name":  "fin_inventory_ledger_detail",
+                      "description":  "查询进销存台账明细账（按SKU查询变动记录）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/inventory/ledger/detail",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "materialid":  {
+                                                        "type":  "string",
+                                                        "description":  "产品物料ID"
+                                                    },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             },
+                                     "startPeriod":  {
+                                                         "type":  "string",
+                                                         "description":  "开始期间，格式：202401"
+                                                     },
+                                     "endPeriod":  {
+                                                       "type":  "string",
+                                                       "description":  "结束期间，格式：202401"
+                                                   },
+                                     "formtype":  {
+                                                      "type":  "string",
+                                                      "description":  "单据类型"
+                                                  },
+                                     "pageNum":  {
+                                                     "type":  "integer",
+                                                     "description":  "页码，默认1"
+                                                 },
+                                     "pageSize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "记录ID",
+                                              "voucherDate":  "日期",
+                                              "formtype":  "单据类型",
+                                              "formNumber":  "单据编号",
+                                              "summary":  "摘要",
+                                              "inboundQty":  "入库数量",
+                                              "inboundAmount":  "入库金额",
+                                              "outboundQty":  "出库数量",
+                                              "outboundAmount":  "出库金额",
+                                              "balanceQty":  "结存数量",
+                                              "balanceAmount":  "结存金额",
+                                              "unitCost":  "单位成本"
+                                          }
+                  },
+                  {
+                      "name":  "fin_inventory_ledger_check",
+                      "description":  "进销存台账勾稽校验（验证库存金额与凭证金额是否一致）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/inventory/ledger/check",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "materialid":  {
+                                                        "type":  "string",
+                                                        "description":  "产品物料ID"
+                                                    },
+                                     "startPeriod":  {
+                                                         "type":  "string",
+                                                         "description":  "开始期间"
+                                                     },
+                                     "endPeriod":  {
+                                                       "type":  "string",
+                                                       "description":  "结束期间"
+                                                   }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "SKU编码",
+                                              "name":  "产品名称",
+                                              "warehouseName":  "仓库名称",
+                                              "inventoryAmount":  "库存金额",
+                                              "voucherAmount":  "凭证金额",
+                                              "difference":  "差异金额"
+                                          }
+                  },
+                  {
+                      "name":  "fin_inventory_ledger_chart",
+                      "description":  "获取进销存台账库存趋势图数据",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/inventory/ledger/chart",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "materialid":  {
+                                                        "type":  "string",
+                                                        "description":  "产品物料ID"
+                                                    },
+                                     "startPeriod":  {
+                                                         "type":  "string",
+                                                         "description":  "开始期间"
+                                                     },
+                                     "endPeriod":  {
+                                                       "type":  "string",
+                                                       "description":  "结束期间"
+                                                   }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "dates":  "日期列表",
+                                              "inboundAmounts":  "入库金额列表",
+                                              "outboundAmounts":  "出库金额列表",
+                                              "balanceAmounts":  "结存金额列表"
+                                          }
+                  },
+                  {
+                      "name":  "fin_supplier_ledger_summary",
+                      "description":  "查询供应商台账汇总（按供应商维度）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/supplier/ledger/summary",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "supplierId":  {
+                                                        "type":  "string",
+                                                        "description":  "供应商ID"
+                                                    },
+                                     "supplierName":  {
+                                                          "type":  "string",
+                                                          "description":  "供应商名称（模糊搜索）"
+                                                      },
+                                     "startDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "reconcileStatus":  {
+                                                             "type":  "integer",
+                                                             "description":  "对账状态：0-未对账，1-已对账"
+                                                         },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "supplierId":  "供应商ID",
+                                              "supplierName":  "供应商名称",
+                                              "totalOrders":  "订单总额",
+                                              "totalPayments":  "付款总额",
+                                              "totalInvoices":  "发票总额",
+                                              "balance":  "余额",
+                                              "uninvoicedAmount":  "未开票金额"
+                                          }
+                  },
+                  {
+                      "name":  "fin_supplier_ledger_statistics",
+                      "description":  "查询供应商台账统计数据（全局汇总）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/supplier/ledger/statistics",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "startDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "totalSuppliers":  "供应商总数",
+                                              "totalOrderAmount":  "订单总额",
+                                              "totalPaymentAmount":  "付款总额",
+                                              "totalInvoiceAmount":  "发票总额",
+                                              "totalBalance":  "总余额"
+                                          }
+                  },
+                  {
+                      "name":  "fin_supplier_ledger_orders",
+                      "description":  "查询供应商订单明细",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/supplier/ledger/orders",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "supplierId":  {
+                                                        "type":  "string",
+                                                        "description":  "供应商ID"
+                                                    },
+                                     "startDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "orderId":  "订单ID",
+                                              "orderNo":  "订单号",
+                                              "orderDate":  "订单日期",
+                                              "amount":  "订单金额",
+                                              "status":  "状态",
+                                              "paymentStatus":  "付款状态",
+                                              "invoiceStatus":  "发票状态"
+                                          }
+                  },
+                  {
+                      "name":  "fin_supplier_ledger_payments",
+                      "description":  "查询供应商付款明细",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/supplier/ledger/payments",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "supplierId":  {
+                                                        "type":  "string",
+                                                        "description":  "供应商ID"
+                                                    },
+                                     "startDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "paymentId":  "付款ID",
+                                              "paymentNo":  "付款单号",
+                                              "paymentDate":  "付款日期",
+                                              "amount":  "付款金额",
+                                              "paymentMethod":  "付款方式",
+                                              "orderNo":  "关联订单号",
+                                              "status":  "状态"
+                                          }
+                  },
+                  {
+                      "name":  "fin_supplier_ledger_invoices",
+                      "description":  "查询供应商发票明细",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/supplier/ledger/invoices",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "supplierId":  {
+                                                        "type":  "string",
+                                                        "description":  "供应商ID"
+                                                    },
+                                     "startDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "invoiceId":  "发票ID",
+                                              "invoiceNo":  "发票号码",
+                                              "invoiceDate":  "开票日期",
+                                              "amount":  "发票金额",
+                                              "status":  "状态"
+                                          }
+                  },
+                  {
+                      "name":  "fin_purchase_ledger_list",
+                      "description":  "查询采购订单台账列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/purchase/ledger/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "supplier":  {
+                                                      "type":  "string",
+                                                      "description":  "供应商ID"
+                                                  },
+                                     "auditstatus":  {
+                                                         "type":  "integer",
+                                                         "description":  "审核状态"
+                                                     },
+                                     "paystatus":  {
+                                                       "type":  "integer",
+                                                       "description":  "付款状态"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "keyword":  {
+                                                     "type":  "string",
+                                                     "description":  "关键词搜索（订单号/供应商名称）"
+                                                 },
+                                     "formNumber":  {
+                                                        "type":  "string",
+                                                        "description":  "订单号"
+                                                    },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "supplierId":  "供应商ID",
+                                              "supplierName":  "供应商名称",
+                                              "formNumber":  "订单号",
+                                              "totalAmount":  "订单总额",
+                                              "paidAmount":  "已付金额",
+                                              "unpaidAmount":  "未付金额",
+                                              "auditstatus":  "审核状态",
+                                              "paystatus":  "付款状态",
+                                              "createdTime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_purchase_ledger_statistics",
+                      "description":  "统计采购订单总额、已付总额、未付总额",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/purchase/ledger/statistics",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "supplier":  {
+                                                      "type":  "string",
+                                                      "description":  "供应商ID"
+                                                  },
+                                     "auditstatus":  {
+                                                         "type":  "integer",
+                                                         "description":  "审核状态"
+                                                     },
+                                     "paystatus":  {
+                                                       "type":  "integer",
+                                                       "description":  "付款状态"
+                                                   },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "keyword":  {
+                                                     "type":  "string",
+                                                     "description":  "关键词搜索"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "totalAmount":  "订单总额",
+                                              "paidAmount":  "已付总额",
+                                              "unpaidAmount":  "未付总额"
+                                          }
+                  },
+                  {
+                      "name":  "fin_purchase_ledger_accounts",
+                      "description":  "查询所有采购账户及余额",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/purchase/ledger/accounts",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "accountId":  "账户ID",
+                                              "accountName":  "账户名称",
+                                              "balance":  "余额"
+                                          }
+                  },
+                  {
+                      "name":  "fin_purchase_ledger_payments",
+                      "description":  "查询某个采购订单的付款明细",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/purchase/ledger/payments",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "entryId":  {
+                                                     "type":  "string",
+                                                     "description":  "订单明细ID"
+                                                 }
+                                 },
+                      "required":  [
+                                       "entryId"
+                                   ],
+                      "response_fields":  {
+                                              "paymentId":  "付款ID",
+                                              "amount":  "付款金额",
+                                              "payTime":  "付款时间",
+                                              "acct":  "付款账户",
+                                              "remark":  "备注"
+                                          }
+                  },
+                  {
+                      "name":  "fin_purchase_ledger_pay",
+                      "description":  "采购订单付款操作",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/purchase/ledger/pay",
+                      "service":  "wimoor-finance",
+                      "method":  "POST",
+                      "params":  {
+                                     "entryId":  {
+                                                     "type":  "string",
+                                                     "description":  "订单明细ID"
+                                                 },
+                                     "acct":  {
+                                                  "type":  "string",
+                                                  "description":  "付款账户"
+                                              },
+                                     "projectid":  {
+                                                       "type":  "string",
+                                                       "description":  "项目ID"
+                                                   },
+                                     "payprice":  {
+                                                      "type":  "number",
+                                                      "description":  "付款金额"
+                                                  },
+                                     "remark":  {
+                                                    "type":  "string",
+                                                    "description":  "备注"
+                                                },
+                                     "operator":  {
+                                                      "type":  "string",
+                                                      "description":  "操作人"
+                                                  },
+                                     "paymentMethod":  {
+                                                           "type":  "integer",
+                                                           "description":  "付款方式"
+                                                       }
+                                 },
+                      "required":  [
+                                       "entryId",
+                                       "payprice"
+                                   ],
+                      "response_fields":  {
+                                              "code":  "状态码",
+                                              "msg":  "消息"
+                                          }
+                  },
+                  {
+                      "name":  "fin_invoice_list",
+                      "description":  "查询发票台账列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/invoice/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "integer",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "supplierId":  {
+                                                        "type":  "integer",
+                                                        "description":  "供应商ID"
+                                                    },
+                                     "invoiceNo":  {
+                                                       "type":  "string",
+                                                       "description":  "发票号码"
+                                                   },
+                                     "invoiceType":  {
+                                                         "type":  "string",
+                                                         "description":  "发票类型"
+                                                     },
+                                     "status":  {
+                                                    "type":  "string",
+                                                    "description":  "发票状态"
+                                                },
+                                     "postingStatus":  {
+                                                           "type":  "integer",
+                                                           "description":  "入账状态：0-未入账，1-已入账"
+                                                       },
+                                     "startDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "发票ID",
+                                              "invoiceNo":  "发票号码",
+                                              "invoiceType":  "发票类型",
+                                              "supplierId":  "供应商ID",
+                                              "sellerName":  "销方名称",
+                                              "sellerTaxNo":  "销方税号",
+                                              "invoiceDate":  "开票日期",
+                                              "amountWithTax":  "含税金额",
+                                              "amountWithoutTax":  "不含税金额",
+                                              "taxAmount":  "税额",
+                                              "currency":  "币种",
+                                              "exchangeRate":  "汇率",
+                                              "status":  "发票状态",
+                                              "postingStatus":  "入账状态",
+                                              "voucherId":  "凭证ID",
+                                              "purchaseOrderIds":  "关联采购订单ID",
+                                              "paymentIds":  "关联付款记录ID",
+                                              "remark":  "备注",
+                                              "createdTime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_invoice_statistics",
+                      "description":  "统计发票信息",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/invoice/statistics",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "integer",
+                                                     "description":  "租户ID"
+                                                 },
+                                     "supplierId":  {
+                                                        "type":  "integer",
+                                                        "description":  "供应商ID"
+                                                    },
+                                     "invoiceType":  {
+                                                         "type":  "string",
+                                                         "description":  "发票类型"
+                                                     },
+                                     "status":  {
+                                                    "type":  "string",
+                                                    "description":  "发票状态"
+                                                },
+                                     "startDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "totalCount":  "发票总数",
+                                              "totalAmountWithTax":  "含税总额",
+                                              "totalTaxAmount":  "税额总计"
+                                          }
+                  },
+                  {
+                      "name":  "fin_invoice_detail",
+                      "description":  "获取发票详情",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/invoice/detail",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "integer",
+                                                "description":  "发票ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "发票ID",
+                                              "invoiceNo":  "发票号码",
+                                              "invoiceType":  "发票类型",
+                                              "supplierId":  "供应商ID",
+                                              "sellerName":  "销方名称",
+                                              "sellerTaxNo":  "销方税号",
+                                              "invoiceDate":  "开票日期",
+                                              "amountWithTax":  "含税金额",
+                                              "amountWithoutTax":  "不含税金额",
+                                              "taxAmount":  "税额",
+                                              "currency":  "币种",
+                                              "exchangeRate":  "汇率",
+                                              "status":  "发票状态",
+                                              "postingStatus":  "入账状态",
+                                              "voucherId":  "凭证ID",
+                                              "purchaseOrderIds":  "关联采购订单ID",
+                                              "paymentIds":  "关联付款记录ID",
+                                              "attachmentUrls":  "附件地址",
+                                              "remark":  "备注",
+                                              "createdTime":  "创建时间",
+                                              "createdBy":  "创建人"
+                                          }
+                  },
+                  {
+                      "name":  "fin_invoice_relations",
+                      "description":  "查询发票关联的采购订单和付款记录",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/api/v1/invoice/relations",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "integer",
+                                                "description":  "发票ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "purchaseOrders":  "关联的采购订单列表",
+                                              "payments":  "关联的付款记录列表"
+                                          }
+                  },
+                  {
+                      "name":  "fin_closing_template_list",
+                      "description":  "查询财务结算模版列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/closing_template/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "租户分组ID"
+                                                 },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "模版名称"
+                                              },
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "模版类型"
+                                               },
+                                     "disabled":  {
+                                                      "type":  "integer",
+                                                      "description":  "是否禁用"
+                                                  },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "模版ID",
+                                              "name":  "模版名称",
+                                              "groupid":  "租户分组ID",
+                                              "ftype":  "模版类型",
+                                              "voucherType":  "凭证类型",
+                                              "country":  "国家",
+                                              "issystem":  "是否系统模版",
+                                              "disabled":  "是否禁用",
+                                              "carryoverType":  "结转方式",
+                                              "voucherClass":  "凭证分类",
+                                              "vourchesId":  "凭证ID",
+                                              "createdTime":  "创建时间",
+                                              "updatedTime":  "修改时间",
+                                              "modifyBy":  "修改人",
+                                              "createBy":  "创建人"
+                                          }
+                  },
+                  {
+                      "name":  "fin_closing_template_detail",
+                      "description":  "获取财务结算模版详情",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/closing_template/{id}",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "模版ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "模版ID",
+                                              "name":  "模版名称",
+                                              "groupid":  "租户分组ID",
+                                              "ftype":  "模版类型",
+                                              "voucherType":  "凭证类型",
+                                              "country":  "国家",
+                                              "issystem":  "是否系统模版",
+                                              "disabled":  "是否禁用",
+                                              "carryoverType":  "结转方式",
+                                              "voucherClass":  "凭证分类",
+                                              "vourchesId":  "凭证ID",
+                                              "createdTime":  "创建时间",
+                                              "updatedTime":  "修改时间",
+                                              "modifyBy":  "修改人",
+                                              "createBy":  "创建人"
+                                          }
+                  },
+                  {
+                      "name":  "fin_closing_template_vouchers",
+                      "description":  "查询结算模版对应的凭证信息",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/closing_template/templateVouchers",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "templateid":  {
+                                                        "type":  "string",
+                                                        "description":  "模版ID"
+                                                    },
+                                     "period":  {
+                                                    "type":  "string",
+                                                    "description":  "会计期间"
+                                                }
+                                 },
+                      "required":  [
+                                       "templateid",
+                                       "period"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "模版ID",
+                                              "name":  "模版名称",
+                                              "groupid":  "租户分组ID",
+                                              "ftype":  "模版类型",
+                                              "vourchesId":  "凭证ID"
+                                          }
+                  },
+                  {
+                      "name":  "fin_closing_template_voucher_log",
+                      "description":  "查询结算模版的凭证生成日志",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/closing_template/voucherLog",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "templateid":  {
+                                                        "type":  "string",
+                                                        "description":  "模版ID"
+                                                    },
+                                     "period":  {
+                                                    "type":  "string",
+                                                    "description":  "会计期间"
+                                                }
+                                 },
+                      "required":  [
+                                       "templateid",
+                                       "period"
+                                   ],
+                      "response_fields":  {
+                                              "ftype":  "模版类型",
+                                              "templateName":  "模版名称",
+                                              "datalog":  "数据日志",
+                                              "vourchesId":  "凭证ID",
+                                              "voucherDate":  "凭证日期",
+                                              "createBy":  "创建人",
+                                              "createdTime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "fin_closing_template_calculation_detail",
+                      "description":  "查询结算模版的计算明细",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/closing_template/calculationDetail",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "templateId":  {
+                                                        "type":  "string",
+                                                        "description":  "模版ID"
+                                                    },
+                                     "period":  {
+                                                    "type":  "string",
+                                                    "description":  "会计期间"
+                                                }
+                                 },
+                      "required":  [
+                                       "templateId",
+                                       "period"
+                                   ],
+                      "response_fields":  {
+                                              "detail":  "计算明细数据"
+                                          }
+                  },
+                  {
+                      "name":  "fin_closing_template_init_item",
+                      "description":  "初始化结算模版子项",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/closing_template/initTemplateItem",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "templateid":  {
+                                                        "type":  "string",
+                                                        "description":  "模版ID"
+                                                    }
+                                 },
+                      "required":  [
+                                       "templateid"
+                                   ],
+                      "response_fields":  {
+                                              "code":  "状态码",
+                                              "msg":  "消息"
+                                          }
+                  },
+                  {
+                      "name":  "fin_closing_template_generate_voucher",
+                      "description":  "根据结算模版生成凭证",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/closing_template/voucher",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "templateId":  {
+                                                        "type":  "string",
+                                                        "description":  "模版ID"
+                                                    },
+                                     "period":  {
+                                                    "type":  "string",
+                                                    "description":  "会计期间"
+                                                }
+                                 },
+                      "required":  [
+                                       "templateId",
+                                       "period"
+                                   ],
+                      "response_fields":  {
+                                              "code":  "状态码",
+                                              "msg":  "消息"
+                                          }
+                  },
+                  {
+                      "name":  "fin_template_item_list",
+                      "description":  "查询结账科目对应关系列表（期末调汇/其他自定义模版子项）",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/templateItem/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "closingTemplateId":  {
+                                                               "type":  "string",
+                                                               "description":  "模版ID"
+                                                           },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "记录ID",
+                                              "closingTemplateId":  "模版ID",
+                                              "summary":  "摘要/借方科目ID",
+                                              "subjectId":  "贷方科目ID",
+                                              "subjectName":  "科目名称",
+                                              "amountField":  "金额字段",
+                                              "direction":  "方向：1-借方，2-贷方",
+                                              "createdTime":  "创建时间",
+                                              "updatedTime":  "更新时间",
+                                              "modifyBy":  "修改人",
+                                              "createBy":  "创建人"
+                                          }
+                  },
+                  {
+                      "name":  "fin_template_amazon_list",
+                      "description":  "查询亚马逊报表模版子项列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/templateAmazon/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "closingTemplateId":  {
+                                                               "type":  "string",
+                                                               "description":  "模版ID"
+                                                           },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "记录ID",
+                                              "closingTemplateId":  "模版ID",
+                                              "country":  "国家",
+                                              "summary":  "摘要",
+                                              "subjectId":  "科目ID",
+                                              "subjectName":  "科目名称",
+                                              "amountField":  "金额字段",
+                                              "direction":  "方向：1-借方，2-贷方",
+                                              "createdTime":  "创建时间",
+                                              "updatedTime":  "更新时间",
+                                              "modifyBy":  "修改人",
+                                              "createBy":  "创建人"
+                                          }
+                  },
+                  {
+                      "name":  "fin_feishu_list",
+                      "description":  "查询结算飞书表格同步列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/closing_template/feishu/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "templateid":  {
+                                                        "type":  "string",
+                                                        "description":  "结算模版ID"
+                                                    },
+                                     "feishuTableId":  {
+                                                           "type":  "string",
+                                                           "description":  "飞书表格ID"
+                                                       },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "templateid":  "结算模版ID",
+                                              "feishuTableId":  "飞书表格ID",
+                                              "filter":  "查询过滤条件",
+                                              "summaryField":  "摘要字段",
+                                              "voucherDateField":  "会计时间字段",
+                                              "subjectField":  "会计科目字段",
+                                              "amountField":  "金额字段",
+                                              "datetype":  "日期汇总类型：0-按日，1-按月，2-单笔"
+                                          }
+                  },
+                  {
+                      "name":  "fin_profit_loss_list",
+                      "description":  "查询结转损益凭证模版配置列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/closing_template_profit_loss/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "templateId":  {
+                                                        "type":  "string",
+                                                        "description":  "结账模板ID"
+                                                    },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "账套ID"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "配置ID",
+                                              "templateId":  "结账模板ID",
+                                              "groupid":  "账套ID",
+                                              "transferCycle":  "结转周期：0-按月，1-按年",
+                                              "transferMethod":  "结转方式：0-追加，1-重新",
+                                              "voucherDate":  "凭证日期",
+                                              "summary":  "凭证摘要",
+                                              "directionHandling":  "方向处理：0-按科目方向，1-按金额正数",
+                                              "profitLossSubjectCode":  "损益科目编码",
+                                              "currentYearProfitSubjectCode":  "本年利润科目编码",
+                                              "priorYearAdjustmentSubjectCode":  "以前年度损益调整科目编码",
+                                              "priorYearAdjustTransferSubjectCode":  "调整结转科目编码",
+                                              "createdTime":  "创建时间",
+                                              "updatedTime":  "修改时间",
+                                              "modifyBy":  "修改人",
+                                              "createBy":  "创建人"
+                                          }
+                  },
+                  {
+                      "name":  "fin_profit_loss_detail",
+                      "description":  "获取结转损益凭证模版配置详情",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/closing_template_profit_loss/{id}",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "配置ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "配置ID",
+                                              "templateId":  "结账模板ID",
+                                              "groupid":  "账套ID",
+                                              "transferCycle":  "结转周期",
+                                              "transferMethod":  "结转方式",
+                                              "voucherDate":  "凭证日期",
+                                              "summary":  "凭证摘要",
+                                              "directionHandling":  "方向处理方式",
+                                              "profitLossSubjectCode":  "损益科目编码",
+                                              "currentYearProfitSubjectCode":  "本年利润科目编码",
+                                              "priorYearAdjustmentSubjectCode":  "以前年度损益调整科目编码",
+                                              "priorYearAdjustTransferSubjectCode":  "调整结转科目编码"
+                                          }
+                  },
+                  {
+                      "name":  "fin_profit_loss_by_template",
+                      "description":  "根据模板ID获取结转损益配置",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/closing_template_profit_loss/template/{templateId}",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "templateId":  {
+                                                        "type":  "string",
+                                                        "description":  "结账模板ID"
+                                                    }
+                                 },
+                      "required":  [
+                                       "templateId"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "配置ID",
+                                              "templateId":  "结账模板ID",
+                                              "groupid":  "账套ID",
+                                              "transferCycle":  "结转周期",
+                                              "transferMethod":  "结转方式",
+                                              "voucherDate":  "凭证日期",
+                                              "summary":  "凭证摘要",
+                                              "directionHandling":  "方向处理方式",
+                                              "profitLossSubjectCode":  "损益科目编码",
+                                              "currentYearProfitSubjectCode":  "本年利润科目编码",
+                                              "priorYearAdjustmentSubjectCode":  "以前年度损益调整科目编码",
+                                              "priorYearAdjustTransferSubjectCode":  "调整结转科目编码"
+                                          }
+                  },
+                  {
+                      "name":  "fin_closing_template_vouchers_list",
+                      "description":  "查询结账模板凭证列表",
+                      "menu_id":  1012188,
+                      "endpoint":  "/finance/closingTemplateVouchers/list",
+                      "service":  "wimoor-finance",
+                      "method":  "GET",
+                      "params":  {
+                                     "templateId":  {
+                                                        "type":  "string",
+                                                        "description":  "模板ID"
+                                                    },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "账套ID"
+                                                 },
+                                     "voucherDate":  {
+                                                         "type":  "string",
+                                                         "description":  "凭证日期"
+                                                     },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "记录ID",
+                                              "templateId":  "模板ID",
+                                              "groupid":  "账套ID",
+                                              "vourchesId":  "凭证ID",
+                                              "voucherDate":  "凭证日期",
+                                              "datalog":  "数据日志",
+                                              "createdTime":  "创建时间",
+                                              "updatedTime":  "更新时间",
+                                              "modifyBy":  "修改人",
+                                              "createBy":  "创建人"
+                                          }
+                  }
+              ]
+}

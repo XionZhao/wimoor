@@ -1,0 +1,124 @@
+﻿{
+    "module":  "Amazon卖家绩效",
+    "description":  "Amazon卖家绩效数据查询，包括订单反馈、优惠券、促销活动等绩效指标",
+    "service":  "wimoor-amazon",
+    "tools":  [
+                  {
+                      "name":  "amz_query_order_feedback",
+                      "description":  "查询Amazon订单反馈列表，展示买家对订单的评价和反馈信息",
+                      "menu_id":  132,
+                      "endpoint":  "/amazon/api/v0/rpt/performance/orderfeedback/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：groupname(店铺分组名称)、marketname(站点名称)、purchase_date(下单日期)、order_status(订单状态)、sku(SKU编码)、name(产品名称)、image(产品图片URL)、amazon_order_id(亚马逊订单号)、feeddate(反馈日期)、rating(评分)、comments(评价内容)、response(卖家回复)、email(买家邮箱)、amazonauthid(授权ID)、refreshtime(数据刷新时间)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_coupon_performance",
+                      "description":  "查询Amazon优惠券绩效列表，展示优惠券的使用情况和效果数据",
+                      "menu_id":  132,
+                      "endpoint":  "/amazon/api/v0/rpt/performance/coupon/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：groupname(店铺分组名称)、marketname(站点名称)、couponid(优惠券ID)、merchantid(商家ID)、amazonauthid(授权ID)、marketplaceid(站点ID)、currency(币种)、name(优惠券名称)、websit_message(网站消息)、start_date_time(开始时间)、end_date_time(结束时间)、discount_type(折扣类型)、discount_amount(折扣金额)、total_discount(总折扣额)、clips(领取次数)、redemptions(兑换次数)、budget(预算)、budget_spend(已花费预算)、budget_remaining(剩余预算)、budget_percentage_used(预算使用百分比)、sales(销售额)、refreshtime(数据刷新时间)、asindetail(关联ASIN详情数组，含asin/sku/price/name/image等)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_promotions_performance",
+                      "description":  "查询Amazon促销活动绩效列表，展示促销活动的执行情况和效果数据",
+                      "menu_id":  132,
+                      "endpoint":  "/amazon/api/v0/rpt/performance/promotions/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：groupname(店铺分组名称)、marketname(站点名称)、promotionid(促销ID)、merchantid(商家ID)、amazonauthid(授权ID)、marketplaceid(站点ID)、currency(币种)、name(促销名称)、status(促销状态)、type(促销类型)、glance_views(浏览量)、units_sold(售出数量)、revenue(收入)、start_date_time(开始时间)、end_date_time(结束时间)、created_date_time(创建时间)、last_updated_date_time(最后更新时间)、refreshtime(数据刷新时间)、asindetail(关联ASIN详情数组，含asin/sku/price/name/image等)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  }
+              ]
+}

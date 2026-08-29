@@ -51,6 +51,7 @@ public class CustomerServiceImpl extends  ServiceImpl<CustomerMapper,Customer> i
 	public void setCustomerExcelBook(SXSSFWorkbook workbook, String search, String shopid) {
 		Map<String, Object> titlemap = new LinkedHashMap<String, Object>();
 		titlemap.put("name", "客户名称");
+		titlemap.put("fullname", "客户全称");
 		titlemap.put("number", "客户编码");
 		titlemap.put("ftype", "客户分类");
 		titlemap.put("goodtype", "货物类型");

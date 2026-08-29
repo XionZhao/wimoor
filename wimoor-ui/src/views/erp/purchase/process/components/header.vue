@@ -20,7 +20,7 @@
 					</el-select>
 					<Warehouse @changeware="getWarehouse"  :defaultValue="isConsumable=='ok'?'only':''"/>
 					<Datepicker v-if="queryParams.auditstatus!='1'&&queryParams.auditstatus!='2'" ref="datepickers" @changedate="changeDate" />
-					<el-input v-model="queryParams.search" @input="handleInputQuery"
+					<el-input v-model="queryParams.search" v-debounce-input="handleInputQuery"
 					 clearable 
 					 @clear="handleInputQuery"
 					 placeholder="请输入" class="input-with-select">

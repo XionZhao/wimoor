@@ -1,5 +1,7 @@
 # Spring Boot 项目通用忽略
 .idea/
+.trae/
+.vscode/
 target/
 *.jar
 *.war
@@ -10,6 +12,7 @@ target/
 mvnw*
 !mvnw.cmd
 /logs
+/logPath_IS_UNDEFINED
 /bin
 /docker
 /config

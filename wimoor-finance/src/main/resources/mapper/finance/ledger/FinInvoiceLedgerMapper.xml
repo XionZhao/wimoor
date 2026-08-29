@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.ledger.mapper.FinInvoiceLedgerMapper">
+
+    <resultMap type="com.wimoor.finance.ledger.domain.FinInvoice" id="FinInvoiceResult">
+        <result property="id"    column="id"    />
+        <result property="invoiceCode"    column="invoice_code"    />
+        <result property="invoiceNo"    column="invoice_no"    />
+        <result property="digitalInvoiceNo"    column="digital_invoice_no"    />
+        <result property="invoiceType"    column="invoice_kind"    />
+        <result property="source"    column="source"    />
+        <result property="groupid"    column="groupid"    />
+        <result property="supplierId"    column="supplier_id"    />
+        <result property="carrierId"    column="carrier_id"    />
+        <result property="sellerName"    column="seller_name"    />
+        <result property="sellerTaxNo"    column="seller_tax_no"    />
+        <result property="buyerName"    column="buyer_name"    />
+        <result property="buyerTaxNo"    column="buyer_tax_no"    />
+        <result property="invoiceDate"    column="invoice_date"    />
+        <result property="drawer"    column="drawer"    />
+        <result property="amountWithTax"    column="amount_with_tax"    />
+        <result property="amountWithoutTax"    column="amount_without_tax"    />
+        <result property="taxAmount"    column="tax_amount"    />
+        <result property="currency"    column="currency"    />
+        <result property="exchangeRate"    column="exchange_rate"    />
+        <result property="status"    column="status"    />
+        <result property="postingStatus"    column="posting_status"    />
+        <result property="voucherId"    column="voucher_id"    />
+        <result property="remark"    column="remark"    />
+        <result property="createdTime"    column="created_time"    />
+        <result property="updatedTime"    column="updated_time"    />
+    </resultMap>
+
+    <sql id="selectFinInvoiceVo">
+        select id, invoice_code, invoice_no, digital_invoice_no, invoice_kind, source, groupid,
+               supplier_id, carrier_id, seller_name, seller_tax_no, buyer_name, buyer_tax_no,
+               invoice_date, drawer, amount_with_tax, amount_without_tax, tax_amount,
+               currency, exchange_rate, status, posting_status, voucher_id,
+               remark, created_time, updated_time
+        from fin_invoice
+    </sql>
+
+    <!-- 查询发票列表 -->
+    <select id="selectFinInvoiceList" parameterType="com.wimoor.finance.ledger.domain.FinInvoice" resultMap="FinInvoiceResult">
+        <include refid="selectFinInvoiceVo"/>
+        <where>
+            <if test="groupid != null and groupid != ''"> and groupid = #{groupid}</if>
+            <if test="invoiceNo != null and invoiceNo != ''"> and (invoice_no like concat('%', #{invoiceNo}, '%') or digital_invoice_no like concat('%', #{invoiceNo}, '%'))</if>
+            <if test="invoiceType != null and invoiceType != ''"> and invoice_kind = #{invoiceType}</if>
+            <if test="supplierId != null"> and supplier_id = #{supplierId}</if>
+            <if test="sellerName != null and sellerName != ''"> and seller_name like concat('%', #{sellerName}, '%')</if>
+            <if test="sellerTaxNo != null and sellerTaxNo != ''"> and seller_tax_no = #{sellerTaxNo}</if>
+            <if test="status != null and status != ''"> and status = #{status}</if>
+            <if test="postingStatus != null"> and posting_status = #{postingStatus}</if>
+            <if test="currency != null and currency != ''"> and currency = #{currency}</if>
+            <if test="startDate != null"> and invoice_date &gt;= #{startDate}</if>
+            <if test="endDate != null"> and invoice_date &lt;= #{endDate}</if>
+        </where>
+        order by created_time desc
+    </select>
+
+    <!-- 查询发票详情 -->
+    <select id="selectFinInvoiceById" parameterType="Long" resultMap="FinInvoiceResult">
+        <include refid="selectFinInvoiceVo"/>
+        where id = #{id}
+    </select>
+
+    <!-- 统计发票信息 -->
+    <select id="selectInvoiceStatistics" parameterType="com.wimoor.finance.ledger.domain.FinInvoice" resultType="java.util.Map">
+        select
+            count(*) as totalCount,
+            coalesce(sum(case when posting_status = 1 then 1 else 0 end), 0) as postedCount,
+            coalesce(sum(case when posting_status = 0 then 1 else 0 end), 0) as unpostedCount,
+            coalesce(sum(amount_with_tax), 0) as totalAmountWithTax,
+            coalesce(sum(case when posting_status = 1 then amount_with_tax else 0 end), 0) as postedAmountWithTax,
+            coalesce(sum(case when posting_status = 0 then amount_with_tax else 0 end), 0) as unpostedAmountWithTax,
+            coalesce(sum(amount_without_tax), 0) as totalAmountWithoutTax,
+            coalesce(sum(tax_amount), 0) as totalTaxAmount
+        from fin_invoice
+        <where>
+            <if test="groupid != null and groupid != ''"> and groupid = #{groupid}</if>
+            <if test="invoiceNo != null and invoiceNo != ''">
+                and (invoice_no like concat('%', #{invoiceNo}, '%') or digital_invoice_no like concat('%', #{invoiceNo}, '%'))
+            </if>
+            <if test="invoiceType != null and invoiceType != ''"> and invoice_kind = #{invoiceType}</if>
+            <if test="supplierId != null"> and supplier_id = #{supplierId}</if>
+            <if test="sellerName != null and sellerName != ''"> and seller_name like concat('%', #{sellerName}, '%')</if>
+            <if test="status != null and status != ''"> and status = #{status}</if>
+            <if test="postingStatus != null"> and posting_status = #{postingStatus}</if>
+            <if test="startDate != null"> and invoice_date &gt;= #{startDate}</if>
+            <if test="endDate != null"> and invoice_date &lt;= #{endDate}</if>
+        </where>
+    </select>
+
+    <!-- 查询发票关联的采购订单和付款记录 -->
+    <select id="selectInvoiceRelations" parameterType="Long" resultType="java.util.Map">
+        select
+            fi.purchase_order_ids as purchaseOrderIds,
+            fi.payment_ids as paymentIds
+        from fin_invoice fi
+        where fi.id = #{id}
+    </select>
+
+    <!-- 新增发票 -->
+    <insert id="insertFinInvoice" parameterType="com.wimoor.finance.ledger.domain.FinInvoice" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_invoice
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="invoiceCode != null">invoice_code,</if>
+            <if test="invoiceNo != null">invoice_no,</if>
+            <if test="digitalInvoiceNo != null">digital_invoice_no,</if>
+            <if test="invoiceType != null">invoice_kind,</if>
+            <if test="source != null">source,</if>
+            <if test="groupid != null">groupid,</if>
+            <if test="supplierId != null">supplier_id,</if>
+            <if test="sellerName != null">seller_name,</if>
+            <if test="sellerTaxNo != null">seller_tax_no,</if>
+            <if test="buyerName != null">buyer_name,</if>
+            <if test="buyerTaxNo != null">buyer_tax_no,</if>
+            <if test="invoiceDate != null">invoice_date,</if>
+            <if test="drawer != null">drawer,</if>
+            <if test="amountWithTax != null">amount_with_tax,</if>
+            <if test="amountWithoutTax != null">amount_without_tax,</if>
+            <if test="taxAmount != null">tax_amount,</if>
+            <if test="currency != null">currency,</if>
+            <if test="exchangeRate != null">exchange_rate,</if>
+            <if test="status != null">status,</if>
+            <if test="postingStatus != null">posting_status,</if>
+            <if test="voucherId != null">voucher_id,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="invoiceCode != null">#{invoiceCode},</if>
+            <if test="invoiceNo != null">#{invoiceNo},</if>
+            <if test="digitalInvoiceNo != null">#{digitalInvoiceNo},</if>
+            <if test="invoiceType != null">#{invoiceType},</if>
+            <if test="source != null">#{source},</if>
+            <if test="groupid != null">#{groupid},</if>
+            <if test="supplierId != null">#{supplierId},</if>
+            <if test="sellerName != null">#{sellerName},</if>
+            <if test="sellerTaxNo != null">#{sellerTaxNo},</if>
+            <if test="buyerName != null">#{buyerName},</if>
+            <if test="buyerTaxNo != null">#{buyerTaxNo},</if>
+            <if test="invoiceDate != null">#{invoiceDate},</if>
+            <if test="drawer != null">#{drawer},</if>
+            <if test="amountWithTax != null">#{amountWithTax},</if>
+            <if test="amountWithoutTax != null">#{amountWithoutTax},</if>
+            <if test="taxAmount != null">#{taxAmount},</if>
+            <if test="currency != null">#{currency},</if>
+            <if test="exchangeRate != null">#{exchangeRate},</if>
+            <if test="status != null">#{status},</if>
+            <if test="postingStatus != null">#{postingStatus},</if>
+            <if test="voucherId != null">#{voucherId},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+         </trim>
+    </insert>
+
+    <!-- 批量新增发票（重复时更新发票类型等字段，不更新supplier_id、carrier_id、voucher_id） -->
+    <insert id="batchInsertFinInvoice" parameterType="java.util.List">
+        insert into fin_invoice (invoice_code, invoice_no, digital_invoice_no, invoice_kind, source,
+                                 groupid, supplier_id, carrier_id, seller_name, seller_tax_no,
+                                 buyer_name, buyer_tax_no, invoice_date, drawer,
+                                 amount_with_tax, amount_without_tax, tax_amount,
+                                 currency, exchange_rate, status, posting_status,
+                                 remark, created_time, updated_time)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.invoiceCode}, #{item.invoiceNo}, #{item.digitalInvoiceNo}, #{item.invoiceType},
+             #{item.source}, #{item.groupid}, #{item.supplierId}, #{item.carrierId}, #{item.sellerName}, #{item.sellerTaxNo},
+             #{item.buyerName}, #{item.buyerTaxNo}, #{item.invoiceDate}, #{item.drawer},
+             #{item.amountWithTax}, #{item.amountWithoutTax}, #{item.taxAmount},
+             #{item.currency}, #{item.exchangeRate}, #{item.status}, #{item.postingStatus},
+             #{item.remark}, #{item.createdTime}, #{item.updatedTime})
+        </foreach>
+        on duplicate key update
+            invoice_kind = ifnull(values(invoice_kind), invoice_kind),
+            seller_name = ifnull(values(seller_name), seller_name),
+            seller_tax_no = ifnull(values(seller_tax_no), seller_tax_no),
+            buyer_name = ifnull(values(buyer_name), buyer_name),
+            buyer_tax_no = ifnull(values(buyer_tax_no), buyer_tax_no),
+            invoice_date = ifnull(values(invoice_date), invoice_date),
+            amount_with_tax = ifnull(values(amount_with_tax), amount_with_tax),
+            amount_without_tax = ifnull(values(amount_without_tax), amount_without_tax),
+            tax_amount = ifnull(values(tax_amount), tax_amount),
+            updated_time = now()
+    </insert>
+
+    <!-- 修改发票 -->
+    <update id="updateFinInvoice" parameterType="com.wimoor.finance.ledger.domain.FinInvoice">
+        update fin_invoice
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="invoiceNo != null">invoice_no = #{invoiceNo},</if>
+            <if test="invoiceType != null">invoice_kind = #{invoiceType},</if>
+            <if test="supplierId != null">supplier_id = #{supplierId},</if>
+            <if test="sellerName != null">seller_name = #{sellerName},</if>
+            <if test="sellerTaxNo != null">seller_tax_no = #{sellerTaxNo},</if>
+            <if test="invoiceDate != null">invoice_date = #{invoiceDate},</if>
+            <if test="amountWithTax != null">amount_with_tax = #{amountWithTax},</if>
+            <if test="amountWithoutTax != null">amount_without_tax = #{amountWithoutTax},</if>
+            <if test="taxAmount != null">tax_amount = #{taxAmount},</if>
+            <if test="currency != null">currency = #{currency},</if>
+            <if test="exchangeRate != null">exchange_rate = #{exchangeRate},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="postingStatus != null">posting_status = #{postingStatus},</if>
+            <if test="voucherId != null">voucher_id = #{voucherId},</if>
+            <if test="purchaseOrderIds != null">purchase_order_ids = #{purchaseOrderIds},</if>
+            <if test="paymentIds != null">payment_ids = #{paymentIds},</if>
+            <if test="attachmentUrls != null">attachment_urls = #{attachmentUrls},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime},</if>
+            <if test="updatedBy != null">updated_by = #{updatedBy},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!-- 批量更新发票入账状态 -->
+    <update id="batchUpdatePostingStatus">
+        update fin_invoice
+        <trim prefix="SET" suffixOverrides=",">
+            posting_status = #{postingStatus},
+            voucher_id = #{voucherId},
+            updated_time = now(),
+        </trim>
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 根据数电发票号码查询 -->
+    <select id="selectByDigitalInvoiceNo" parameterType="String" resultMap="FinInvoiceResult">
+        select id, digital_invoice_no from fin_invoice where digital_invoice_no = #{digitalInvoiceNo} limit 1
+    </select>
+
+    <!-- 批量根据发票号码查询（同时支持数电发票号码和普通发票号码） -->
+    <select id="selectByDigitalInvoiceNos" resultMap="FinInvoiceResult">
+        select id, invoice_no, digital_invoice_no from fin_invoice where digital_invoice_no in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        or invoice_no in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <!-- 删除发票 -->
+    <delete id="deleteFinInvoiceById" parameterType="Long">
+        delete from fin_invoice where id = #{id}
+    </delete>
+
+    <!-- 批量删除发票 -->
+    <delete id="deleteFinInvoiceByIds" parameterType="String">
+        delete from fin_invoice where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 更新发票类型 -->
+    <update id="updateInvoiceType">
+        update fin_invoice set invoice_kind = #{invoiceType} where id = #{id}
+    </update>
+
+    <!-- 查询supplier_id为空的发票，按seller_name去重 -->
+    <select id="selectDistinctSellerNamesWithoutSupplier" resultType="java.util.Map">
+        select distinct seller_name as sellerName, seller_tax_no as sellerTaxNo
+        from fin_invoice
+        where supplier_id is null
+        and seller_name is not null
+        and seller_name != ''
+    </select>
+
+    <!-- 诊断：查询发票数据概况 -->
+    <select id="selectInvoiceDiagInfo" resultType="java.util.Map">
+        select
+            count(*) as totalCount,
+            sum(case when supplier_id is null then 1 else 0 end) as nullSupplierCount,
+            sum(case when supplier_id is not null then 1 else 0 end) as hasSupplierCount,
+            sum(case when seller_name is null or seller_name = '' then 1 else 0 end) as nullSellerNameCount,
+            group_concat(distinct groupid) as groupIds
+        from fin_invoice
+    </select>
+
+    <!-- 按seller_name批量更新supplier_id -->
+    <update id="batchUpdateSupplierIdBySellerName">
+        update fin_invoice
+        set supplier_id = #{supplierId}, updated_time = now()
+        where seller_name = #{sellerName}
+        and supplier_id is null
+    </update>
+
+    <!-- 查询carrier_id为空的发票，按seller_name去重 -->
+    <select id="selectDistinctSellerNamesWithoutCarrier" resultType="java.util.Map">
+        select distinct seller_name as sellerName, seller_tax_no as sellerTaxNo
+        from fin_invoice
+        where carrier_id is null
+        and seller_name is not null
+        and seller_name != ''
+    </select>
+
+    <!-- 按seller_name批量更新carrier_id -->
+    <update id="batchUpdateCarrierIdBySellerName">
+        update fin_invoice
+        set carrier_id = #{carrierId}, updated_time = now()
+        where seller_name = #{sellerName}
+        and carrier_id is null
+    </update>
+
+</mapper>

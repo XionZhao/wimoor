@@ -1,0 +1,218 @@
+﻿{
+    "module":  "Amazon透明计划",
+    "description":  "Amazon透明计划(Transparency)授权管理、SKU配置、任务列表、码段管理",
+    "service":  "wimoor-amazon",
+    "tools":  [
+                  {
+                      "name":  "amz_query_transparency_authority",
+                      "description":  "查询Amazon透明计划授权列表，获取已开通透明计划的站点和卖家信息",
+                      "menu_id":  2002,
+                      "endpoint":  "/amazon/api/v0/transparency/listAuthority",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "客户端名称，模糊搜索"
+                                              }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "clientId":  "客户端ID",
+                                              "clientName":  "客户端名称",
+                                              "shopid":  "公司ID",
+                                              "token":  "授权令牌",
+                                              "expiry":  "令牌过期时间",
+                                              "disabled":  "是否禁用",
+                                              "createtime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_transparency_sku_list",
+                      "description":  "查询透明计划SKU配置列表，展示已启用透明计划的SKU信息",
+                      "menu_id":  2002,
+                      "endpoint":  "/amazon/api/v0/transparency/skuinfo/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "asin":  {
+                                                  "type":  "string",
+                                                  "description":  "ASIN编码"
+                                              },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             },
+                                     "authid":  {
+                                                    "type":  "string",
+                                                    "description":  "透明计划授权ID"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：id(记录ID)、gtin(GTIN编码)、groupid(店铺分组ID)、asin(ASIN编码)、sku(SKU编码)、disabled(是否禁用)、authid(授权ID)、createtime(创建时间)、opttime(修改时间)、creator(创建人ID)、operator(操作人ID)、client_name(客户端名称)、groupname(分组名称)、codenum(码段数量统计，格式：总数(已使用数))、name(产品名称)、image(产品图片URL)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_transparency_task_list",
+                      "description":  "查询透明计划任务列表，展示码段申请/生成任务的执行状态",
+                      "menu_id":  2002,
+                      "endpoint":  "/amazon/api/v0/transparency/task/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "authid":  {
+                                                    "type":  "string",
+                                                    "description":  "透明计划授权ID"
+                                                },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码，模糊搜索"
+                                             },
+                                     "status":  {
+                                                    "type":  "string",
+                                                    "description":  "任务状态，如INPROCESS、COMPLETED"
+                                                },
+                                     "taskid":  {
+                                                    "type":  "string",
+                                                    "description":  "任务ID"
+                                                },
+                                     "tcodelist":  {
+                                                       "type":  "array",
+                                                       "description":  "码段列表"
+                                                   },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：sku(SKU编码)、asin(ASIN编码)、gtin(GTIN编码)、authid(授权ID)、groupid(店铺分组ID)、client_name(客户端名称)、groupname(分组名称)、count(码段数量)、url(下载URL)、status(任务状态)、taskid(任务ID)、jobid(任务JobID)、createtime(创建时间)、codenum(已使用码段统计，格式：总数(已使用数))、name(产品名称)、image(产品图片URL)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_transparency_code_list",
+                      "description":  "查询透明计划码段列表，展示已生成的透明码信息",
+                      "menu_id":  2002,
+                      "endpoint":  "/amazon/api/v0/transparency/tcode/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             },
+                                     "taskid":  {
+                                                    "type":  "string",
+                                                    "description":  "任务ID"
+                                                },
+                                     "authid":  {
+                                                    "type":  "string",
+                                                    "description":  "透明计划授权ID"
+                                                },
+                                     "tcodelist":  {
+                                                       "type":  "array",
+                                                       "description":  "码段列表，用于筛选"
+                                                   },
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "文件类型，如H1"
+                                               },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：sku(SKU编码)、asin(ASIN编码)、gtin(GTIN编码)、authid(授权ID)、groupid(店铺分组ID)、client_name(客户端名称)、groupname(分组名称)、count(码段数量)、url(下载URL)、status(任务状态)、tcode(透明码)、usetime(使用时间)、taskid(关联任务ID)、type_of_codes(码段类型)、createtime(创建时间)、jobid(任务JobID)、name(产品名称)、image(产品图片URL)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_transparency_code_used_by_task",
+                      "description":  "标记透明计划码段按任务维度为已使用状态",
+                      "menu_id":  2002,
+                      "endpoint":  "/amazon/api/v0/transparency/tcode/usedByTask",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "taskid":  {
+                                                    "type":  "string",
+                                                    "description":  "任务ID，标记该任务下所有码段为已使用"
+                                                }
+                                 },
+                      "required":  [
+                                       "taskid"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "操作结果"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_transparency_code_unused_by_task",
+                      "description":  "标记透明计划码段按任务维度为未使用状态",
+                      "menu_id":  2002,
+                      "endpoint":  "/amazon/api/v0/transparency/tcode/unUsedByTask",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "taskid":  {
+                                                    "type":  "string",
+                                                    "description":  "任务ID，标记该任务下所有码段为未使用"
+                                                }
+                                 },
+                      "required":  [
+                                       "taskid"
+                                   ],
+                      "response_fields":  {
+                                              "data":  "操作结果"
+                                          }
+                  }
+              ]
+}

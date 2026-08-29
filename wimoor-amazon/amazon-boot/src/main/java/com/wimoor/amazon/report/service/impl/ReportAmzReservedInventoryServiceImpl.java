@@ -1,18 +1,5 @@
 package com.wimoor.amazon.report.service.impl;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Resource;
-
-import org.springframework.stereotype.Service;
-
 import com.amazon.spapi.model.reports.CreateReportSpecification;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.wimoor.amazon.auth.pojo.entity.AmazonAuthority;
@@ -22,6 +9,12 @@ import com.wimoor.amazon.inventory.pojo.entity.InventoryReservedReport;
 import com.wimoor.amazon.report.pojo.entity.ReportType;
 import com.wimoor.amazon.util.AmzDateUtils;
 import com.wimoor.common.GeneralUtil;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.*;
 
  
 
@@ -95,8 +88,10 @@ public class ReportAmzReservedInventoryServiceImpl extends ReportServiceImpl{
 					String product_name = i < length ? info[i++] : null;
 					String reserved_qty = i < length ? info[i++] : null;
 					String reserved_customerorders = i < length ? info[i++] : null;
-					String reserved_fc_transfers = i < length ? info[i++] : null;
 					String reserved_fc_processing = i < length ? info[i++] : null;
+					String reserved_fc_transfers = i < length ? info[i++] : null;
+					//sku	fnsku	asin	product-name	reserved_qty	reserved_customerorders	reserved_fc-processing
+					// reserved_staging	program
 					record.setSku(sku);
 					record.setFnsku(fnsku);
 					record.setAsin(asin);

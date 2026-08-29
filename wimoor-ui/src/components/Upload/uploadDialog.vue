@@ -1,5 +1,8 @@
 <template>
 <el-dialog v-model="visible" :title="title"  width="400px" >
+	 <div v-if="state.desc" style="margin-bottom:16px;padding:12px;background:#fdf6ec;border-radius:4px;color:#e6a23c;font-size:13px;line-height:1.6;">
+		{{ state.desc }}
+	 </div>
 	 <el-upload
 	     :drag="true"
 	      action
@@ -37,19 +40,20 @@
 	   import {UploadFilled} from '@element-plus/icons-vue';
 		import { ref,reactive,onMounted,toRefs} from 'vue';
 		import downloadTemplateFileApi from '@/api/erp/common/downloadTemplateFileApi.js';
-		let state=reactive({visible:false,myfile:null,templateFile:"",title:"",callback:null,btnloading:false,action:undefined});
-		const{visible,myfile,title,btnloading }=toRefs(state);
-		 const emit = defineEmits(['upload']);
-		function show(param){
-			state.templateFile=param.template;
-			state.title=param.title;
-			state.visible=true;
-			state.btnloading=false;
-			state.callback=param.templateCallback;
-			if(param.action){
-				state.action=param.action;
-			}
+		let state=reactive({visible:false,myfile:null,templateFile:"",title:"",desc:"",callback:null,btnloading:false,action:undefined});
+	const{visible,myfile,title,btnloading }=toRefs(state);
+	 const emit = defineEmits(['upload']);
+	function show(param){
+		state.templateFile=param.template;
+		state.title=param.title;
+		state.visible=true;
+		state.btnloading=false;
+		state.callback=param.templateCallback;
+		state.desc=param.desc||"";
+		if(param.action){
+			state.action=param.action;
 		}
+	}
 		function hide(){
 				state.visible=false;
 				state.btnloading=false;

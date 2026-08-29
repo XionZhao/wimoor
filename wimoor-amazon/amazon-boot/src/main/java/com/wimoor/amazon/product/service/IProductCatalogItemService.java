@@ -9,14 +9,14 @@ import com.amazon.spapi.model.catalogitems.ItemSearchResults;
 import com.wimoor.amazon.auth.pojo.entity.AmazonAuthority;
 import com.wimoor.amazon.auth.service.IRunAmazonService;
 import com.wimoor.amazon.product.pojo.dto.ProductCatalogItemsDTO;
-import com.wimoor.amazon.product.pojo.entity.AmzProductRefresh;
+import com.wimoor.amazon.product.pojo.entity.AmzProductRefreshType;
 
 public interface IProductCatalogItemService extends IRunAmazonService{
 
-	void captureCatalogProductSync(AmazonAuthority amazonAuthority, AmzProductRefresh amzProductRefresh, List<String> marketList);
-	public Item captureCatalogProduct(AmazonAuthority auth, AmzProductRefresh skuRefresh, List<String> market);
-	void handlerResult(AmazonAuthority auth, AmzProductRefresh skuRefresh, com.amazon.spapi.model.catalogitems.Item result);
-	void handlerFailure(AmazonAuthority auth, AmzProductRefresh skuRefresh, ApiException e);
+	void captureCatalogProductSync(AmazonAuthority amazonAuthority, AmzProductRefreshType amzProductRefresh, List<String> marketList);
+	public Item captureCatalogProduct(AmazonAuthority auth, AmzProductRefreshType skuRefresh, List<String> market);
+	void handlerResult(AmazonAuthority auth, AmzProductRefreshType skuRefresh, com.amazon.spapi.model.catalogitems.Item result);
+	void handlerFailure(AmazonAuthority auth, AmzProductRefreshType skuRefresh, ApiException e);
 	void stopTask();
 	void runTask();
 	public Item captureCatalogProductDim(AmazonAuthority auth,String asin, List<String> market);

@@ -19,7 +19,7 @@
   <select id="findByCondition" parameterType="java.util.Map" resultType="java.util.Map">
   	SELECT t.id,max(t.number) number,max(t.remark) remark,max(t.auditstatus) auditstatus,
 	max(m.name) paymethod,max(u2.name) creatorname,max(u.name) operatorname,max(u3.name) auditorname,max(f.number) purnumber,
-	max(e.supplier) supplierid,SUM(pay.payprice) price,
+	max(e.supplier) supplierid,SUM(pay.payprice) price,max(gp.name) groupname,
 	MAX(t.createtime) createtime,MAX(t.opttime) opttime,MAX(t.audittime) audittime,
 	false approveVisible,false payVisible,false returnVisible
 	 FROM t_erp_purchase_fin_form t
@@ -30,7 +30,11 @@
 	LEFT JOIN t_userinfo u2 ON u2.id=t.creator
 	LEFT JOIN t_userinfo u3 ON u3.id=t.auditor
 	LEFT JOIN t_erp_purchase_fin_form_payment pay ON pay.formid=t.id
+	LEFT JOIN t_amazon_group gp ON gp.id=t.groupid
 	where t.shopid=#{param.shopid,jdbcType=CHAR}
+	<if test="param.groupid!=null and param.groupid!=''">
+	   and t.groupid=#{param.groupid,jdbcType=CHAR}
+	</if>
 	<if test="param.supplierid!=null and param.supplierid!=''">
 	   and e.supplier=#{param.supplierid,jdbcType=CHAR}
 	</if>
@@ -61,7 +65,7 @@
   
   <select id="findFormId"  parameterType="java.lang.String" resultType="java.util.Map" >
   	 select t.*,u2.name creatorname,u.name operatorname,u3.name auditorname,me.name paymethod,
-  	  m.sku,m.name mname,p.location image,f.number purnumber
+  	  m.sku,m.name mname,p.location image,f.number purnumber,gp.name groupname
   	 from t_erp_purchase_fin_form t
   	 LEFT JOIN t_userinfo u ON u.id=t.operator
 	 LEFT JOIN t_userinfo u2 ON u2.id=t.creator
@@ -71,6 +75,7 @@
 	 left join t_erp_material m on m.id=e.materialid
 	 left join t_picture p on p.id=m.image
 	 LEFT JOIN t_erp_purchase_form f ON f.id=e.formid
+	 LEFT JOIN t_amazon_group gp ON gp.id=t.groupid
 	 where t.id=#{formid,jdbcType=CHAR}
   </select>
   

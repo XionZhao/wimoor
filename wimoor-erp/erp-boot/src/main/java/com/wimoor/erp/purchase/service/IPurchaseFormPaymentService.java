@@ -25,4 +25,11 @@ public interface IPurchaseFormPaymentService extends IService<PurchaseFormPaymen
 	public List<PurchaseFormPayment> getPaymentByEntryid(String id,String paytype) ;
 	public void handleAvgPrice(PurchaseFormEntry entry);
 	int removePay(String id);
+
+    // ==================== 台账Feign接口 ====================
+    
+    /**
+     * 获取订单付款明细（台账用）
+     */
+    List<Map<String, Object>> getPaymentsByEntryId(String entryId);
 }

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wimoor.erp.customer.mapper.CustomerAccountMapper">
+    <resultMap id="BaseResultMap" type="com.wimoor.erp.customer.pojo.entity.CustomerAccount">
+        <id column="id" property="id" jdbcType="CHAR"/>
+        <result column="customer_id" property="customerId" jdbcType="CHAR"/>
+        <result column="company_name" property="companyName" jdbcType="CHAR"/>
+        <result column="account_number" property="accountNumber" jdbcType="VARCHAR"/>
+        <result column="operator" property="operator" jdbcType="CHAR"/>
+        <result column="opttime" property="opttime" jdbcType="TIMESTAMP"/>
+        <result column="is_default" property="isDefault" jdbcType="BOOLEAN"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="bank_name" property="bankName" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="findByCustomerId" resultType="java.util.Map">
+        SELECT a.id, a.customer_id, a.company_name, a.account_number,
+               a.is_default, a.status, a.bank_name, a.remark,
+               u.name operator_name, a.opttime
+        FROM t_erp_customer_account a
+        LEFT JOIN t_userinfo u ON u.id = a.operator
+        WHERE a.customer_id = #{customerId, jdbcType=CHAR}
+        <if test="status != null">
+            AND a.status = #{status}
+        </if>
+        ORDER BY a.is_default DESC, a.opttime DESC
+    </select>
+
+    <update id="resetDefault">
+        UPDATE t_erp_customer_account
+        SET is_default = 0
+        WHERE customer_id = #{customerId, jdbcType=CHAR}
+          AND is_default = 1
+    </update>
+    
+    <select id="findByShopId" resultType="java.util.Map">
+        SELECT a.id, a.customer_id, a.company_name, a.account_number,
+               a.is_default, a.status, a.bank_name, a.remark,
+               c.name customer_name
+        FROM t_erp_customer_account a
+        INNER JOIN t_erp_customer c ON c.id = a.customer_id
+        WHERE c.shopid = #{shopid, jdbcType=CHAR}
+        ORDER BY c.name, a.is_default DESC
+    </select>
+</mapper>

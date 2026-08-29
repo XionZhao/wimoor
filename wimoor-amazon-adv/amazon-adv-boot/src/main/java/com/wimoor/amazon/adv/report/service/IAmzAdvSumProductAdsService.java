@@ -1,6 +1,7 @@
 package com.wimoor.amazon.adv.report.service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 public interface IAmzAdvSumProductAdsService {
@@ -8,5 +9,6 @@ public interface IAmzAdvSumProductAdsService {
   public Map<String, Object> getDaysSumProduct(Map<String,Object> param);
   public BigDecimal orderSummaryAll(Map<String,Object> param);
   public Map<String,Object> orderDaysSummaryAll(Map<String,Object> param);
-  public Map<String, Object> getMonthSumProduct(Map<String,Object> param); 
+  public Map<String, Object> getMonthSumProduct(Map<String,Object> param);
+  public List<Map<String, Object>> getCostGroupByMonth(Map<String, Object> param);
 }

@@ -9,7 +9,7 @@
 					<el-button @click="upload">导入</el-button>
 					<el-button @click="handleDelete">删除</el-button>
 					<Datepicker ref="datepickers" @changedate="changedate" />
-					<el-input  v-model="searchKeywords" placeholder="输入代料编码或SKU" @input="handleQuery" class="input-with-select" >
+					<el-input  v-model="searchKeywords" placeholder="输入代料编码或SKU" v-debounce-input="handleQuery" class="input-with-select" >
 					   <template #append>
 					     <el-button @click="handleQuery">
 					        <el-icon style="font-size: 16px;align-itmes:center">
@@ -162,6 +162,6 @@
 <style scoped="scoped">
 	.font-48{
 		font-size: 48px;
-		    color: #999;
+		    color: var(--el-text-color-secondary);
 	}
 </style>

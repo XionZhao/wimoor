@@ -1,7 +1,7 @@
 <template>
 	<el-button v-if="type" @click="show(type)">上传报告</el-button>
 <el-dialog v-model="visible" title="报表上传"  width="400px" >
-	<div class="text-red">请将您在卖家中心下载的报表转换成UTF-8格式的文本文件(制表符分隔)</div>
+	<div class="text-red">请将您在卖家中心下载的报表转换成UTF-8格式的文本文件(制表符分隔)或CSV文件</div>
 	 <el-upload
 	     :drag="true"
 	      action
@@ -10,7 +10,7 @@
 		 :before-upload="beforeUpload" 
 		 :show-file-list="true" 
 		 :headers="headers" 
-		 accept=".txt"
+		 accept=".txt,.csv"
 	     multiple
 	   >
 	     <el-icon class="font-large"><upload-filled /></el-icon>

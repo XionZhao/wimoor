@@ -943,6 +943,8 @@ public class AssemblyFormServiceImpl extends  ServiceImpl<AssemblyFormMapper,Ass
 		cell.setCellValue("创建人");
 		cell=row.createCell(14);
 		cell.setCellValue("操作时间");
+		cell=row.createCell(15);
+		cell.setCellValue("关联采购单");
         Map<String, String> usermap = adminClientOneFeign.getAllUserName();
 		for(int i=0;list!=null&&i<list.size();i++) {
 			Map<String, Object> item = list.get(i);
@@ -978,6 +980,8 @@ public class AssemblyFormServiceImpl extends  ServiceImpl<AssemblyFormMapper,Ass
 			  cell.setCellValue(usermap.get(creator));
 			  cell = row.createCell(14);
 			  cell.setCellValue(getValue(item.get("opttime")));
+			  cell = row.createCell(15);
+			  cell.setCellValue(getValue(item.get("purchaseNumbers")));
 		}
 		return workbook;
 	}
@@ -1006,6 +1010,8 @@ public class AssemblyFormServiceImpl extends  ServiceImpl<AssemblyFormMapper,Ass
 		cell.setCellValue("创建人");
 		cell=row.createCell(8);
 		cell.setCellValue("创建时间");
+		cell=row.createCell(9);
+		cell.setCellValue("关联采购单");
 		
         Map<String, String> usermap = adminClientOneFeign.getAllUserName();
 		for(int i=0;list!=null&&i<list.size();i++) {
@@ -1030,6 +1036,8 @@ public class AssemblyFormServiceImpl extends  ServiceImpl<AssemblyFormMapper,Ass
 			  cell.setCellValue(usermap.get(creator));
 			  cell = row.createCell(8);
 			  cell.setCellValue(getValue(item.get("createdate")));
+			  cell = row.createCell(9);
+			  cell.setCellValue(getValue(item.get("purchaseNumbers")));
 		}
 		return workbook;
 	}

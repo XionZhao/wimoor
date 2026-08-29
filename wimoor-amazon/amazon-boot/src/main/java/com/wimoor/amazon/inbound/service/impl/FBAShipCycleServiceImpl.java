@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service("fBAShipCycleService")
 @RequiredArgsConstructor
@@ -148,6 +149,22 @@ public class FBAShipCycleServiceImpl extends ServiceImpl<FBAShipCycleMapper,FBAS
 		return result;
 	}
 
+	@Override
+	public Map<String, FBAShipCycle> getFbaShipCycleBatch(String groupid, String marketplaceid, Set<String> skuSet) {
+		Map<String, FBAShipCycle> result = new HashMap<>();
+		if (skuSet == null || skuSet.isEmpty()) {
+			return result;
+		}
+		LambdaQueryWrapper<FBAShipCycle> query = new LambdaQueryWrapper<>();
+		query.eq(FBAShipCycle::getGroupid, groupid);
+		query.eq(FBAShipCycle::getMarketplaceid, marketplaceid);
+		query.in(FBAShipCycle::getSku, skuSet);
+		List<FBAShipCycle> list = this.list(query);
+		for (FBAShipCycle item : list) {
+			result.put(item.getSku(), item);
+		}
+		return result;
+	}
 
  
 }

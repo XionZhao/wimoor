@@ -30,6 +30,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface IProductInOptService extends IService<ProductInOpt> {
 
 	void refreshAllProductAdv();
+	void refreshAllProductFees();
 	public  IPage<ProductPriceVo>  priceQueue(ProductPriceDTO dto);
 	public List<Map<String, Object>> findMaterialSizeByCondition(Map<String, Object> param);
 	public List<Map<String, Object>> getProRemarkHis(String pid,String ftype);

@@ -36,4 +36,23 @@ public interface IFaccountService extends IService<FinAccount> {
 	public List<FinAccount> findAccountArchiveAll(String shopid);
 
 	void savePaymethodIndex(UserInfo currUser,List<Map<String, Object>> indexlist);
+
+	void saveAccountIndex(UserInfo currUser,List<Map<String, Object>> indexlist);
+
+    // ==================== 台账Feign接口 ====================
+    
+    /**
+     * 进销存台账汇总（台账用）
+     */
+    List<Map<String, Object>> getInventoryLedgerSummary(Map<String, Object> params);
+
+    /**
+     * 进销存台账明细（台账用）
+     */
+    List<Map<String, Object>> getInventoryLedgerDetail(Map<String, Object> params);
+
+    /**
+     * 进销存台账明细总数
+     */
+    long getInventoryLedgerDetailCount(Map<String, Object> params);
 }

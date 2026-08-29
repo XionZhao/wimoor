@@ -8,9 +8,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wimoor.amazon.auth.pojo.entity.AmazonAuthority;
 import com.wimoor.amazon.auth.service.IAmazonAuthorityService;
 import com.wimoor.amazon.auth.service.impl.ApiBuildService;
-import com.wimoor.amazon.product.pojo.entity.AmzProductRefresh;
+import com.wimoor.amazon.product.pojo.entity.AmzProductRefreshType;
 import com.wimoor.amazon.product.pojo.entity.ProductInReview;
-import com.wimoor.amazon.product.service.IAmzProductRefreshService;
 import com.wimoor.amazon.product.service.IProductInReviewService;
 import com.wimoor.amazon.product.mapper.ProductInReviewMapper;
 import com.wimoor.amazon.product.service.IProductInfoService;
@@ -38,15 +37,13 @@ public class ProductInReviewServiceImpl extends ServiceImpl<ProductInReviewMappe
     IProductInfoService iProductInfoService;
 
     @Autowired
-    @Lazy
-    IAmzProductRefreshService iAmzProductRefreshService;
-
-    @Autowired
     ApiBuildService apiBuildService;
     @Override
-    public void capture(AmazonAuthority amazonAuthority, AmzProductRefresh skuRefresh) {
+    public void capture(AmazonAuthority amazonAuthority, AmzProductRefreshType skuRefresh) {
         CustomerFeedbackApi api = apiBuildService.getCustomerFeedbackApi(amazonAuthority);
         try {
+            // 需要通过pid获取产品信息来获取asin和marketplaceid
+            // 这里暂时使用空值，实际使用时需要从产品信息表获取
             ItemReviewTopicsResponse response = api.getItemReviewTopics(skuRefresh.getAsin(), skuRefresh.getMarketplaceid(), "STAR_RATING_IMPACT");
             System.out.println(response.toString());
 

@@ -58,4 +58,10 @@ public interface IAmzSettlementReportService extends IService<AmzSettlementRepor
 	public List<Map<String,Object>> monthDetail(Map<String,Object> param);
 
 	public Map<String,Object> monthReport(Map<String, Object> param);
+
+	public Map<String, Object> quantityByDay(Map<String, Object> param);
+
+	public Map<String, Object> dailyIncomeReport(Map<String, Object> param);
+
+	public Map<String, Object> dailyIncomeReportByTransaction(Map<String, Object> param);
 }

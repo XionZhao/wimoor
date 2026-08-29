@@ -89,7 +89,10 @@
                   </el-form-item>
 
                   <el-form-item label="收发货人名称：" prop="tradeName" required>
-                    <el-input v-model="declaration.header.tradeName" placeholder="请输入境内收发货人名称" />
+                    <el-select v-if="state.companyOptions.length > 1" v-model="declaration.header.tradeName" placeholder="请选择收发货人" @change="handleCompanyChange" style="width: 100%">
+                      <el-option v-for="item in state.companyOptions" :key="item.value" :label="item.label" :value="item.value" />
+                    </el-select>
+                    <el-input v-else v-model="declaration.header.tradeName" placeholder="请输入境内收发货人名称" />
                   </el-form-item>
 
                   <el-form-item label="生产销售单位代码：" prop="ownerCode">
@@ -657,6 +660,7 @@ import {ref, reactive, computed, watch, nextTick, toRefs} from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import CustomsSelect from '@/views/erp/shipv2/shipment_handing/shipstep/components/customs_data.vue'
 import shipmentCustomsApi from '@/api/erp/shipv2/shipmentCustomsApi.js'
+import groupApi from '@/api/amazon/group/groupApi.js'
 import { useCustomsDict } from '@/hooks/erp/shipment/custom_data.js'
 import {Delete} from "@element-plus/icons-vue";
 const { unit,currency,wrapType,trafMode,pod,country,portCode } = useCustomsDict('unit','currency','wrapType','trafMode','pod','country','portCode')
@@ -679,6 +683,7 @@ xmlform: {
 },
 optType:'dxpId',
 xmlLoading: false,
+companyOptions: [],
 // FBA订单表单数据
 orderData: { items: [] }
 })
@@ -1161,8 +1166,52 @@ shipmentCustomsApi.viewXmlData(state.xmlform).then((res) => {
 })
 }
 
+async function loadCompanyOptions(groupids) {
+  try {
+    const res = await groupApi.getAmazongroupList();
+    if (res.data) {
+      // 过滤出选中的店铺
+      const filteredGroups = res.data.filter(group => groupids.includes(group.id));
+      // 构建公司选项列表（去重）
+      const companyMap = new Map();
+      filteredGroups.forEach(group => {
+        if (group.company && !companyMap.has(group.company)) {
+          companyMap.set(group.company, {
+            value: group.company,
+            label: group.company,
+            taxNumber: group.taxNumber || group.tax_number || '',
+            customNumber: group.customNumber || group.custom_number || '',
+            dxpid: group.dxpid || '',
+            groupId: group.id
+          });
+        }
+      });
+      state.companyOptions = Array.from(companyMap.values());
+    }
+  } catch (e) {
+    console.error('获取店铺信息失败', e);
+  }
+}
+
+function handleCompanyChange(companyName) {
+  const selectedCompany = state.companyOptions.find(item => item.value === companyName);
+  if (selectedCompany) {
+    // 更新收发货人代码
+    declaration.header.tradeCode = selectedCompany.customNumber || selectedCompany.taxNumber || '';
+    // copName与tradeName保持一致
+    declaration.header.copName = companyName;
+    declaration.header.copCode = selectedCompany.customNumber || selectedCompany.taxNumber || '';
+    // 更新dxpId到xmlform
+    state.xmlform.dxpId = selectedCompany.dxpid || '';
+    // 更新groupid，使后端能获取到正确的公司信息生成文件名
+    state.xmlform.groupid = selectedCompany.groupId;
+    // 更新文件名
+    getFileName();
+  }
+}
+
 // 对外暴露的方法
-async function show(groupid, shipmentid,guid) {
+async function show(groupid, shipmentid,guid,groupids) {
 state.guid=guid;
 state.xmlVisible = true;
 state.groupid = groupid
@@ -1175,6 +1224,8 @@ if (state.xmlform) {
   state.xmlform = {number:shipmentid,groupid:groupid,xmlType:"DEC001"}
 }
 
+// 获取店铺信息，构建公司选项列表
+await loadCompanyOptions(groupids || [groupid]);
 loadXml();
 }
 

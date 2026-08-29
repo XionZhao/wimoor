@@ -1,9 +1,9 @@
 
 <template>
-  <div class="deepseek-app">
+  <div class="deepseek-app" :class="{ 'drawer-mode': drawerMode }">
     <el-row v-if="innerType=='deepseek'" class="deepseek-row">
       <!-- 左侧会话列表 -->
-      <el-col :span="4" class="sidebar-left">
+      <el-col v-if="!drawerMode" :span="4" class="sidebar-left">
         <div class="sidebar-header">
           <el-button type="primary" class="new-session-btn" @click="handleAddSession()">
             <el-icon><Plus /></el-icon>
@@ -44,7 +44,7 @@
       </el-col>
 
       <!-- 中间聊天区域 -->
-      <el-col :span="16" class="chat-main">
+      <el-col :span="drawerMode ? 24 : 16" class="chat-main">
         <div ref="messagesWrapperRef" class="messages-wrapper">
           <template v-for="(item, index) in messages" :key="item.id || item.message_id || index">
             <div class="message-wrapper" :class="item.role=='user' ? 'user-message' : 'assistant-message'">
@@ -103,7 +103,16 @@
                   <el-option label="MiniMax-M2.5" value="MiniMax-M2.5">MiniMax-阿里云</el-option>
                   <el-option label="MiniMax/MiniMax-M2.7" value="MiniMax/MiniMax-M2.7">MiniMax-稀宇科技</el-option>
                 </el-select>
-                <el-tooltip content="流式读取：实时显示AI回复，响应更快" placement="top">
+                <el-tooltip content="Agent模式：AI自动调用系统接口查询数据，帮您解决业务问题" placement="top">
+                  <el-switch
+                    v-model="agentMode"
+                    class="agent-switch"
+                    inline-prompt
+                    active-text="Agent"
+                    inactive-text="普通"
+                  />
+                </el-tooltip>
+                <el-tooltip v-if="!agentMode" content="流式读取：实时显示AI回复，响应更快" placement="top">
                   <el-switch
                     v-model="streamEnabled"
                     class="stream-switch"
@@ -129,7 +138,7 @@
       </el-col>
 
       <!-- 右侧快捷短语 -->
-      <el-col :span="4" class="sidebar-right">
+      <el-col v-if="!drawerMode" :span="4" class="sidebar-right">
         <div class="sidebar-header">
           <div class="sidebar-title">快捷短语</div>
         </div>
@@ -254,7 +263,10 @@
 
 <script setup>
 import { ref,reactive, onMounted, toRefs,nextTick, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import deepseekApi from '@/api/sys/tool/deepseekApi.js';
+import { getDictItemByCodeAndName, listDictsByCode } from '@/api/sys/admin/dict.js';
+import { getHelpDocByPath } from '@/api/sys/admin/helpDoc.js';
 import MarkdownRenderer from "./components/MarkdownRenderer.vue"
 import {Top,Plus,Promotion,Delete} from '@element-plus/icons-vue';
 const emit = defineEmits(['change']);
@@ -263,19 +275,26 @@ const props = defineProps({
     type: String,
     default: 'deepseek'
   },
-
+  drawerMode: {
+    type: Boolean,
+    default: false
+  }
 });
 
-const { innerType,  } = props;
+const route = useRoute();
+const { innerType, drawerMode } = props;
 
 const textareaRef = ref(null)
 const messagesWrapperRef=ref();
+
+// 帮助文档库缓存（整个系统的所有帮助文档）
+let helpDocLibrary = null;
 
     const  state=reactive({
 		message:"",
 		messages:[],
 		sessionid:null,
-		search_model:"qwen-turbo",
+		search_model:"deepseek-v3.2",
 		search_network:"deepseek-chat",
 		isLoading:false,
 		sessions:[],
@@ -283,6 +302,8 @@ const messagesWrapperRef=ref();
 		response:null,
 		streamEnabled: true, // 是否启用流式读取
 		hasStreamContent: false, // 是否有流式内容
+		agentMode: true, // 是否启用Agent模式（自动调用系统接口）
+		toolCalls: [], // 当前正在执行的工具调用
 	})
 	const{
 		message,
@@ -296,6 +317,8 @@ const messagesWrapperRef=ref();
 		response,
 		streamEnabled,
 		hasStreamContent,
+		agentMode,
+		toolCalls,
 	}=toRefs(state);
   function submit(data,callback){
     data.model=state.search_model;
@@ -318,15 +341,21 @@ const messagesWrapperRef=ref();
       if(res.data){
         state.response=res.data;
         state.isLoading=false;
-        // 合并服务器返回的消息（包含用户消息和AI回复），添加 reasoning 相关字段
-        state.messages = state.response.messages.map(msg => ({
-          ...msg,
-          reasoning: msg.reasoning_content || msg.reasoning || '',
-          showReasoning: false,
-          isStreaming: false,
-          isThinking: false
-        }));
-        state.sessionid=state.response.id;
+        // 从服务端响应中提取AI回复，追加到现有消息列表（不覆盖历史）
+        if (state.response.messages && state.response.messages.length > 0) {
+          const aiReply = state.response.messages[state.response.messages.length - 1];
+          const aiMessage = {
+            ...aiReply,
+            reasoning: aiReply.reasoning_content || aiReply.reasoning || '',
+            showReasoning: false,
+            isStreaming: false,
+            isThinking: false
+          };
+          state.messages = [...state.messages, aiMessage];
+        }
+        if (state.response.id) {
+          state.sessionid = state.response.id;
+        }
         emit("change");
         if(callback){
           callback(res.data);
@@ -446,8 +475,20 @@ const messagesWrapperRef=ref();
         deepseekApi.search(data).then(res => {
           if (res.data) {
             state.response = res.data;
-            state.messages = state.response.messages;
-            state.sessionid = state.response.id;
+            // 追加AI回复而非覆盖历史
+            if (state.response.messages && state.response.messages.length > 0) {
+              const aiReply = state.response.messages[state.response.messages.length - 1];
+              state.messages = [...state.messages, {
+                ...aiReply,
+                reasoning: aiReply.reasoning_content || aiReply.reasoning || '',
+                showReasoning: false,
+                isStreaming: false,
+                isThinking: false
+              }];
+            }
+            if (state.response.id) {
+              state.sessionid = state.response.id;
+            }
             emit("change");
             nextTick(() => {
               scrollToBottom();
@@ -501,19 +542,439 @@ const messagesWrapperRef=ref();
     );
   }
 
+  // Agent模式流式提交方法（支持工具调用）
+  function submitAgentStream(data, callback) {
+    data.model = state.search_model;
+    data.frequencyPenalty = 0;
+    data.maxTokens = 4096;
+    data.presencePenalty = 0;
+    data.responseFormat = {"type": "json_object"};
+    data.stop = null;
+    data.stream = true;
+    data.streamOptions = null;
+    data.temperature = 1;
+    data.topP = 1;
+    data.sessionId = state.sessionid;
+    data.agentMode = true;
+    state.isLoading = true;
+    state.hasStreamContent = false;
+    state.toolCalls = []; // 清空工具调用列表
+
+    let fullContent = '';
+    let fullReasoning = '';
+    let hasReceivedData = false;
+    let agentSteps = []; // 执行步骤列表
+    let currentIteration = 0; // 当前迭代轮次
+    let panelCollapsed = false; // 面板是否折叠
+
+    // 获取流式消息容器
+    const container = document.getElementById('streaming-container');
+    if (!container) {
+      console.error('找不到流式消息容器');
+      return;
+    }
+
+    // 清空容器并创建流式消息元素（含执行过程面板）
+    container.innerHTML = `
+      <div class="message-wrapper assistant-message" id="streaming-message">
+        <div class="message-avatar">
+          <div class="avatar ai-avatar">AI</div>
+        </div>
+        <div class="message-content">
+          <!-- 执行过程面板 -->
+          <div id="agent-process-panel" class="agent-process-panel">
+            <div class="process-panel-header" id="process-panel-header">
+              <span class="process-panel-icon">⚡</span>
+              <span class="process-panel-title" id="process-panel-title">正在连接AI服务...</span>
+              <span class="process-panel-toggle" id="process-panel-toggle">▼</span>
+            </div>
+            <div class="process-panel-body" id="process-panel-body">
+              <div class="process-timeline" id="process-timeline">
+                <div class="process-step step-active" id="step-init">
+                  <div class="step-dot"></div>
+                  <div class="step-content">
+                    <span class="step-text">正在连接AI服务...</span>
+                    <span class="step-time"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 最终回答区域 -->
+          <div class="message-bubble ai-bubble" id="final-answer-bubble" style="display:none;">
+            <div id="streaming-content"></div>
+            <span class="streaming-cursor">|</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 面板折叠/展开
+    const panelHeader = document.getElementById('process-panel-header');
+    if (panelHeader) {
+      panelHeader.onclick = () => {
+        panelCollapsed = !panelCollapsed;
+        const body = document.getElementById('process-panel-body');
+        const toggle = document.getElementById('process-panel-toggle');
+        if (body) body.style.display = panelCollapsed ? 'none' : 'block';
+        if (toggle) toggle.textContent = panelCollapsed ? '▶' : '▼';
+      };
+    }
+
+    // 添加步骤到时间线
+    function addStep(text, type) {
+      const timeline = document.getElementById('process-timeline');
+      if (!timeline) return;
+      const now = new Date();
+      const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+      const stepId = 'step-' + Date.now();
+      const dotClass = type === 'error' ? 'step-dot-error' : type === 'success' ? 'step-dot-success' : type === 'tool' ? 'step-dot-tool' : 'step-dot-active';
+      const html = `
+        <div class="process-step step-${type || 'info'}" id="${stepId}">
+          <div class="step-dot ${dotClass}"></div>
+          <div class="step-content">
+            <span class="step-text">${text}</span>
+            <span class="step-time">${timeStr}</span>
+          </div>
+        </div>
+      `;
+      timeline.insertAdjacentHTML('beforeend', html);
+      // 滚动面板到底部
+      const body = document.getElementById('process-panel-body');
+      if (body) body.scrollTop = body.scrollHeight;
+      scrollToBottom();
+    }
+
+    // 更新面板标题
+    function updatePanelTitle(title) {
+      const el = document.getElementById('process-panel-title');
+      if (el) el.textContent = title;
+    }
+
+    // 启动动态省略号动画
+    let dotCount = 0;
+    let thinkingTextBase = 'AI正在连接';
+    const dotInterval = setInterval(() => {
+      dotCount = (dotCount + 1) % 4;
+      const dots = '.'.repeat(dotCount);
+      const titleEl = document.getElementById('process-panel-title');
+      if (titleEl) {
+        titleEl.textContent = thinkingTextBase + dots;
+      } else {
+        clearInterval(dotInterval);
+      }
+    }, 400);
+
+    deepseekApi.searchAgentStream(
+      data,
+      // onMessage - 接收流式数据
+      (parsed) => {
+        if (!hasReceivedData) {
+          hasReceivedData = true;
+          state.hasStreamContent = true;
+          emit("change");
+        }
+
+        // 处理状态事件
+        if (parsed.type === 'status') {
+          const msg = parsed.message || '';
+          thinkingTextBase = msg.replace(/\.{0,3}$/, '');
+          const titleEl = document.getElementById('process-panel-title');
+          if (titleEl) titleEl.textContent = thinkingTextBase + '.';
+          dotCount = 1;
+
+          // 根据状态添加步骤
+          if (msg.includes('准备')) {
+            addStep('正在准备系统提示词和工具定义...', 'info');
+          } else if (msg.includes('选择工具')) {
+            addStep('正在分析用户问题，选择合适的工具...', 'info');
+          } else if (msg.includes('思考')) {
+            addStep('AI正在思考中...', 'info');
+          } else if (msg.includes('调用AI')) {
+            addStep('正在调用AI模型...', 'info');
+          }
+          scrollToBottom();
+          return;
+        }
+
+        // 处理AI调用详情事件（后端发送的详细执行信息）
+        if (parsed.type === 'ai_calling') {
+          addStep(parsed.message, 'info');
+          updatePanelTitle(parsed.message);
+          scrollToBottom();
+          return;
+        }
+
+        if (parsed.type === 'ai_response') {
+          addStep(parsed.message, parsed.message.includes('工具调用') ? 'tool' : 'success');
+          scrollToBottom();
+          return;
+        }
+
+        // 处理错误事件
+        if (parsed.type === 'error') {
+          clearInterval(dotInterval);
+          const errMsg = parsed.message || 'AI调用失败';
+          const errDetail = parsed.detail || '';
+          addStep(`${errMsg}${errDetail ? ': ' + errDetail : ''}`, 'error');
+          updatePanelTitle('执行出错');
+          state.isLoading = false;
+          return;
+        }
+
+        // 处理工具调用事件
+        if (parsed.type === 'tool_call') {
+          currentIteration++;
+          const toolCall = {
+            id: parsed.tool_call_id,
+            functionName: parsed.function_name,
+            description: parsed.function_description,
+            endpoint: parsed.endpoint,
+            method: parsed.method,
+            service: parsed.service,
+            module: parsed.module,
+            arguments: parsed.arguments,
+            status: 'calling',
+            result: null
+          };
+          state.toolCalls.push(toolCall);
+          updatePanelTitle(`正在执行工具调用 #${currentIteration}`);
+
+          // 添加工具调用步骤
+          const methodBadge = parsed.method ? `[${parsed.method}]` : '';
+          const endpointInfo = parsed.endpoint ? ` ${parsed.endpoint}` : '';
+          addStep(`调用工具: ${parsed.function_description || parsed.function_name}${methodBadge}${endpointInfo}`, 'tool');
+
+          // 显示请求参数
+          if (parsed.arguments) {
+            try {
+              const argsStr = JSON.stringify(JSON.parse(parsed.arguments), null, 2);
+              addStep(`请求参数: ${argsStr}`, 'params');
+            } catch(e) {
+              addStep(`请求参数: ${parsed.arguments}`, 'params');
+            }
+          }
+
+          renderToolCalls();
+          scrollToBottom();
+          return;
+        }
+
+        // 处理工具结果事件
+        if (parsed.type === 'tool_result') {
+          const toolCall = state.toolCalls.find(t => t.id === parsed.tool_call_id);
+          if (toolCall) {
+            toolCall.status = 'completed';
+            toolCall.result = parsed.result;
+            renderToolCalls();
+
+            // 添加结果步骤
+            const resultPreview = formatToolResult(parsed.result);
+            const shortResult = resultPreview.length > 200 ? resultPreview.substring(0, 200) + '...' : resultPreview;
+            addStep(`返回结果: ${shortResult}`, 'success');
+          }
+          scrollToBottom();
+          return;
+        }
+
+        // 处理推理/思考过程（显示在面板中，折叠形式）
+        if (parsed.reasoning) {
+          fullReasoning += parsed.reasoning;
+          // 只在第一次收到思考内容时添加一个可折叠的步骤
+          const existingThinking = document.getElementById('step-thinking-block');
+          if (!existingThinking) {
+            const timeline = document.getElementById('process-timeline');
+            if (timeline) {
+              const now = new Date();
+              const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+              const html = `
+                <div class="process-step step-thinking" id="step-thinking-block">
+                  <div class="step-dot step-dot-active"></div>
+                  <div class="step-content">
+                    <div class="thinking-block-header" onclick="this.parentElement.querySelector('.thinking-block-body').style.display = this.parentElement.querySelector('.thinking-block-body').style.display === 'none' ? 'block' : 'none'; this.querySelector('.thinking-toggle').textContent = this.parentElement.querySelector('.thinking-block-body').style.display === 'none' ? '▶' : '▼';">
+                      <span class="step-text" style="cursor:pointer;">AI思考过程 (点击展开)</span>
+                      <span class="thinking-toggle" style="font-size:11px;color:#909399;margin-left:4px;">▶</span>
+                      <span class="step-time">${timeStr}</span>
+                    </div>
+                    <div class="thinking-block-body" style="display:none;">
+                      <pre class="thinking-detail" id="thinking-detail-text"></pre>
+                    </div>
+                  </div>
+                </div>
+              `;
+              timeline.insertAdjacentHTML('beforeend', html);
+            }
+          }
+          // 追加思考内容
+          const detailEl = document.getElementById('thinking-detail-text');
+          if (detailEl) {
+            detailEl.textContent += parsed.reasoning;
+            detailEl.scrollTop = detailEl.scrollHeight;
+          }
+          scrollToBottom();
+          return;
+        }
+
+        // 处理正式内容
+        if (parsed.content && parsed.content !== '[DONE]') {
+          fullContent += parsed.content;
+
+          // 第一次收到内容时，隐藏过程面板并显示回答区域
+          if (fullContent.length === parsed.content.length) {
+            const bubble = document.getElementById('final-answer-bubble');
+            if (bubble) bubble.style.display = 'block';
+            // 自动折叠过程面板
+            const body = document.getElementById('process-panel-body');
+            const toggle = document.getElementById('process-panel-toggle');
+            if (body) body.style.display = 'none';
+            if (toggle) toggle.textContent = '▶';
+            updatePanelTitle(`执行完成 (${currentIteration}次工具调用)`);
+            addStep('正在生成最终答案...', 'success');
+          }
+
+          const contentDiv = document.getElementById('streaming-content');
+          if (contentDiv) {
+            contentDiv.innerHTML = fullContent.replace(/\n/g, '<br>');
+          }
+          scrollToBottom();
+        }
+
+        if (parsed.id) {
+          state.sessionid = parsed.id;
+        }
+      },
+      // onError - 错误处理
+      (error) => {
+        console.error('Agent Stream error:', error);
+        clearInterval(dotInterval);
+        state.isLoading = false;
+        state.toolCalls = [];
+        const streamingMsg = document.getElementById('streaming-message');
+        if (streamingMsg) {
+          streamingMsg.remove();
+        }
+        const errorMessage = {
+          id: Date.now(),
+          message_id: Date.now(),
+          role: 'assistant',
+          content: '抱歉，AI Agent处理请求时发生错误，请重试。',
+          format_type: 'plain',
+          message_type: 'text',
+          created_time: new Date(),
+          showReasoning: false,
+          isStreaming: false,
+          isThinking: false
+        };
+        state.messages = [...state.messages, errorMessage];
+        nextTick(() => { scrollToBottom(); });
+      },
+      // onComplete - 完成
+      (sessionId) => {
+        clearInterval(dotInterval);
+        state.isLoading = false;
+
+        const streamingMsg = document.getElementById('streaming-message');
+        if (streamingMsg) {
+          streamingMsg.remove();
+        }
+
+        if (sessionId && !state.sessionid) {
+          state.sessionid = sessionId;
+        }
+
+        // 将流式内容添加到消息列表（含执行过程）
+        const aiMessage = {
+          id: Date.now(),
+          message_id: Date.now(),
+          role: 'assistant',
+          content: fullContent,
+          reasoning: fullReasoning || '',
+          format_type: 'plain',
+          message_type: 'text',
+          created_time: new Date(),
+          showReasoning: false,
+          isStreaming: false,
+          isThinking: false,
+          // 保存执行过程数据
+          agentSteps: agentSteps.length > 0 ? agentSteps : null,
+          toolCalls: state.toolCalls.length > 0 ? [...state.toolCalls] : null
+        };
+        state.messages = [...state.messages, aiMessage];
+        state.toolCalls = [];
+
+        emit("change");
+        deepseekApi.getSession().then(res => {
+          state.sessions = res.data;
+        });
+        if (callback) {
+          callback(aiMessage);
+        }
+        nextTick(() => { scrollToBottom(); });
+      }
+    );
+  }
+
+  // 渲染工具调用列表（折叠卡片）
+  function renderToolCalls() {
+    // 工具调用已在addStep中实时渲染到时间线，这里不需要额外处理
+  }
+
+  // HTML转义
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // 格式化工具结果 - 展示实际数据
+  function formatToolResult(result) {
+    try {
+      const parsed = JSON.parse(result);
+      if (parsed.success) {
+        // 展示实际返回数据，而非只显示"查询成功"
+        if (parsed.data) {
+          const data = parsed.data;
+          // 如果是分页数据，展示records
+          if (data.records && Array.isArray(data.records)) {
+            const count = data.total || data.records.length;
+            const preview = data.records.slice(0, 3);
+            let previewJson = JSON.stringify(preview, null, 2);
+            if (data.records.length > 3) {
+              previewJson = previewJson.replace(/\]$/, ',\n  ...(还有' + (data.records.length - 3) + '条)');
+            }
+            return '共' + count + '条记录\n' + previewJson;
+          }
+          // 如果data是数组
+          if (Array.isArray(data)) {
+            const preview = data.slice(0, 3);
+            let previewJson = JSON.stringify(preview, null, 2);
+            if (data.length > 3) {
+              previewJson = previewJson.replace(/\]$/, ',\n  ...(还有' + (data.length - 3) + '条)');
+            }
+            return '共' + data.length + '条\n' + previewJson;
+          }
+          // 其他情况展示完整data
+          const dataStr = JSON.stringify(data, null, 2);
+          if (dataStr.length > 1000) {
+            return dataStr.substring(0, 1000) + '\n...(已截断)';
+          }
+          return dataStr;
+        }
+        return parsed.message || '查询成功（无数据）';
+      } else {
+        return parsed.error || parsed.message || '查询失败';
+      }
+    } catch (e) {
+      if (result.length > 500) {
+        return result.substring(0, 500) + '\n...(已截断)';
+      }
+      return result;
+    }
+  }
+
 	function handleSubmit(){
 		var data={};
-		var messages=[]; 
 		if(state.message) {
-			// 删除当前会话（如果有的话）
-			const currentSessionId = state.sessionid;
-			if (currentSessionId) {
-				deepseekApi.deleteSession(currentSessionId).catch(err => {
-					console.error('删除会话失败:', err);
-				});
-			}
-			
-			// 清空之前的历史消息，只保留当前问题
+			// 构建用户消息对象
 			const userMessage = {
 				message_id: Date.now(),
 				role: 'user',
@@ -522,36 +983,113 @@ const messagesWrapperRef=ref();
 				message_type: 'text',
 				created_time: new Date()
 			};
-			state.messages = [userMessage];
-			state.sessionid = null; // 使用新的会话ID
-			
+
+			// 追加用户消息到现有历史（保留之前的对话）
+			state.messages = [...state.messages, userMessage];
+
 			// 清空输入框
-			const currentMessage = state.message;
 			state.message = "";
-			
+
 			// 清空流式消息容器
 			const container = document.getElementById('streaming-container');
 			if (container) {
 				container.innerHTML = '';
 			}
-			
+
 			// 滚动到底部
 			nextTick(() => {
 				scrollToBottom();
 			});
-			
-			// 准备请求数据
-		messages.push({"role":"user","content": currentMessage});
-      data.messages=messages;
-      
-      // 根据开关选择流式或普通模式
-      if (streamEnabled.value) {
-        submitStream(data);
-      } else {
-        submit(data);
-      }
-    }
 
+			// 发送完整的历史消息给后端（保持上下文连贯）
+			data.messages = state.messages.map(msg => ({
+				"role": msg.role,
+				"content": msg.content
+			}));
+
+			// 获取当前页面路径和页面标题
+			const currentPath = window.location.hash ? window.location.hash.substring(1) : window.location.pathname;
+			data.currentPage = currentPath;
+			
+			// 获取当前路由的页面标题（用于查询帮助文档）
+			const pageTitle = route.meta?.title || '';
+			data.pageTitle = pageTitle;
+
+			// 加载帮助文档库和当前页面的帮助文档内容
+			Promise.all([
+				loadHelpDocLibrary(),
+				loadCurrentPageHelpDoc(currentPath)
+			]).then(([helpDocs, currentHelpDoc]) => {
+				if (helpDocs) {
+					// 传递整个帮助文档库（转换为JSON字符串）
+					data.helpDocLibrary = JSON.stringify(helpDocs);
+					// 同时传递当前页面的帮助文档URL
+					const currentHelp = helpDocs.find(d => d.name === pageTitle);
+					if (currentHelp && currentHelp.value) {
+						data.helpDocUrl = currentHelp.value;
+					}
+				}
+				
+				// 传递当前页面的帮助文档内容
+				if (currentHelpDoc) {
+					data.currentHelpDoc = JSON.stringify(currentHelpDoc);
+				}
+				
+				// 根据模式选择提交方式
+				if (agentMode.value) {
+					// Agent模式：自动调用系统接口
+					submitAgentStream(data);
+				} else if (streamEnabled.value) {
+					// 普通流式模式
+					submitStream(data);
+				} else {
+					// 同步模式
+					submit(data);
+				}
+			});
+		}
+	}
+	
+	// 加载整个帮助文档库（带缓存）
+	async function loadHelpDocLibrary() {
+		// 如果已缓存，直接返回
+		if (helpDocLibrary !== null) {
+			return helpDocLibrary;
+		}
+		try {
+			const res = await listDictsByCode('helppage');
+			if (res.data && Array.isArray(res.data)) {
+				// 只保留name和value字段，减少数据量
+				helpDocLibrary = res.data
+					.filter(d => d.name && d.value)
+					.map(d => ({
+						name: d.name,
+						url: d.value
+					}));
+				return helpDocLibrary;
+			}
+		} catch (e) {
+			console.warn('获取帮助文档库失败:', e);
+		}
+		return null;
+	}
+	
+	// 加载当前页面的帮助文档内容
+	async function loadCurrentPageHelpDoc(path) {
+		try {
+			const res = await getHelpDocByPath(path);
+			if (res.data) {
+				return {
+					docKey: res.data.docKey,
+					title: res.data.title,
+					content: res.data.content,
+					category: res.data.category
+				};
+			}
+		} catch (e) {
+			console.warn('获取当前页面帮助文档失败:', e);
+		}
+		return null;
 	}
  function handleSession(session){
 	 // 加载历史消息时，添加 reasoning 相关字段
@@ -641,13 +1179,77 @@ watch(state.messages, () => {
 
 
 // 初始化示例消息
-onMounted(() => {
+onMounted(async () => {
+  // 获取当前页面路径
+  const currentPath = window.location.hash ? window.location.hash.substring(1) : window.location.pathname;
+  const pageTitle = route.meta?.title || '';
+  console.log('[AI助手] 当前页面路径:', currentPath, '页面标题:', pageTitle);
+  
+  // 尝试获取当前页面的帮助文档
+  let helpDocContent = null;
+  try {
+    const res = await getHelpDocByPath(currentPath);
+    console.log('[AI助手] 帮助文档API响应:', res);
+    if (res.data && res.data.content) {
+      helpDocContent = res.data.content;
+      console.log('[AI助手] 获取到帮助文档内容');
+    }
+  } catch (e) {
+    console.warn('[AI助手] 获取帮助文档失败:', e);
+  }
+  
+  // 根据是否是抽屉模式设置欢迎消息
+  let welcomeContent = '你好！我是AI助手，我可以帮助你查询业务数据和解答问题。请问有什么可以帮您的？';
+  
+  if (drawerMode) {
+    if (helpDocContent) {
+      // 有帮助文档时，显示详细内容
+      welcomeContent = `**当前页面：${pageTitle || currentPath}**\n\n${helpDocContent}`;
+    } else {
+      // 没有帮助文档时，根据路径生成简要介绍
+      const pathParts = currentPath.split('/').filter(p => p);
+      const moduleMap = {
+        'amazon': 'Amazon平台',
+        'erp': 'ERP系统',
+        'finance': '财务模块',
+        'sys': '系统设置',
+        'purchase': '采购管理',
+        'inventory': '库存管理',
+        'ship': '发货管理',
+        'warehouse': '仓库管理',
+        'order': '订单管理',
+        'profit': '利润分析',
+        'report': '报表',
+        'sale': '销售',
+        'advertising': '广告管理'
+      };
+      
+      // 尝试从路径中提取模块信息
+      let moduleDesc = '';
+      for (const part of pathParts) {
+        if (moduleMap[part]) {
+          moduleDesc += moduleMap[part] + ' > ';
+        }
+      }
+      if (moduleDesc.endsWith(' > ')) {
+        moduleDesc = moduleDesc.slice(0, -3);
+      }
+      
+      welcomeContent = `**当前页面：${pageTitle || moduleDesc || currentPath}**\n\n` +
+        `欢迎使用AI智能助手！我可以帮助您：\n\n` +
+        `- 查询业务数据（库存、订单、采购等）\n` +
+        `- 解答系统操作问题\n` +
+        `- 分析销售趋势和数据\n\n` +
+        `请问有什么可以帮您的？`;
+    }
+  }
+  
   state.messages = [
     {
       message_id: 1,
       role: 'assistant',
-      content: '你好！我是AI助手，我可以帮助你解答问题。请问有什么可以帮您的？',
-      format_type: 'plain',
+      content: welcomeContent,
+      format_type: 'markdown',
       message_type: 'text',
       created_time: new Date()
     }
@@ -775,6 +1377,37 @@ defineExpose({
   height: calc(100vh - 40px);
   background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
   overflow: hidden;
+}
+
+.deepseek-app.drawer-mode {
+  height: 100%;
+  background: none;
+}
+
+.deepseek-app.drawer-mode :deep(.deepseek-row) {
+  height: 100%;
+}
+
+.deepseek-app.drawer-mode :deep(.chat-main) {
+  height: 100%;
+  display: flex;
+  background:none;
+  flex-direction: column;
+}
+
+.deepseek-app.drawer-mode :deep(.messages-wrapper) {
+  flex: 1;
+  height: auto;
+  overflow-y: auto;
+  padding: 16px 24px;
+  min-height: 0;
+  border-radius: 16px;
+  margin: 12px 24px;
+}
+
+.deepseek-app.drawer-mode :deep(.input-area) {
+  flex-shrink: 0;
+  padding: 12px 24px;
 }
 
 .deepseek-row {
@@ -1261,6 +1894,9 @@ defineExpose({
   border-radius: 8px;
   margin-top: 16px;
 }
+.streaming-container:empty {
+  display: none;
+}
 .stream-switch {
   margin-left: 12px;
 }
@@ -1321,19 +1957,11 @@ defineExpose({
   }
 }
 
-.thinking-text {
-  color: #909399;
+.thinking-text-animated {
+  color: #667eea;
   font-size: 14px;
-  animation: fadeInOut 2s infinite;
-}
-
-@keyframes fadeInOut {
-  0%, 100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 /* 响应式调整 */
@@ -1348,140 +1976,441 @@ defineExpose({
   }
 }
 
-/* 暗黑模式 */
-:global(html.dark) .deepseek-app {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+/* Agent模式样式 */
+.agent-switch {
+  margin-left: 12px;
 }
 
-:global(html.dark) .sidebar-left,
-:global(html.dark) .sidebar-right {
-  background: #1e1e2e;
-  border-color: #2a2a3e;
+.agent-switch :deep(.el-switch__core) {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
-:global(html.dark) .sidebar-header {
-  background: #252538;
-  border-color: #2a2a3e;
+.agent-switch :deep(.el-switch.is-checked .el-switch__core) {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
 
-:global(html.dark) .session-item {
-  background: #252538;
+.agent-switch :deep(.el-switch__label) {
+  font-size: 11px;
 }
 
-:global(html.dark) .session-item:hover {
-  background: #2e2e42;
+/* 执行过程面板 */
+.agent-process-panel {
+  margin-bottom: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e4e7ed;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  animation: fadeIn 0.3s ease;
 }
 
-:global(html.dark) .session-title {
-  color: #e0e0e0;
+.process-panel-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  background: linear-gradient(135deg, #f5f7fa 0%, #eef0f3 100%);
+  border-bottom: 1px solid #e4e7ed;
+  transition: background 0.2s;
 }
 
-:global(html.dark) .session-item.active .session-title {
-  color: #ffffff;
+.process-panel-header:hover {
+  background: linear-gradient(135deg, #eef0f3 0%, #e4e8ec 100%);
 }
 
-:global(html.dark) .sidebar-title {
-  color: #e0e0e0;
+.process-panel-icon {
+  margin-right: 8px;
+  font-size: 14px;
 }
 
-:global(html.dark) .phrase-item {
-  background: #252538;
+.process-panel-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
 }
 
-:global(html.dark) .phrase-item:hover {
-  background: #2e2e42;
+.process-panel-toggle {
+  font-size: 12px;
+  color: #909399;
+  transition: transform 0.2s;
 }
 
-:global(html.dark) .phrase-text {
-  color: #c0c0c0;
+.process-panel-body {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 8px 0;
 }
 
-:global(html.dark) .chat-main {
-  background: #1a1a2e;
+/* 时间线样式 */
+.process-timeline {
+  padding: 0 14px;
 }
 
-:global(html.dark) .messages-wrapper {
-  background: transparent;
+.process-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 4px 0;
+  position: relative;
 }
 
-:global(html.dark) .ai-bubble {
-  background: #252538;
-  color: #e0e0e0;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+.process-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 18px;
+  bottom: -4px;
+  width: 1px;
+  background: #e4e7ed;
 }
 
-:global(html.dark) .input-area {
-  background: #1e1e2e;
-  border-color: #2a2a3e;
+.step-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 3px;
+  background: #c0c4cc;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px #c0c4cc;
 }
 
-:global(html.dark) .input-wrapper {
-  background: #252538;
-  border-color: #2a2a3e;
+.step-dot-active {
+  background: #409eff;
+  box-shadow: 0 0 0 1px #409eff;
+  animation: dotPulse 1.4s infinite ease-in-out both;
 }
 
-:global(html.dark) .input-wrapper:focus-within {
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+.step-dot-tool {
+  background: #e6a23c;
+  box-shadow: 0 0 0 1px #e6a23c;
 }
 
-:global(html.dark) .message-textarea {
-  color: #e0e0e0;
+.step-dot-success {
+  background: #67c23a;
+  box-shadow: 0 0 0 1px #67c23a;
 }
 
-:global(html.dark) .message-textarea::placeholder {
-  color: #808090;
+.step-dot-error {
+  background: #f56c6c;
+  box-shadow: 0 0 0 1px #f56c6c;
 }
 
-:global(html.dark) .model-dropdown :deep(.el-input__wrapper) {
-  background: #1e1e2e;
+.step-content {
+  flex: 1;
+  min-width: 0;
 }
 
-:global(html.dark) .reasoning-block {
-  background: #1e1e2e;
-  border-color: #2a2a3e;
+.step-text {
+  font-size: 12px;
+  color: #606266;
+  line-height: 1.5;
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
-:global(html.dark) .reasoning-header:hover {
-  background: #2e2e42;
+.step-time {
+  font-size: 11px;
+  color: #c0c4cc;
+  margin-left: 8px;
+  white-space: nowrap;
 }
 
-:global(html.dark) .reasoning-title {
-  color: #c0c0c0;
+.step-error .step-text {
+  color: #f56c6c;
+  font-weight: 500;
 }
 
-:global(html.dark) .reasoning-content {
-  border-color: #2a2a3e;
-  color: #a0a0b0;
+.step-tool .step-text {
+  color: #e6a23c;
+  font-weight: 500;
 }
 
-:global(html.dark) .empty-icon {
-  opacity: 0.7;
+.step-success .step-text {
+  color: #67c23a;
 }
 
-:global(html.dark) .empty-text {
-  color: #e0e0e0;
+.step-thinking .step-text {
+  color: #909399;
+  font-style: italic;
 }
 
-:global(html.dark) .empty-subtitle {
-  color: #808090;
+.step-params .step-text {
+  color: #909399;
+  font-size: 11px;
+  font-family: monospace;
+  background: #f5f7fa;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: block;
+  max-height: 150px;
+  overflow-y: auto;
 }
 
-:global(html.dark) .thinking-text {
-  color: #808090;
+/* 思考过程折叠块 */
+.thinking-block-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
 }
 
-:global(html.dark) .product-messages-wrapper {
-  background: #1a1a2e;
-  border-color: #2a2a3e;
+.thinking-block-header:hover .step-text {
+  color: #409eff;
 }
 
-:global(html.dark) .product-input-area {
-  background: #1e1e2e;
-  border-color: #2a2a3e;
+.thinking-detail {
+  background: #f8f9fb;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #606266;
+  margin: 4px 0 0 0;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: monospace;
+}
+</style>
+
+<!-- 暗黑模式样式 - 非scoped确保生效 -->
+<style>
+/* 暗黑模式 - 纯黑主题 */
+html.dark .deepseek-app {
+  background: #0d0d0d !important;
 }
 
-:global(html.dark) .streaming-container {
-  background: #252538;
+html.dark .deepseek-app .sidebar-left,
+html.dark .deepseek-app .sidebar-right {
+  background: #111111 !important;
+  border-color: #1a1a1a !important;
+}
+
+html.dark .deepseek-app .sidebar-header {
+  background: #0d0d0d !important;
+  border-color: #1a1a1a !important;
+}
+
+html.dark .deepseek-app .session-item {
+  background: #161616 !important;
+}
+
+html.dark .deepseek-app .session-item:hover {
+  background: #1f1f1f !important;
+}
+
+html.dark .deepseek-app .session-title {
+  color: #e0e0e0 !important;
+}
+
+html.dark .deepseek-app .session-item.active .session-title {
+  color: #ffffff !important;
+}
+
+html.dark .deepseek-app .sidebar-title {
+  color: #e0e0e0 !important;
+}
+
+html.dark .deepseek-app .phrase-item {
+  background: #161616 !important;
+}
+
+html.dark .deepseek-app .phrase-item:hover {
+  background: #1f1f1f !important;
+}
+
+html.dark .deepseek-app .phrase-text {
+  color: #c0c0c0 !important;
+}
+
+html.dark .deepseek-app .chat-main {
+  background: #0d0d0d !important;
+}
+
+html.dark .deepseek-app .messages-wrapper {
+  background: transparent !important;
+}
+
+html.dark .deepseek-app .ai-bubble {
+  background: #161616 !important;
+  color: #e0e0e0 !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .deepseek-app .input-area {
+  background: #111111 !important;
+  border-color: #1a1a1a !important;
+}
+
+html.dark .deepseek-app .input-wrapper {
+  background: #161616 !important;
+  border-color: #1a1a1a !important;
+}
+
+html.dark .deepseek-app .input-wrapper:focus-within {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2) !important;
+}
+
+html.dark .deepseek-app .message-textarea {
+  color: #e0e0e0 !important;
+}
+
+html.dark .deepseek-app .message-textarea::placeholder {
+  color: #666666 !important;
+}
+
+html.dark .deepseek-app .model-dropdown .el-input__wrapper {
+  background: #111111 !important;
+}
+
+html.dark .deepseek-app .reasoning-block {
+  background: #111111 !important;
+  border-color: #1a1a1a !important;
+}
+
+html.dark .deepseek-app .reasoning-header:hover {
+  background: #1f1f1f !important;
+}
+
+html.dark .deepseek-app .reasoning-title {
+  color: #c0c0c0 !important;
+}
+
+html.dark .deepseek-app .reasoning-content {
+  border-color: #1a1a1a !important;
+  color: #a0a0a0 !important;
+}
+
+html.dark .deepseek-app .empty-icon {
+  opacity: 0.6 !important;
+}
+
+html.dark .deepseek-app .empty-text {
+  color: #e0e0e0 !important;
+}
+
+html.dark .deepseek-app .empty-subtitle {
+  color: #666666 !important;
+}
+
+html.dark .deepseek-app .thinking-text {
+  color: #666666 !important;
+}
+
+html.dark .deepseek-app .product-messages-wrapper {
+  background: #0d0d0d !important;
+  border-color: #1a1a1a !important;
+}
+
+html.dark .deepseek-app .product-input-area {
+  background: #111111 !important;
+  border-color: #1a1a1a !important;
+}
+
+html.dark .deepseek-app .streaming-container {
+  background: #161616 !important;
+}
+
+/* AI头像在暗黑模式下的颜色 */
+html.dark .deepseek-app .ai-avatar {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
+}
+
+/* 思考动画圆点在暗黑模式下 */
+html.dark .deepseek-app .thinking-dots .dot {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+/* 流式开关在暗黑模式下 */
+html.dark .deepseek-app .stream-switch .el-switch__core {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+html.dark .deepseek-app .stream-switch.el-switch.is-checked .el-switch__core {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
+}
+
+/* Agent开关在暗黑模式下 */
+html.dark .deepseek-app .agent-switch .el-switch__core {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+}
+
+html.dark .deepseek-app .agent-switch.el-switch.is-checked .el-switch__core {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+}
+
+/* 执行过程面板在暗黑模式下 */
+html.dark .deepseek-app .agent-process-panel {
+  background: #161616 !important;
+  border-color: #2d2d44 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .deepseek-app .process-panel-header {
+  background: linear-gradient(135deg, #1a1a1a 0%, #1f1f1f 100%) !important;
+  border-color: #2d2d44 !important;
+}
+
+html.dark .deepseek-app .process-panel-header:hover {
+  background: linear-gradient(135deg, #1f1f1f 0%, #2d2d2d 100%) !important;
+}
+
+html.dark .deepseek-app .process-panel-title {
+  color: #e0e0e0 !important;
+}
+
+html.dark .deepseek-app .step-text {
+  color: #c0c0c0 !important;
+}
+
+html.dark .deepseek-app .step-time {
+  color: #555 !important;
+}
+
+html.dark .deepseek-app .process-step:not(:last-child)::after {
+  background: #2d2d44 !important;
+}
+
+html.dark .deepseek-app .step-dot {
+  border-color: #161616 !important;
+}
+
+html.dark .deepseek-app .step-params .step-text {
+  background: #1a1a1a !important;
+  color: #808080 !important;
+}
+
+html.dark .deepseek-app .step-error .step-text {
+  color: #f56c6c !important;
+}
+
+html.dark .deepseek-app .step-tool .step-text {
+  color: #e6a23c !important;
+}
+
+html.dark .deepseek-app .step-success .step-text {
+  color: #67c23a !important;
+}
+
+html.dark .deepseek-app .thinking-block-header:hover .step-text {
+  color: #409eff !important;
+}
+
+html.dark .deepseek-app .thinking-detail {
+  background: #1a1a1a !important;
+  border-color: #2d2d44 !important;
+  color: #a0a0a0 !important;
+}
+
+html.dark .deepseek-app .reasoning-text {
+  color: #808080 !important;
+  background: #1a1a1a !important;
 }
 </style>

@@ -94,6 +94,9 @@
 	 			if(datas.country=='IN' || datas.country=='CA'){
 	 				row5_2={"name":"FBA GST/HST 税率","enname":"FBA GST/HST Taxes","cost":formatFloat(datas.fbaTaxFee),"prefix":"","suffix":""};
 	 			}
+	 			if(datas.country=='AU'){
+	 				row5_2={"name":"销售GST税率","enname":"Selling GST Tax","cost":formatFloat(datas.selling_GST),"prefix":"","suffix":""};
+	 			}
 	 			var row6={"name":"仓储费","enname":"Inventory Storage Fee","cost":formatFloat(datas.storageFee),"prefix":datas.currency,"suffix":"" };
 	 		
 	 			var row7={};
@@ -117,9 +120,9 @@
 	 			var row14={"name":"其它每单销售固定成本","enname":"Other rate Fee","cost":formatFloat(datas.othersFee) ,"prefix":datas.currency,"suffix":""};
 	 			var row15={"name":"按件收费，适用个人版","enname":"Per-Item Fee","cost":formatFloat(datas.perItemFee) ,"prefix":datas.currency,"suffix":""};
 	 			var row15_1={};
-	 			if(datas.country=='UK' || datas.country=='DE' || datas.country=='IT' || datas.country=='ES'|| datas.country=='FR'|| datas.country=='NL'){
-	 				row15_1={"name":"欧洲增值税","enname":"Vat Tax Fee","cost":formatFloat(datas.vatFee),"prefix":"","suffix":""};
-	 			}
+ 			if(datas.country=='UK' || datas.country=='DE' || datas.country=='IT' || datas.country=='ES'|| datas.country=='FR'|| datas.country=='NL'|| datas.country=='IE'|| datas.country=='BE'|| datas.country=='SE'|| datas.country=='PL'){
+ 				row15_1={"name":"欧洲增值税","enname":"Vat Tax Fee","cost":formatFloat(datas.vatFee),"prefix":"","suffix":""};
+ 			}
 	 			var row15_2={};
 	 			var row15_3={};
 	 			if(datas.country=='IN'){

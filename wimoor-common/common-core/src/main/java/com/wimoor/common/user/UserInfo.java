@@ -74,4 +74,7 @@ public class UserInfo implements Serializable {
 			return null;
 		}
 	}
+	public String getGroupid(){
+		return this.companyid;
+	}
 }

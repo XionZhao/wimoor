@@ -38,7 +38,7 @@
 				<div style="width:50px;" v-else-if="scope.row.sysavgsales">{{scope.row.sysavgsales}}</div>
 				<div style="width:50px;" v-else>0</div>
 				<el-icon ><Calendar/></el-icon>
-          <div v-if="hasPrelistData(scope.row)"
+          <div v-if="hasPrelistData(scope.row) && !isExpandAll"
                :ref="el => initSparkline(el, scope.row)"
                class="prelist-sparkline">
           </div>
@@ -58,12 +58,17 @@
 				     </div>
 			</template>
 		</el-table-column>
-		<el-table-column label="FBA库存" min-width="90" header-align="center" align="center" >
+		<el-table-column label="FBA库存" min-width="110" header-align="center" align="center" >
 			<template #default="scope">
 				<el-space>
 				<div v-if="scope.row.iseu">
 					<span v-if="scope.row.formqty" class="text-warning">{{parseInt(scope.row.quantity)+parseInt(scope.row.formqty)}}</span>
 					<span v-else>{{scope.row.quantity}} </span>
+					 <el-icon v-if="scope.row.iseu && invLoadingMap[scope.row.groupid+scope.row.marketplaceid+scope.row.sku]" 
+				          class="font-extraSmall is-loading"
+				          title="正在刷新FBA库存">
+				     <RefreshRight />
+				 </el-icon>
 				</div>
 				 <div v-else
 				  @click="e=>InventoryDetails(e,scope.row)"
@@ -71,11 +76,16 @@
 				  class="text-center pointer">
 				  <span v-if="scope.row.formqty" class="text-warning">{{parseInt(scope.row.quantity)+parseInt(scope.row.formqty)}}</span>
 				  <span v-else>{{scope.row.quantity}} </span>
-				   <span class="font-extraSmall" v-if="scope.row.overseaqty">+{{getZeroValue(scope.row.overseaqty)}}</span>  
+				   <span class="font-extraSmall" v-if="scope.row.overseaqty">+{{getZeroValue(scope.row.overseaqty)}}</span>
 				 </div>
+				 <el-icon v-if="invLoadingMap[scope.row.groupid+scope.row.marketplaceid+scope.row.sku]" 
+				          class="font-extraSmall is-loading"
+				          title="正在刷新FBA库存">
+				     <RefreshRight />
+				 </el-icon>
 				 <div class="font-extraSmall pointer" v-if="scope.row.inbounddiff" @click="showWarningDialog(scope.row)">
 				     <span v-if="scope.row.inbounddiff>0" >+{{scope.row.inbounddiff}} </span>  
-									    <span v-else >{{scope.row.inbounddiff}} </span>  
+								    <span v-else >{{scope.row.inbounddiff}} </span>  
 				</div>  
 				<div v-if="scope.row.invage"><span class="font-extraSmall"  title="90天以上库龄">滞销:</span>
 				<span class="text-red">{{scope.row.invage}}</span></div>
@@ -240,7 +250,7 @@
 				      </el-tooltip>
 				<span v-else>0</span>
 
-          <el-tooltip v-if="scope.row.salesdayAvgsales"
+          <el-tooltip v-if="scope.row.salesdayAvgsales && !row.skipPrelist"
                       effect="dark"
                       placement="top"
                       content="可销售天数内日均销量"
@@ -294,7 +304,7 @@
 <script setup>
 	import { ref ,reactive,toRefs,watch,nextTick} from 'vue'
 	// echarts removed - using lightweight SVG sparkline instead
-	import {Calendar,Edit,View,CaretBottom,EditPen,WarningFilled,SuccessFilled,CirclePlusFilled,RemoveFilled} from '@element-plus/icons-vue';
+	import {Calendar,Edit,View,CaretBottom,EditPen,WarningFilled,SuccessFilled,CirclePlusFilled,RemoveFilled,RefreshRight} from '@element-plus/icons-vue';
  	import planApi from '@/api/erp/ship/planApi.js';
 	import fbacycleApi from '@/api/amazon/inbound/fbacycleApi.js';
 	import {dateFormat,CheckInputInt} from "@/utils/index";
@@ -307,13 +317,15 @@
 					tableData:[],
 					status:{},
 					isOversea:false,
+					isExpandAll:false,
 					transtypeOptions:{},
 					overseaOptions:[],
 					allOverseaOptions:[],
-					editSub:{}
+					editSub:{},
+					invLoadingMap:{default:()=>({})}
 	})
 	const {
-	   tableData,status,transtypeOptions,isOversea,overseaOptions,editSub,allOverseaOptions
+	   tableData,status,transtypeOptions,isOversea,overseaOptions,editSub,allOverseaOptions,invLoadingMap
 	} = toRefs(props);
  
 	defineExpose({
@@ -330,7 +342,8 @@
 							  'reload',
 							  'edit-row',
 							  'add-sub',
-							  'show-fba-warning']);
+							  'show-fba-warning',
+							  'refresh-inventory']);
 	function getZeroValue(value){
 		if(value){
 			return value;
@@ -340,6 +353,9 @@
 	}
 	function showWarningDialog(row){
 	  emit('show-fba-warning',row);
+	}
+	function refreshInventory(row){
+		emit('refresh-inventory',row);
 	}
 	function handleBlur(e,row){
 		const evt = e || window.e || window.event;

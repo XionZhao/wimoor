@@ -2,6 +2,7 @@ package com.wimoor.amazon.inbound.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.wimoor.amazon.inbound.pojo.dto.ShipTimeDTO;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -43,6 +44,16 @@ public interface IShipInboundPlanService extends IService<ShipInboundPlan> {
 	
 	public List<Map<String, Object>> getShipRecord(String shopid,String groupid, String marketplaceid, String sku);
 
+	/**
+	 * 批量查询发货记录
+	 * @param shopid
+	 * @param groupid
+	 * @param marketplaceid
+	 * @param skuSet
+	 * @return key: sku, value: 发货记录列表
+	 */
+	public Map<String, List<Map<String, Object>>> getShipRecordBatch(String shopid, String groupid, String marketplaceid, Set<String> skuSet);
+	
 	List<Map<String, Object>> getShipBadRecord(String companyid, String marketplaceid, String sku);
 
 	IPage<Map<String, Object>> getShipmentReport(Page<?> page, Map<String, Object> param);

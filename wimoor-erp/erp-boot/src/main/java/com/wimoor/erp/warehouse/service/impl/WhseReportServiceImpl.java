@@ -290,31 +290,16 @@ public class WhseReportServiceImpl extends  ServiceImpl<WhseUnsalableReportMappe
 								continue;
 							}
 							BigDecimal invnum = invnumMap.get(materialid);
-							BigDecimal ship30 = ship30Map.getOrDefault(materialid, BigDecimal.ZERO);
-							BigDecimal ship60 = ship60Map.getOrDefault(materialid, BigDecimal.ZERO);
-							BigDecimal ship90 = ship90Map.getOrDefault(materialid, BigDecimal.ZERO);
-							BigDecimal num30 = inv30Map.getOrDefault(materialid, BigDecimal.ZERO);
-							BigDecimal num60 = BigDecimal.ZERO;
-							BigDecimal num90 = BigDecimal.ZERO;
-							BigDecimal num180 = BigDecimal.ZERO;
-							BigDecimal num365 = BigDecimal.ZERO;
-							BigDecimal ship180 = BigDecimal.ZERO;
-							BigDecimal ship365 = BigDecimal.ZERO;
-
-							if (num30.intValue() - ship30.intValue() > 0) {
-								num60 = inv60Map.getOrDefault(materialid, BigDecimal.ZERO);
-							}
-							if (num60.intValue() - ship60.intValue() > 0) {
-								num90 = inv90Map.getOrDefault(materialid, BigDecimal.ZERO);
-							}
-							if (num90.intValue() - ship90.intValue() > 0) {
-								num180 = inv180Map.getOrDefault(materialid, BigDecimal.ZERO);
-								ship180 = ship180Map.getOrDefault(materialid, BigDecimal.ZERO);
-							}
-							if (num180.intValue() - ship180.intValue() > 0) {
-								num365 = inv365Map.getOrDefault(materialid, BigDecimal.ZERO);
-								ship365 = ship365Map.getOrDefault(materialid, BigDecimal.ZERO);
-							}
+						BigDecimal ship30 = ship30Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal ship60 = ship60Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal ship90 = ship90Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal num30 = inv30Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal num60 = inv60Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal num90 = inv90Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal num180 = inv180Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal num365 = inv365Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal ship180 = ship180Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal ship365 = ship365Map.getOrDefault(materialid, BigDecimal.ZERO);
 
 							WhseUnsalableReport whse = new WhseUnsalableReport();
 							whse.setMtid(materialid);
@@ -474,39 +459,24 @@ public class WhseReportServiceImpl extends  ServiceImpl<WhseUnsalableReportMappe
 								continue;
 							}
 							BigDecimal invnum = invnumMap.get(materialid);
-							BigDecimal ship30 = ship30Map.getOrDefault(materialid, BigDecimal.ZERO);
-							BigDecimal ship60 = ship60Map.getOrDefault(materialid, BigDecimal.ZERO);
-							BigDecimal ship90 = ship90Map.getOrDefault(materialid, BigDecimal.ZERO);
-							BigDecimal num30 = inv30Map.getOrDefault(materialid, BigDecimal.ZERO);
-							BigDecimal num60 = BigDecimal.ZERO;
-							BigDecimal num90 = BigDecimal.ZERO;
-							BigDecimal num180 = BigDecimal.ZERO;
-							BigDecimal num365 = BigDecimal.ZERO;
-							BigDecimal ship180 = BigDecimal.ZERO;
-							BigDecimal ship365 = BigDecimal.ZERO;
+						BigDecimal ship30 = ship30Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal ship60 = ship60Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal ship90 = ship90Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal num30 = inv30Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal num60 = inv60Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal num90 = inv90Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal num180 = inv180Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal num365 = inv365Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal ship180 = ship180Map.getOrDefault(materialid, BigDecimal.ZERO);
+						BigDecimal ship365 = ship365Map.getOrDefault(materialid, BigDecimal.ZERO);
 
-							if (num30.intValue() - ship30.intValue() > 0) {
-								num60 = inv60Map.getOrDefault(materialid, BigDecimal.ZERO);
-							}
-							if (num60.intValue() - ship60.intValue() > 0) {
-								num90 = inv90Map.getOrDefault(materialid, BigDecimal.ZERO);
-							}
-							if (num90.intValue() - ship90.intValue() > 0) {
-								num180 = inv180Map.getOrDefault(materialid, BigDecimal.ZERO);
-								ship180 = ship180Map.getOrDefault(materialid, BigDecimal.ZERO);
-							}
-							if (num180.intValue() - ship180.intValue() > 0) {
-								num365 = inv365Map.getOrDefault(materialid, BigDecimal.ZERO);
-								ship365 = ship365Map.getOrDefault(materialid, BigDecimal.ZERO);
-							}
-
-							WhseUnsalableReport whse = new WhseUnsalableReport();
-							whse.setMtid(materialid);
-							whse.setSku(material.getSku());
-							whse.setGroupid("all");
-							whse.setName(today);
-							whse.setWid(warehouse.getId());
-							whse.setShopid(shopid);
+						WhseUnsalableReport whse = new WhseUnsalableReport();
+						whse.setMtid(materialid);
+						whse.setSku(material.getSku());
+						whse.setGroupid("all");
+						whse.setName(today);
+						whse.setWid(warehouse.getId());
+						whse.setShopid(shopid);
 							whse.setQtysum(invnum);
 							whse.setQtysum30(num30);
 							whse.setQtysum60(num60);

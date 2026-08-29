@@ -20,19 +20,49 @@
           </div>
         </div>
       </template>
-      <el-table :data="subjectGroups" style="width: 100%" border v-loading="loading" height="385">
+      <el-table :data="subjectGroups" style="width: 100%" border v-loading="loading"  >
             <el-table-column prop="summary" label="摘要" width="220">
+          <template #header>
+            <span>摘要
+              <el-popover placement="top" :width="300" trigger="click">
+                <template #reference>
+                  <el-icon class="help-icon"><InfoFilled /></el-icon>
+                </template>
+                <p style="font-size: 13px;">填写该科目在凭证中显示的摘要说明文字，如"FBA产品销售收入"、"FBA销售费用"等。支持自定义内容。</p>
+              </el-popover>
+            </span>
+          </template>
           <template #default="scope">
             <el-input type="textarea" rows="2" v-model="scope.row.summary" placeholder="请输入摘要"   />
           </template>
         </el-table-column>
         <el-table-column prop="subjectName" label="科目名称"  >
+          <template #header>
+            <span>科目名称
+              <el-popover placement="top" :width="300" trigger="click">
+                <template #reference>
+                  <el-icon class="help-icon"><InfoFilled /></el-icon>
+                </template>
+                <p style="font-size: 13px;">系统根据初始化设置自动匹配的会计科目。如需更改科目，请删除当前行后通过"新增科目"按钮重新选择。</p>
+              </el-popover>
+            </span>
+          </template>
           <template #default="scope">
             <div>{{ scope.row.subjectCode }} {{ scope.row.subjectName }}</div>
           </template>
         </el-table-column>
     
         <el-table-column prop="direction" label="余额方向" width="120">
+          <template #header>
+            <span>余额方向
+              <el-popover placement="top" :width="300" trigger="click">
+                <template #reference>
+                  <el-icon class="help-icon"><InfoFilled /></el-icon>
+                </template>
+                <p style="font-size: 13px;">选择该科目在凭证中的记账方向。"借方"通常用于资产、费用类科目；"贷方"通常用于负债、收入、权益类科目。</p>
+              </el-popover>
+            </span>
+          </template>
           <template #default="scope">
             <el-select v-model="scope.row.direction" placeholder="选择方向"  style="width: 90px">
               <el-option label="借方" :value="1"></el-option>
@@ -41,6 +71,16 @@
           </template>
         </el-table-column>
         <el-table-column prop="amountField" label="模板字段"  >
+          <template #header>
+            <span>模板字段
+              <el-popover placement="top" :width="300" trigger="click">
+                <template #reference>
+                  <el-icon class="help-icon"><InfoFilled /></el-icon>
+                </template>
+                <p style="font-size: 13px;">定义金额的计算公式。点击右侧计算器图标打开公式编辑器，可选择亚马逊报告中的字段进行加减乘除运算，如"FBA product sales" - "FBA selling fees"。</p>
+              </el-popover>
+            </span>
+          </template>
           <template #default="scope">
             <div style="display: flex; align-items: center; justify-content: space-between;">
               <span>{{scope.row.amountField}}</span>
@@ -135,6 +175,7 @@
 import { ref, onMounted, watch, reactive, toRefs, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Calculator} from '@icon-park/vue-next';
+import { InfoFilled } from '@element-plus/icons-vue';
 import { getMonthReportField, addTemplateItem, updateTemplateItem, listTemplateItem, delTemplateItem } from '@/api/finance/closing_template_amazon.js'
 import { addFinClosingTemplate, updateFinClosingTemplate,initTemplateItem } from '@/api/finance/closing_template.js'
 import { listAll as listSubjects } from '@/api/finance/subjects.js'
@@ -787,5 +828,17 @@ onMounted(() => {
 .account-option span:first-child {
   margin-right: 10px;
   font-weight: 500;
+}
+
+.help-icon {
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
+  cursor: pointer;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.help-icon:hover {
+  color: #409eff;
 }
 </style>

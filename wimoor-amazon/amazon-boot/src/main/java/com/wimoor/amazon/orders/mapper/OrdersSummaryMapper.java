@@ -62,4 +62,6 @@ public interface OrdersSummaryMapper extends BaseMapper<OrdersSummary> {
 	List<ProductSalesRankVo> top5(SummaryMutilParameterQueryDTO dto);
 
     List<Map<String, Object>> selectTotal(Map<String, Object> parameter);
+
+    List<Map<String, Object>> quantityByDay(Map<String, Object> parameter);
 }

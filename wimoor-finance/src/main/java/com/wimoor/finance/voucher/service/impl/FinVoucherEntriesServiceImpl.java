@@ -1,0 +1,122 @@
+package com.wimoor.finance.voucher.service.impl;
+
+import com.wimoor.finance.voucher.domain.FinVoucherEntries;
+import com.wimoor.finance.voucher.domain.dto.FinVoucherDTO;
+import com.wimoor.finance.voucher.mapper.FinVoucherEntriesMapper;
+import com.wimoor.finance.voucher.service.IFinVoucherEntriesService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 凭证分录明细Service业务层处理
+ * 
+ * @author wimoor
+ * @date 2025-11-04
+ */
+@Service
+public class FinVoucherEntriesServiceImpl implements IFinVoucherEntriesService 
+{
+    @Autowired
+    private FinVoucherEntriesMapper finVoucherEntriesMapper;
+
+    /**
+     * 查询凭证分录明细
+     * 
+     * @param entryId 凭证分录明细主键
+     * @return 凭证分录明细
+     */
+    @Override
+    public FinVoucherEntries selectFinVoucherEntriesByEntryId(Long entryId)
+    {
+        return finVoucherEntriesMapper.selectFinVoucherEntriesByEntryId(entryId);
+    }
+
+    /**
+     * 查询凭证分录明细列表
+     * 
+     * @param finVoucherEntries 凭证分录明细
+     * @return 凭证分录明细
+     */
+    @Override
+    public List<FinVoucherEntries> selectFinVoucherEntriesList(FinVoucherEntries finVoucherEntries)
+    {
+        return finVoucherEntriesMapper.selectFinVoucherEntriesList(finVoucherEntries);
+    }
+
+    @Override
+    public List<Map<String, Object>> selectFinVoucherEntriesList(FinVoucherDTO dto) {
+        List<Map<String, Object>> list = finVoucherEntriesMapper.selectFinVoucherEntriesListWithJoin(dto);
+//        if(list != null && list.size() > 0){
+//            list.forEach(item -> item.setGroupName(companyname));
+//        }
+        return list;
+    }
+
+    @Override
+    public List<FinVoucherEntries> selectFinVoucherEntriesListByVoucherId(Long voucherId) {
+        return this.finVoucherEntriesMapper.selectByVoucherId(voucherId);
+    }
+
+
+    /**
+     * 新增凭证分录明细
+     * 
+     * @param finVoucherEntries 凭证分录明细
+     * @return 结果
+     */
+    @Override
+    public int insertFinVoucherEntries(FinVoucherEntries finVoucherEntries)
+    {
+        return finVoucherEntriesMapper.insertFinVoucherEntries(finVoucherEntries);
+    }
+
+    /**
+     * 修改凭证分录明细
+     * 
+     * @param finVoucherEntries 凭证分录明细
+     * @return 结果
+     */
+    @Override
+    public int updateFinVoucherEntries(FinVoucherEntries finVoucherEntries)
+    {
+        return finVoucherEntriesMapper.updateFinVoucherEntries(finVoucherEntries);
+    }
+
+    /**
+     * 批量删除凭证分录明细
+     * 
+     * @param entryIds 需要删除的凭证分录明细主键
+     * @return 结果
+     */
+    @Override
+    public int deleteFinVoucherEntriesByEntryIds(Long[] entryIds)
+    {
+        return finVoucherEntriesMapper.deleteFinVoucherEntriesByEntryIds(entryIds);
+    }
+
+    /**
+     * 删除凭证分录明细信息
+     * 
+     * @param entryId 凭证分录明细主键
+     * @return 结果
+     */
+    @Override
+    public int deleteFinVoucherEntriesByEntryId(Long entryId)
+    {
+        return finVoucherEntriesMapper.deleteFinVoucherEntriesByEntryId(entryId);
+    }
+
+    @Override
+    public int deleteByVoucherId(Long voucherId) {
+        return finVoucherEntriesMapper.deleteByVoucherId(voucherId);
+    }
+
+    @Override
+    public Map<String, Object> sumBySubjectAndPeriod(String groupid, Date startDate, Date endDate, String subjectId) {
+        return finVoucherEntriesMapper.sumBySubjectAndPeriod(groupid, startDate, endDate, subjectId);
+    }
+}

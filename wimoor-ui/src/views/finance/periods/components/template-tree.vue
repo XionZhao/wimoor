@@ -429,3 +429,22 @@ defineExpose({
   background-color: #f5f7fa;
 }
 </style>
+
+<style>
+/* 暗黑模式适配 */
+.dark .group-title {
+  color: var(--el-text-color-primary);
+}
+
+.dark .el-tree-node.is-current > .el-tree-node__content {
+  background-color: var(--el-fill-color) !important;
+}
+
+.dark .el-tree-node.is-current > .el-tree-node__content:hover {
+  background-color: var(--el-fill-color) !important;
+}
+
+.dark .el-tree-node__content:hover {
+  background-color: var(--el-fill-color-light) !important;
+}
+</style>

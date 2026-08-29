@@ -1,304 +1,425 @@
 <template>
   <div class="feishu-table-record">
-    <!-- 模板信息和表格类型选择 -->
-    <el-card class="box-card" shadow="never">
-      <template #header>
-        <div class="card-header">
-          <div class="voucher-type-info">
-            <el-input v-model="form.name" placeholder="请输入模板名称" clearable style="width: 300px; margin-right: 10px;"></el-input>
-            <span class="voucher-type-label">凭证字</span>
-            <el-select v-model="form.voucherType" placeholder="记" style="width:70px;margin-right: 5px; border-radius: 0; height: 30px;">
-              <el-option v-for="item in voucherTypeList" :key="item.id" :label="item.name" :value="item.name"></el-option>
-            </el-select>
-            <span class="voucher-no-label">国家</span>
-            <el-select v-model="form.country" placeholder="选择国家" style="width: 90px; text-align: center; height: 30px; border-radius: 0; margin-right: 10px;">
-              <el-option  key="" label="" value=""></el-option>
-                <el-option v-for="item in marketList" :key="item.market" :label="item.name" :value="item.market"></el-option>
-            </el-select>
-
-          </div>
-          <div class="header-actions">
-            <el-select v-model="selectType" @change="handleTable()" placeholder="请选择表格类型" style="width: 200px; margin-right: 10px;">
-              <el-option v-for="item in typeList" :key="item.id" :label="item.name" :value="item.id"></el-option>
-            </el-select>
-            <el-button :icon="Setting" link @click="tableDataRef.show()"></el-button>
-          </div>
-        </div>
-      </template>
-
-      <!-- Filter 组件 -->
-      <el-card title="筛选条件" class="filter-card" shadow="never">
-        <feishu-table-record-filter 
-          :fields="filterFields"
-          @search="handleSearch"
-          :model-value="currentFilter"
-          @update:model-value="handleFilterUpdate"
-          @filter-generated="handleFilterGenerated" 
-        />
-      </el-card>
-
-      <!-- 字段映射配置 -->
-      <el-card title="字段映射配置" class="filter-card" shadow="never" style="margin-top: 10px;margin-bottom:5px">
-        <el-descriptions :column="5" border direction="vertical">
-          <el-descriptions-item label="摘要字段" :label-width="120">
-            <el-select 
-              v-model="feishuConfig.summaryField" 
-              placeholder="请选择摘要字段" 
-              style="width: 180px;"
-            >
-              <el-option value="" label="请选择"></el-option>
-              <el-option 
-                v-for="field in fields" 
-                :key="field.field_name" 
-                :label="field.field_name" 
-                :value="field.field_name" 
-              />
-            </el-select>
-          </el-descriptions-item>
-          <el-descriptions-item label="会计时间字段" :label-width="120">
-            <el-select 
-              v-model="feishuConfig.voucherDateField" 
-              placeholder="请选择会计时间字段" 
-              style="width: 180px;"
-            >
-              <el-option value="" label="请选择"></el-option>
-              <el-option 
-                v-for="field in fields" 
-                :key="field.field_name" 
-                :label="field.field_name" 
-                :value="field.field_name" 
-              />
-            </el-select>
-          </el-descriptions-item>
-          <el-descriptions-item label="会计科目字段" :label-width="120">
-            <el-select 
-              v-model="feishuConfig.subjectField" 
-              placeholder="请选择会计科目字段" 
-              style="width: 180px;"
-            >
-              <el-option value="" label="请选择"></el-option>
-              <el-option 
-                v-for="field in fields" 
-                :key="field.field_name" 
-                :label="field.field_name" 
-                :value="field.field_name" 
-              />
-            </el-select>
-          </el-descriptions-item>
-           <el-descriptions-item label="费用字段" :label-width="120">
-            <el-select 
-              v-model="feishuConfig.amountField" 
-              placeholder="费用字段" 
-              style="width: 180px;"
-            >
-              <el-option value="" label="请选择"></el-option>
-              <el-option 
-                v-for="field in fields" 
-                :key="field.field_name" 
-                :label="field.field_name" 
-                :value="field.field_name" 
-              />
-            </el-select>
-          </el-descriptions-item>
-          <el-descriptions-item label="会计日期汇总类型" :label-width="100">
-            <el-select 
-              v-model="feishuConfig.datetype" 
-              placeholder="请选择汇总类型" 
-              style="width: 129px;"
-            >
-              <el-option :value="1" label="按月"></el-option>
-            </el-select>
-          </el-descriptions-item>
-        </el-descriptions>
-      </el-card>
-      <el-card class="box-card" shadow="never">
-
-        <el-table :data="reportFields" style="width: 100%" border  height="185">
-          <el-table-column label="借方科目" width="400">
-            <template #header="scope">
-              <div style="display: flex; justify-content: space-between;">
-                <span>借方科目</span>
-                <el-button type="primary" size="small" @click="handleAddSubject(scope.row)">
-                  <el-icon><Plus /></el-icon>
-                  添加行</el-button>
-              </div>
-            </template>
-            <template #default="scope">
-              <el-select 
-                v-model="scope.row.summary" 
-                placeholder="请选择科目" 
-                style="width: 100%"
-                filterable
-              >
-                <el-option
-                  v-for="subject in subjects"
-                  :key="subject.subjectId"
-                  :label="`${subject.subjectCode} ${subject.subjectName}`"
-                  :value="subject.subjectId"
-                />
-              </el-select>
-            </template>
-          </el-table-column>
-          <el-table-column label="贷方科目" width="400">
-            <template #default="scope">
-              <el-select 
-                v-model="scope.row.subjectId" 
-                placeholder="请选择科目" 
-                style="width: 100%"
-                filterable
-              >
-                <el-option
-                  v-for="subject in subjects"
-                  :key="subject.subjectId"
-                  :label="`${subject.subjectCode} ${subject.subjectName}`"
-                  :value="subject.subjectId"
-                />
-              </el-select>
-            </template>
-          </el-table-column>
-          <el-table-column prop="amountField"  label="科目内容配对"  >
-            <template #header="scope">
-              <div style="display: flex; justify-content: space-between;">
-                <span>科目内容配对</span>
-               <el-tooltip style="float:right" content="点击选择数据表" placement="left">
-              <template #content>
-              <div >
-                  <div class="tooltip-footer">
-             通配符规则说明-必须完成“会计科目字段”配置 
-          </div>
-          
-          <table class="rule-table">
-            <thead>
-              <tr>
-                <th>您想匹配的内容</th>
-                <th>填写规则示例</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>所有内容</td><td><code>*</code></td></tr>
-              <tr><td>固定值之一（逗号分隔）</td><td><code>apple, banana, cherry</code></td></tr>
-              <tr><td>以 <code>.txt</code> 结尾</td><td><code>*.txt</code></td></tr>
-              <tr><td>单个字符不同（如 data1.csv, data2.csv）</td><td><code>data?.csv</code></td></tr>
-              <tr><td>数字编号（0-9）的文件</td><td><code>file[0-9].txt</code></td></tr>
-              <tr><td>扩展名是 jpg 或 png</td><td><code>*.{jpg,png}</code></td></tr>
-              <tr><td>首字母大写，后续任意小写字母</td><td><code>[A-Z][a-z]*</code></td></tr>
-              <tr><td>首字符不是数字</td><td><code>[!0-9]*</code></td></tr>
-              <tr><td>包含字面星号（如 <code>a*b</code>）</td><td><code>a\*b</code></td></tr>
-            </tbody>
-          </table>
-          <div class="tooltip-footer">
-            💡 提示：<code>*</code> 匹配任意长度字符串，<code>?</code> 匹配单个字符，<code>[ ]</code> 匹配字符集，<code>{ }</code> 多选一。
-          </div>
-        </div>
-              </template>
-               <el-icon><InfoFilled /></el-icon>  
-            </el-tooltip>
-              </div>
-            </template>
-            <template #default="scope">
-              <div style="display: flex; justify-content: space-between;">
-                <el-input v-model="scope.row.amountField" placeholder="请输入科目内容配对"></el-input>
-                </div>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="55">
-            <template #default="scope">
-              <el-button type="danger" link size="small" @click="deleteSubject(scope.row)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </el-card>
-      <!-- 查询结果表格 -->
-      <div style="padding-top:10px;">
-        <el-table scrollbar-always-on v-if="records&&records.items" v-loading="loading" height="400" :data="records.items" fit>
-          <!-- <el-table-column type="selection" width="55" /> -->
-          <el-table-column 
-            :prop="field.field_name" 
-            :width="getColumnWidth(field)"
-            :min-width="getMinColumnWidth(field)"
-            v-for="field in fields"  
-            show-overflow-tooltip 
-            :label="field.field_name" 
-            resizable
-          >
-            <template #header>
-              <el-tooltip placement="top" :content="field.field_name">
-              <div class="text-omit-1">{{field.field_name}}</div>
-              </el-tooltip>
-            </template>
-            <template #default="scope">
-              <div v-if="JSON.stringify(scope.row.fields) !== '{}'">
-                <div :class="field.field_name===formData.feedback ? 'text-success' : ''" v-if="hasFieldValue(scope.row.fields[field.field_name], field)">
-                   <!-- 人员字段 (type: 11, ui_type: User) -->
-                   <template v-if="field.type === 11 || field.ui_type === 'User'">
-                     <el-avatar 
-                       :size="18" 
-                       :src="getPersonAvatar(scope.row.fields[field.field_name])"
-                       :style="{ marginRight: '8px' }"
-                     >
-                       {{ getPersonName(scope.row.fields[field.field_name]) }}
-                     </el-avatar>
-                     <span>{{ getPersonName(scope.row.fields[field.field_name]) }}</span>
-                   </template>
-                   <!-- 日期字段 (type: 5, ui_type: DateTime) -->
-                   <template v-else-if="field.type === 5 || field.ui_type === 'DateTime'">
-                     {{ renderDateValue(scope.row.fields[field.field_name]) }}
-                   </template>
-                   <!-- 链接字段 (type: 15, ui_type: Url) -->
-                   <template v-else-if="field.type === 15 || field.ui_type === 'Url'">
-                     <el-link 
-                       v-if="isLinkValue(scope.row.fields[field.field_name])" 
-                       :href="getLinkUrl(scope.row.fields[field.field_name])" 
-                       target="_blank"
-                     >
-                       {{ getLinkText(scope.row.fields[field.field_name]) }}
-                     </el-link>
-                     <span v-else>{{ scope.row.fields[field.field_name] }}</span>
-                   </template>
-                   <!-- 单选字段 (type: 3, ui_type: SingleSelect) -->
-                   <template v-else-if="field.type === 3 || field.ui_type === 'SingleSelect'">
-                     <el-tag :type="getTagType(scope.row.fields[field.field_name], field)" size="small">
-                       {{ renderFieldValue(scope.row.fields[field.field_name]) }}
-                     </el-tag>
-                   </template>
-                   <!-- 多选字段 (type: 13, ui_type: MultiSelect) 或数组值 -->
-                   <template v-else-if="field.type === 13 || field.ui_type === 'MultiSelect' || isArrayValue(scope.row.fields[field.field_name])">
-                     <el-tag 
-                       v-for="(item, index) in getArrayItems(scope.row.fields[field.field_name])" 
-                       :key="index" 
-                       :type="getTagTypeForArray(item, field)" 
-                       size="small"
-                       :style="{ marginRight: '4px' }"
-                     >
-                       {{ item.text || item.name || item }}
-                     </el-tag>
-                   </template>
-                   <!-- 其他类型 -->
-                   <template v-else>
-                     {{ renderFieldValue(scope.row.fields[field.field_name]) }}
-                   </template>
-                </div>
-                <el-button size="small" type="primary"
-                           v-if="field.field_name===formData.feedback &&scope.row.record_id&&scope.row.fields[field.field_name]!=='已同步'"
-                           link
-                           @click="handleFeedback(scope.row.record_id)">回写</el-button>
-              </div>
-              <div v-else> --</div>
-            </template>
-          </el-table-column>
-        </el-table>
+    <!-- 顶部操作栏 -->
+    <div class="top-bar">
+      <div class="top-left">
+        <el-input v-model="form.name" placeholder="模板名称" clearable size="small" style="width: 200px;"></el-input>
+        <el-select v-model="form.voucherType" placeholder="凭证字" size="small" style="width: 80px;">
+          <el-option v-for="item in voucherTypeList" :key="item.id" :label="item.name" :value="item.name"></el-option>
+        </el-select>
+        <el-select v-model="form.country" placeholder="国家" size="small" style="width: 100px;">
+          <el-option key="" label="" value=""></el-option>
+          <el-option v-for="item in marketList" :key="item.market" :label="item.name" :value="item.market"></el-option>
+        </el-select>
       </div>
-    </el-card>
+      <div class="top-right">
+        <el-select v-model="selectType" @change="handleTable()" placeholder="选择数据表" size="small" style="width: 180px;">
+          <el-option v-for="item in typeList" :key="item.id" :label="item.name" :value="item.id"></el-option>
+        </el-select>
+        <el-button :icon="Refresh" size="small" @click="loadTypeList()"></el-button>
+        <el-button :icon="Setting" size="small" @click="tableDataRef.show()"></el-button>
+      </div>
+    </div>
+
+    <!-- 步骤指引 -->
+    <div class="steps-bar">
+      <div class="step-item" :class="{ active: currentStep >= 1 }">
+        <span class="step-num">1</span>
+        <span class="step-text">选择数据表</span>
+      </div>
+      <div class="step-line" :class="{ active: currentStep >= 2 }"></div>
+      <div class="step-item" :class="{ active: currentStep >= 2 }">
+        <span class="step-num">2</span>
+        <span class="step-text">设置筛选条件</span>
+      </div>
+      <div class="step-line" :class="{ active: currentStep >= 3 }"></div>
+      <div class="step-item" :class="{ active: currentStep >= 3 }">
+        <span class="step-num">3</span>
+        <span class="step-text">配置字段映射</span>
+      </div>
+      <div class="step-line" :class="{ active: currentStep >= 4 }"></div>
+      <div class="step-item" :class="{ active: currentStep >= 4 }">
+        <span class="step-num">4</span>
+        <span class="step-text">配置科目映射</span>
+      </div>
+    </div>
+
+    <!-- 主内容区：左右分栏 -->
+    <div class="main-content">
+      <!-- 左侧：配置区域 -->
+      <div class="config-panel">
+        <!-- 筛选条件 -->
+        <div class="section">
+          <div class="section-header">
+            <span class="section-title">筛选条件
+              <el-popover placement="top" :width="350" trigger="click">
+                <template #reference>
+                  <el-icon class="help-icon"><InfoFilled /></el-icon>
+                </template>
+                <div>
+                  <p style="font-weight: bold; margin-bottom: 8px; color: #303133;">筛选条件说明</p>
+                  <p style="margin-bottom: 4px; font-size: 13px;">用于设置从飞书表格中查询数据的过滤规则。</p>
+                  <p style="margin-bottom: 4px; font-size: 13px;">例如：只查询"状态"为"已审核"的记录，或只查询金额大于0的记录。</p>
+                  <p style="font-size: 13px;">设置后右侧数据预览会自动刷新，显示符合条件的数据。</p>
+                  <div style="margin-top: 10px; padding: 8px; background-color: #fef0f0; border-left: 3px solid #f56c6c; border-radius: 2px;">
+                    <p style="margin: 0; font-weight: bold; color: #f56c6c; font-size: 13px;">⚠️ 重要提醒：必须筛选公司！</p>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: #606266;">筛选条件中必须包含公司/组织字段，确保数据对应到正确的公司实体。没有正确筛选公司将导致账务归属错误，造成财务数据混乱，后果非常严重！</p>
+                  </div>
+                </div>
+              </el-popover>
+            </span>
+          </div>
+          <feishu-table-record-filter 
+            :fields="filterFields"
+            @search="handleSearch"
+            :model-value="currentFilter"
+            @update:model-value="handleFilterUpdate"
+            @filter-generated="handleFilterGenerated" 
+          />
+        </div>
+
+        <!-- 字段映射配置 -->
+        <div class="section">
+          <div class="section-header">
+            <span class="section-title">字段映射配置
+              <el-popover placement="top" :width="350" trigger="click">
+                <template #reference>
+                  <el-icon class="help-icon"><InfoFilled /></el-icon>
+                </template>
+                <div>
+                  <p style="font-weight: bold; margin-bottom: 8px;">字段映射配置说明</p>
+                  <p style="margin-bottom: 4px; font-size: 13px;">将飞书表格中的字段映射到财务凭证的各个字段。</p>
+                  <p style="margin-bottom: 4px; font-size: 13px;">需要选择飞书表格中的哪个列对应凭证的摘要、日期、科目和金额。</p>
+                  <p style="font-size: 13px;">请先在上方选择数据表，然后从下拉列表中选择对应的飞书字段。</p>
+                </div>
+              </el-popover>
+            </span>
+          </div>
+          <div class="field-mapping">
+            <div class="mapping-row">
+              <label class="mapping-label">摘要字段
+                <el-popover placement="top" :width="300" trigger="click">
+                  <template #reference>
+                    <el-icon class="help-icon"><InfoFilled /></el-icon>
+                  </template>
+                  <p style="font-size: 13px;">选择飞书表格中作为凭证摘要的字段。摘要会显示在生成的会计凭证上，用于说明该笔业务的内容，如"报销差旅费"、"支付供应商货款"等。</p>
+                </el-popover>
+              </label>
+              <el-select 
+                v-model="feishuConfig.summaryField"
+                filterable
+                placeholder="选择摘要字段" 
+                size="small"
+                style="flex: 1;"
+              >
+                <el-option value="" label="请选择"></el-option>
+                <el-option 
+                  v-for="field in fields" 
+                  :key="field.field_name" 
+                  :label="field.field_name" 
+                  :value="field.field_name" 
+                />
+              </el-select>
+            </div>
+            <div class="mapping-row">
+              <label class="mapping-label">会计时间
+                <el-popover placement="top" :width="300" trigger="click">
+                  <template #reference>
+                    <el-icon class="help-icon"><InfoFilled /></el-icon>
+                  </template>
+                  <p style="font-size: 13px;">选择飞书表格中记录业务发生日期的字段。系统会根据此日期确定凭证归属的会计期间，并按"汇总类型"设置进行汇总。</p>
+                </el-popover>
+              </label>
+              <el-select
+                filterable
+                v-model="feishuConfig.voucherDateField" 
+                placeholder="选择会计时间字段" 
+                size="small"
+                style="flex: 1;"
+              >
+                <el-option value="" label="请选择"></el-option>
+                <el-option 
+                  v-for="field in fields" 
+                  :key="field.field_name" 
+                  :label="field.field_name" 
+                  :value="field.field_name" 
+                />
+              </el-select>
+            </div>
+            <div class="mapping-row">
+              <label class="mapping-label">会计科目
+                <el-popover placement="top" :width="300" trigger="click">
+                  <template #reference>
+                    <el-icon class="help-icon"><InfoFilled /></el-icon>
+                  </template>
+                  <p style="font-size: 13px;">选择飞书表格中记录会计科目的字段。系统会将此字段的值与下方"会计科目-映射配置"中的规则进行匹配，确定最终使用的会计科目。</p>
+                </el-popover>
+              </label>
+              <el-select 
+                v-model="feishuConfig.subjectField" 
+                placeholder="选择会计科目字段"
+                filterable
+                size="small"
+                style="flex: 1;"
+              >
+                <el-option value="" label="请选择"></el-option>
+                <el-option 
+                  v-for="field in fields" 
+                  :key="field.field_name" 
+                  :label="field.field_name" 
+                  :value="field.field_name" 
+                />
+              </el-select>
+            </div>
+            <div class="mapping-row">
+              <label class="mapping-label">费用字段
+                <el-popover placement="top" :width="300" trigger="click">
+                  <template #reference>
+                    <el-icon class="help-icon"><InfoFilled /></el-icon>
+                  </template>
+                  <p style="font-size: 13px;">选择飞书表格中记录金额的字段。此字段的值将作为生成凭证的借方或贷方金额。如果金额为空或0，该条记录将被跳过。</p>
+                </el-popover>
+              </label>
+              <el-select 
+                v-model="feishuConfig.amountField" 
+                placeholder="选择费用字段"
+                filterable
+                size="small"
+                style="flex: 1;"
+              >
+                <el-option value="" label="请选择"></el-option>
+                <el-option 
+                  v-for="field in fields" 
+                  :key="field.field_name" 
+                  :label="field.field_name" 
+                  :value="field.field_name" 
+                />
+              </el-select>
+            </div>
+            <div class="mapping-row">
+              <label class="mapping-label">汇总类型
+                <el-popover placement="top" :width="300" trigger="click">
+                  <template #reference>
+                    <el-icon class="help-icon"><InfoFilled /></el-icon>
+                  </template>
+                  <p style="font-size: 13px;">设置金额的汇总方式。"按月"表示将同一月份内的所有记录金额合计后生成一张凭证。</p>
+                </el-popover>
+              </label>
+              按日汇总，每个日期生成一张凭证。按月抓取数据。
+            </div>
+          </div>
+        </div>
+
+        <!-- 会计科目-映射配置 -->
+        <div class="section">
+          <div class="section-header">
+            <span class="section-title">会计科目-映射配置
+              <el-popover placement="top" :width="350" trigger="click">
+                <template #reference>
+                  <el-icon class="help-icon"><InfoFilled /></el-icon>
+                </template>
+                <div>
+                  <p style="font-weight: bold; margin-bottom: 8px;">会计科目-映射配置说明</p>
+                  <p style="margin-bottom: 4px; font-size: 13px;">配置飞书表格中"会计科目"字段值与系统会计科目的对应关系。</p>
+                  <p style="margin-bottom: 4px; font-size: 13px;">每一行代表一条映射规则：当飞书数据匹配"内容配对"规则时，使用对应的借方/贷方科目生成凭证。</p>
+                  <p style="font-size: 13px;">"内容配对"支持通配符：* 匹配所有内容，多个值用逗号分隔。</p>
+                </div>
+              </el-popover>
+            </span>
+            <el-space>
+              <el-dropdown size="small" split-button  type="success" @click="handleExcelCommand('import')"  >
+                  <el-icon><Upload /></el-icon> 导入Excel
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item @click="handleExcelCommand('downloadTemplate')" >
+                      <el-icon><Download /></el-icon> 下载导入模板
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+              <el-upload
+                ref="uploadRef"
+                :auto-upload="false"
+                :show-file-list="false"
+                :on-change="handleFileChange"
+                accept=".xlsx,.xls"
+                style="display: none;"
+              >
+                <el-button ref="importBtnRef" type="success" size="small">
+                  <el-icon><Upload /></el-icon> 导入Excel
+                </el-button>
+              </el-upload>
+              <el-button type="primary" size="small" @click="handleAddSubject()">
+                <el-icon><Plus /></el-icon> 添加行
+              </el-button>
+            </el-space>
+          </div>
+          <el-table :data="reportFields" border size="small"  >
+            <el-table-column label="借方科目" min-width="150">
+              <template #default="scope">
+                <el-select 
+                  v-model="scope.row.summary" 
+                  placeholder="选择科目" 
+                  size="small"
+                  style="width: 100%"
+                  filterable
+                >
+                  <el-option
+                    v-for="subject in subjects"
+                    :key="subject.subjectId"
+                    :label="`${subject.subjectCode} ${subject.subjectName}`"
+                    :value="subject.subjectId"
+                  />
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="贷方科目" min-width="150">
+              <template #default="scope">
+                <el-select 
+                  v-model="scope.row.subjectId" 
+                  placeholder="选择科目" 
+                  size="small"
+                  style="width: 100%"
+                  filterable
+                >
+                  <el-option
+                    v-for="subject in subjects"
+                    :key="subject.subjectId"
+                    :label="`${subject.subjectCode} ${subject.subjectName}`"
+                    :value="subject.subjectId"
+                  />
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="内容配对" min-width="120">
+              <template #header>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span>内容配对</span>
+                  <el-tooltip placement="top">
+                    <template #content>
+                      <div style="max-width: 300px;">
+                        <p style="font-weight: bold; margin-bottom: 8px;">通配符规则说明</p>
+                        <p style="margin-bottom: 4px;">必须先配置"会计科目字段"</p>
+                        <p style="margin-bottom: 4px;">* 匹配所有内容</p>
+                        <p style="margin-bottom: 4px;">apple,banana 匹配固定值</p>
+                        <p style="margin-bottom: 4px;">*.txt 匹配以.txt结尾</p>
+                        <p style="margin-bottom: 4px;">data?.csv 匹配单个字符</p>
+                      </div>
+                    </template>
+                    <el-icon size="14"><InfoFilled /></el-icon>  
+                  </el-tooltip>
+                </div>
+              </template>
+              <template #default="scope">
+                <el-input v-model="scope.row.amountField" placeholder="输入配对规则" size="small"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="60" align="center">
+              <template #default="scope">
+                <el-button type="danger" link size="small" @click="deleteSubject(scope.row)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </div>
+
+      <!-- 右侧：数据预览 -->
+      <div class="preview-panel">
+        <div class="section">
+          <div class="section-header">
+            <span class="section-title">数据预览</span>
+            <el-tag v-if="records && records.items" size="small" type="info">
+              共 {{ records.items.length }} 条记录
+            </el-tag>
+          </div>
+          <div class="preview-table">
+            <el-table 
+              v-if="records && records.items" 
+              v-loading="loading" 
+              :data="records.items" 
+              size="small"
+              border
+              max-height="500"
+              style="width: 100%"
+            >
+              <el-table-column 
+                v-for="field in fields"  
+                :key="field.field_name"
+                :prop="field.field_name" 
+                :min-width="getMinColumnWidth(field)"
+                show-overflow-tooltip 
+                :label="field.field_name" 
+              >
+                <template #header>
+                  <el-tooltip placement="top" :content="field.field_name">
+                    <div class="text-omit-1">{{ field.field_name }}</div>
+                  </el-tooltip>
+                </template>
+                <template #default="scope">
+                  <div v-if="JSON.stringify(scope.row.fields) !== '{}'">
+                    <div :class="field.field_name === formData.feedback ? 'text-success' : ''" v-if="hasFieldValue(scope.row.fields[field.field_name], field)">
+                      <template v-if="field.type === 11 || field.ui_type === 'User'">
+                        <el-avatar :size="16" :src="getPersonAvatar(scope.row.fields[field.field_name])" style="margin-right: 4px;">
+                          {{ getPersonName(scope.row.fields[field.field_name]) }}
+                        </el-avatar>
+                        <span>{{ getPersonName(scope.row.fields[field.field_name]) }}</span>
+                      </template>
+                      <template v-else-if="field.type === 5 || field.ui_type === 'DateTime'">
+                        {{ renderDateValue(scope.row.fields[field.field_name]) }}
+                      </template>
+                      <template v-else-if="field.type === 15 || field.ui_type === 'Url'">
+                        <el-link v-if="isLinkValue(scope.row.fields[field.field_name])" :href="getLinkUrl(scope.row.fields[field.field_name])" target="_blank">
+                          {{ getLinkText(scope.row.fields[field.field_name]) }}
+                        </el-link>
+                        <span v-else>{{ scope.row.fields[field.field_name] }}</span>
+                      </template>
+                      <template v-else-if="field.type === 3 || field.ui_type === 'SingleSelect'">
+                        <el-tag :type="getTagType(scope.row.fields[field.field_name], field)" size="small">
+                          {{ renderFieldValue(scope.row.fields[field.field_name]) }}
+                        </el-tag>
+                      </template>
+                      <template v-else-if="field.type === 13 || field.ui_type === 'MultiSelect' || isArrayValue(scope.row.fields[field.field_name])">
+                        <el-tag 
+                          v-for="(item, index) in getArrayItems(scope.row.fields[field.field_name])" 
+                          :key="index" 
+                          :type="getTagTypeForArray(item, field)" 
+                          size="small"
+                          style="margin-right: 4px;"
+                        >
+                          {{ item.text || item.name || item }}
+                        </el-tag>
+                      </template>
+                      <template v-else>
+                        {{ renderFieldValue(scope.row.fields[field.field_name]) }}
+                      </template>
+                    </div>
+                    <el-button 
+                      v-if="field.field_name === formData.feedback && scope.row.record_id && scope.row.fields[field.field_name] !== '已同步'" 
+                      size="small" 
+                      type="primary" 
+                      link
+                      @click="handleFeedback(scope.row.record_id)"
+                    >回写</el-button>
+                  </div>
+                  <div v-else>--</div>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-empty v-else description="请选择数据表并设置筛选条件后查询" :image-size="100" />
+          </div>
+        </div>
+      </div>
+    </div>
 
     <TableData ref="tableDataRef"></TableData>
-    <!-- 新增科目对话框 -->
     <AddSubjectDialog
-        v-model="addSubjectVisible"
-        :subjects="subjects"
-        :selected-subject-ids="selectedSubjectIds"
-        @confirm="handleAddSubjects"
+      v-model="addSubjectVisible"
+      :subjects="subjects"
+      :selected-subject-ids="selectedSubjectIds"
+      @confirm="handleAddSubjects"
     />
-
   </div>
 </template>
 
@@ -307,11 +428,11 @@ import TableData from "@/views/finance/periods/components/template/feishu_table_
 import FeishuTableRecordFilter from "./feishu_table_record_filter.vue";
 import { onMounted, ref, reactive, toRefs, computed, watch } from 'vue';
 import { ElMessage } from 'element-plus';
-import {Plus, Setting,InfoFilled} from '@element-plus/icons-vue'; 
+import {Plus, Setting,InfoFilled,Refresh,Delete,Upload,ArrowDown,Download} from '@element-plus/icons-vue'; 
 import feishuApi from '@/api/sys/tool/feishuApi.js';
 import { listVoucherTypes } from '@/api/finance/voucher_type'
 import { updateFinClosingTemplate, getFinClosingTemplate, addFinClosingTemplate } from '@/api/finance/closing_template.js';
-import { getFeishuConfigByTemplateId, addFinClosingTemplateFeishu, updateFinClosingTemplateFeishu } from '@/api/finance/closing_template_feishu.js';
+import { getFeishuConfigByTemplateId, addFinClosingTemplateFeishu, updateFinClosingTemplateFeishu, insertOrUpdateFeishuConfig } from '@/api/finance/closing_template_feishu.js';
 import { addTemplateItem, delTemplateItem, listTemplateItem, updateTemplateItem } from '@/api/finance/closing_template_item.js';
 import { listAll as listSubjects } from '@/api/finance/subjects.js';
 import finStore from '@/hooks/store/useFinanceStore.js'
@@ -319,8 +440,11 @@ import marketApi from '@/api/amazon/market/marketApi.js'
 import {Calculator} from "@icon-park/vue-next";
 import AddSubjectDialog from "@/views/finance/periods/components/template/add_subject_dialog.vue";
 import { ElMessageBox } from 'element-plus';
+import * as XLSX from 'xlsx';
 
 const tableDataRef = ref(null);
+const uploadRef = ref(null);
+const importBtnRef = ref(null);
 let currentFilter = ref(null);
 
 // 新增科目对话框显示状态
@@ -401,6 +525,15 @@ const filterFields = computed(() => {
   return fields.value || [];
 });
 
+// 当前步骤指示
+const currentStep = computed(() => {
+  if (!selectType.value) return 1;
+  if (!currentFilter.value) return 2;
+  if (!feishuConfig.value.summaryField || !feishuConfig.value.subjectField) return 3;
+  if (reportFields.value.length === 0) return 4;
+  return 4;
+});
+
 // 获取市场数据
 async function getMarketData(){
   const groupid = await finStore.getCurrentTenantId()
@@ -441,8 +574,6 @@ const fetchSubjects = async () => {
 // 处理 Filter 更新
 function handleFilterUpdate(filter) {
   currentFilter.value = filter;
-  // 保存 filter 到后端
-  saveFilterToBackend(filter);
 }
 
 // 处理 Filter 生成
@@ -534,6 +665,138 @@ const handleAddSubjects = async () => {
 
 };
 
+// 处理Excel下拉菜单命令
+const handleExcelCommand = (command) => {
+  if (command === 'import') {
+    // 触发文件选择
+    uploadRef.value?.$el?.querySelector('input')?.click();
+  } else if (command === 'downloadTemplate') {
+    // 下载Excel模板
+    downloadExcelTemplate();
+  }
+};
+
+// 下载Excel导入模板（使用exceljs，支持隐藏式批注）
+const downloadExcelTemplate = async () => {
+  try {
+    const ExcelJS = await import('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    const ws = workbook.addWorksheet('科目映射模板');
+
+    // 设置表头
+    ws.addRow(['借方科目', '贷方科目', '内容配对']);
+    // 示例数据
+    // ws.addRow(['1001 库存现金', '6001 主营业务收入', '*']);
+    // ws.addRow(['1002 银行存款', '6001 主营业务收入', 'apple,banana']);
+    // ws.addRow(['6602 管理费用', '2202 应付账款', '*.txt']);
+
+    // 设置列宽
+    ws.getColumn(1).width = 30;
+    ws.getColumn(2).width = 30;
+    ws.getColumn(3).width = 25;
+
+    // 表头加粗
+    ws.getRow(1).font = { bold: true };
+
+    // 设置隐藏式批注（鼠标悬停才显示）
+    ws.getCell('A1').note = '输入借方科目编码';
+    ws.getCell('B1').note = '输入贷方科目编码';
+    ws.getCell('C1').note = '请查看页面字段内容提示';
+
+    // 下载文件
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = '会计科目映射导入模板.xlsx';
+    link.click();
+    URL.revokeObjectURL(url);
+    ElMessage.success('模板下载成功');
+  } catch (error) {
+    console.error('模板下载失败:', error);
+    ElMessage.error('模板下载失败');
+  }
+};
+
+// 处理Excel文件导入
+const handleFileChange = (file) => {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+      
+      if (jsonData.length === 0) {
+        ElMessage.error('Excel文件为空');
+        return;
+      }
+      
+      // 验证表头
+      const headers = jsonData[0];
+      const expectedHeaders = ['借方科目', '贷方科目', '内容配对'];
+      const headerValid = expectedHeaders.every((header, index) => 
+        headers[index] && headers[index].toString().trim() === header
+      );
+      
+      if (!headerValid) {
+        ElMessage.error('Excel表头格式错误，应为：借方科目、贷方科目、内容配对');
+        return;
+      }
+      
+      // 处理数据行
+      const importedData = [];
+      for (let i = 1; i < jsonData.length; i++) {
+        const row = jsonData[i];
+        if (row && row.length >= 3) {
+          const debitSubjectName = row[0] ? row[0].toString().trim() : '';
+          const creditSubjectName = row[1] ? row[1].toString().trim() : '';
+          const matchRule = row[2] ? row[2].toString().trim() : '';
+          
+          if (debitSubjectName || creditSubjectName || matchRule) {
+            // 查找借方科目ID
+            const debitSubject = subjects.value.find(s => 
+              s.subjectName === debitSubjectName || 
+              s.subjectCode === debitSubjectName ||
+              `${s.subjectCode} ${s.subjectName}` === debitSubjectName
+            );
+            
+            // 查找贷方科目ID
+            const creditSubject = subjects.value.find(s => 
+              s.subjectName === creditSubjectName || 
+              s.subjectCode === creditSubjectName ||
+              `${s.subjectCode} ${s.subjectName}` === creditSubjectName
+            );
+            
+            importedData.push({
+              summary: debitSubject ? debitSubject.subjectId : '',
+              subjectId: creditSubject ? creditSubject.subjectId : '',
+              amountField: matchRule,
+              closingTemplateId: props.selectedTemplate.id,
+            });
+          }
+        }
+      }
+      
+      if (importedData.length === 0) {
+        ElMessage.warning('Excel中没有有效数据');
+        return;
+      }
+      
+      // 添加到现有数据
+      reportFields.value = [...reportFields.value, ...importedData];
+      ElMessage.success(`成功导入 ${importedData.length} 条映射配置`);
+      
+    } catch (error) {
+      console.error('Excel解析失败:', error);
+      ElMessage.error('Excel文件解析失败，请检查文件格式');
+    }
+  };
+  reader.readAsArrayBuffer(file.raw);
+};
+
 // 删除科目
 const deleteSubject = (subject) => {
   ElMessageBox.confirm('确定要删除这个科目吗？', '提示', {
@@ -573,7 +836,7 @@ function saveFilterToBackend(filter) {
 }
 
 // 保存飞书配置到 fin_closing_template_feishu 表
-function saveFeishuConfigToBackend(filterJson) {
+async function saveFeishuConfigToBackend(filterJson) {
   if (!props.selectedTemplate || !props.selectedTemplate.id) {
     ElMessage.warning('请选择模板');
     return;
@@ -598,42 +861,30 @@ function saveFeishuConfigToBackend(filterJson) {
       // 已存在，更新
       updateFinClosingTemplateFeishu(feishuConfigData).then(res => {
         if (res.code === 200) {
-          ElMessage.success('飞书配置更新成功');
-          console.log('飞书配置更新成功');
+          ElMessage.success('飞书配置保存成功');
         } else {
-          ElMessage.error('更新飞书配置失败: ' + (res.msg || '未知错误'));
+          ElMessage.error('飞书配置保存失败: ' + (res.msg || '未知错误'));
         }
       }).catch(err => {
-        console.error('更新飞书配置失败:', err);
-        ElMessage.error('更新飞书配置失败');
+        console.error('飞书配置保存失败:', err);
+        ElMessage.error('飞书配置保存失败');
       });
     } else {
       // 不存在，新增
       addFinClosingTemplateFeishu(feishuConfigData).then(res => {
         if (res.code === 200) {
           ElMessage.success('飞书配置保存成功');
-          console.log('飞书配置新增成功');
         } else {
-          ElMessage.error('新增飞书配置失败: ' + (res.msg || '未知错误'));
+          ElMessage.error('飞书配置保存失败: ' + (res.msg || '未知错误'));
         }
       }).catch(err => {
-        console.error('新增飞书配置失败:', err);
-        ElMessage.error('新增飞书配置失败');
+        console.error('飞书配置保存失败:', err);
+        ElMessage.error('飞书配置保存失败');
       });
     }
   }).catch(err => {
-    // 查询失败，尝试新增
-    addFinClosingTemplateFeishu(feishuConfigData).then(res => {
-      if (res.code === 200) {
-        ElMessage.success('飞书配置保存成功');
-        console.log('飞书配置新增成功');
-      } else {
-        ElMessage.error('新增飞书配置失败: ' + (res.msg || '未知错误'));
-      }
-    }).catch(err => {
-      console.error('新增飞书配置失败:', err);
-      ElMessage.error('新增飞书配置失败');
-    });
+    console.error('查询飞书配置失败:', err);
+    ElMessage.error('飞书配置保存失败');
   });
 }
 
@@ -687,6 +938,7 @@ const saveSubjectGroups = async () => {
   }
   
   const now = new Date().toISOString();
+  const errors = [];
   
   // 直接从 reportFields 读取数据，确保获取到最新的用户输入
   for (const field of reportFields.value) {
@@ -709,14 +961,23 @@ const saveSubjectGroups = async () => {
       } else {
         // 新增
         const response = await addTemplateItem(templateItem);
-        if (response.code === 200) {
-          field.id = response.data.id;
+        if (response.code === 200 && response.data) {
+          // 确保获取到新插入记录的ID
+          const newId = response.data.id || response.data;
+          if (newId) {
+            field.id = String(newId);
+            console.log('新增科目映射成功，ID:', field.id);
+          }
         }
       }
     } catch (error) {
       console.error('保存科目映射失败:', error);
-      throw error;
+      errors.push(error);
     }
+  }
+  
+  if (errors.length > 0) {
+    throw new Error(`保存科目映射失败: ${errors.length} 条记录保存失败`);
   }
 };
 
@@ -829,9 +1090,17 @@ function loadTypeList() {
           // 使用 splice 保持响应式引用
           state.typeList.splice(0, state.typeList.length, ...data);
           state.formData = data[0];
-          if(!state.selectType && data.length > 0){
+          
+          // 检查 selectType 是否还在新的 typeList 中
+          const isSelectTypeExists = data.some(item => item.id === state.selectType);
+          if (!isSelectTypeExists) {
+            // 如果 selectType 不在列表中，清空它并选择第一个元素
+            state.selectType = data.length > 0 ? data[0].id : '';
+          } else if (!state.selectType && data.length > 0) {
+            // 如果 selectType 为空且列表不为空，选择第一个元素
             state.selectType = data[0].id;
           }
+          
           handleTable();
         } else {
           ElMessage.error(res.message || '获取数据表类型列表失败');
@@ -1320,51 +1589,227 @@ function formatDate(date) {
 </script>
 
 <style>
-.box-card, .box-card .el-card__body{
+.box-card .el-card__body {
   padding: 0;
 }
 </style>
 <style scoped>
 .feishu-table-record {
-  padding: 10px;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.card-header {
+/* 顶部操作栏 */
+.top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e4e7ed;
+  flex-shrink: 0;
 }
 
-.voucher-type-info {
+.top-left,
+.top-right {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
 }
 
-.voucher-type-label,
-.voucher-no-label,
-.voucher-date-label {
-  font-size: 14px;
+/* 步骤指引 */
+.steps-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e4e7ed;
+  flex-shrink: 0;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+.step-item.active {
+  opacity: 1;
+}
+
+.step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #c0c4cc;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.step-item.active .step-num {
+  background: #409eff;
+}
+
+.step-text {
+  font-size: 13px;
+  color: #606266;
+}
+
+.step-item.active .step-text {
+  color: #303133;
   font-weight: 500;
 }
 
-.header-actions {
+.step-line {
+  width: 40px;
+  height: 2px;
+  background: #dcdfe6;
+  margin: 0 8px;
+}
+
+.step-line.active {
+  background: #409eff;
+}
+
+/* 主内容区 */
+.main-content {
   display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 左侧配置面板 */
+.config-panel {
+  width: 50%;
+  overflow-y: auto;
+  padding: 16px;
+  border-right: 1px solid #e4e7ed;
+}
+
+/* 右侧预览面板 */
+.preview-panel {
+  width: 50%;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* 区块 */
+.section {
+  margin-bottom: 16px;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+}
+
+/* 字段映射 */
+.field-mapping {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-.filter-card {
-  margin-bottom: -10px;
-  border-radius: 0px;
-  border-top:none;
-  border-left:none;
-  border-right:none;
+.mapping-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mapping-label {
+  width: 90px;
+  font-size: 13px;
+  color: var(--el-text-color-regular);
+  text-align: right;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* 预览表格 */
+.preview-table {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.text-omit-1 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .text-success {
   color: #67c23a;
+}
+
+.help-icon {
+  font-size: 14px;
+  color: #909399;
+  cursor: pointer;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.help-icon:hover {
+  color: #409eff;
+}
+</style>
+
+<style>
+/* 暗黑模式适配 */
+.dark .top-bar {
+  background: var(--el-bg-color);
+  border-bottom-color: var(--el-border-color);
+}
+
+.dark .steps-bar {
+  background: var(--el-fill-color-lighter);
+  border-bottom-color: var(--el-border-color);
+}
+
+.dark .step-text {
+  color: var(--el-text-color-regular);
+}
+
+.dark .step-item.active .step-text {
+  color: var(--el-text-color-primary);
+}
+
+.dark .step-line {
+  background: var(--el-border-color);
+}
+
+.dark .config-panel {
+  border-right-color: var(--el-border-color);
+}
+
+.dark .section-header {
+  border-bottom-color: var(--el-border-color-lighter);
+}
+
+.dark .section-title {
+  color: var(--el-text-color-primary);
 }
 </style>

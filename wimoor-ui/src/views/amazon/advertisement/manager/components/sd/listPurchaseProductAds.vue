@@ -2,7 +2,7 @@
 	<el-row>
 		<el-space>
           <DateSelect @setDate="setDate" @dateTypeSwitch="handleQuery"/>
-			<el-input v-model="queryParams.search" clearable @input="handleQuery" placeholder="搜索SKU">
+			<el-input v-model="queryParams.search" clearable @clear="handleQuery" v-debounce-input="handleQuery" placeholder="搜索SKU">
 					 <template #suffix>
 					  <el-icon @click.stop="handleQuery"><Search /></el-icon>
 					 </template>
@@ -254,7 +254,6 @@
 		}
 	    
 	}
-	 
 	 function show(params){
 		 if(state.queryParams.profileid!=params.profileid
 		  ||state.queryParams.campaignid!=params.campaignid

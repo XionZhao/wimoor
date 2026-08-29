@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.feishu.mapper.FeishuChatGroupMapper">
+
+    <resultMap id="BaseResultMap" type="com.wimoor.feishu.pojo.entity.FeishuChatGroup">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="description" property="description" />
+        <result column="avatar_url" property="avatarUrl" />
+        <result column="owner_id" property="ownerId" />
+        <result column="chat_mode" property="chatMode" />
+        <result column="member_count" property="memberCount" />
+        <result column="app_id" property="appId" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <select id="getGroupListWithStats" resultType="java.util.Map">
+        SELECT
+            g.id,
+            CASE
+                WHEN g.chat_mode = 'p2p' THEN (
+                    SELECT m.name FROM t_sys_feishu_chat_member m
+                    WHERE m.chat_id = g.id AND m.member_id != g.app_id
+                    LIMIT 1
+                )
+                ELSE g.name
+            END as name,
+            g.description,
+            g.avatar_url as avatarUrl,
+            g.owner_id as ownerId,
+            g.chat_mode as chatMode,
+            g.member_count as memberCount,
+            g.status,
+            g.create_time as createTime,
+            g.update_time as updateTime,
+            (SELECT COUNT(*) FROM t_sys_feishu_chat_message m WHERE m.chat_id = g.id) as messageCount,
+            (SELECT MAX(m.create_time) FROM t_sys_feishu_chat_message m WHERE m.chat_id = g.id) as lastMessageTime
+        FROM t_sys_feishu_chat_group g
+        WHERE g.app_id = #{appId}
+        and exists(select id from t_sys_feishu_chat_member m where m.chat_id=g.id and m.name=#{username})
+        ORDER BY lastMessageTime DESC
+    </select>
+
+</mapper>

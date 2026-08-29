@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.ledger.mapper.FinInvoiceDetailMapper">
+
+    <resultMap type="com.wimoor.finance.ledger.domain.FinInvoiceDetail" id="FinInvoiceDetailResult">
+        <result property="id"               column="id" />
+        <result property="invoiceId"        column="invoice_id" />
+        <result property="lineNo"           column="line_no" />
+        <result property="goodsName"        column="goods_name" />
+        <result property="specModel"        column="spec_model" />
+        <result property="unit"             column="unit" />
+        <result property="quantity"         column="quantity" />
+        <result property="unitPrice"        column="unit_price" />
+        <result property="amountWithoutTax" column="amount_without_tax" />
+        <result property="taxRate"          column="tax_rate" />
+        <result property="taxAmount"        column="tax_amount" />
+        <result property="amountWithTax"    column="amount_with_tax" />
+        <result property="taxCategoryCode"  column="tax_category_code" />
+        <result property="createdTime"      column="created_time" />
+    </resultMap>
+
+    <select id="selectByInvoiceId" parameterType="Long" resultMap="FinInvoiceDetailResult">
+        select * from fin_invoice_detail where invoice_id = #{invoiceId} order by line_no
+    </select>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into fin_invoice_detail (invoice_id, line_no, goods_name, spec_model, unit,
+                                        quantity, unit_price, amount_without_tax, tax_rate,
+                                        tax_amount, amount_with_tax, tax_category_code)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.invoiceId}, #{item.lineNo}, #{item.goodsName}, #{item.specModel}, #{item.unit},
+             #{item.quantity}, #{item.unitPrice}, #{item.amountWithoutTax}, #{item.taxRate},
+             #{item.taxAmount}, #{item.amountWithTax}, #{item.taxCategoryCode})
+        </foreach>
+    </insert>
+
+    <delete id="deleteByInvoiceId" parameterType="Long">
+        delete from fin_invoice_detail where invoice_id = #{invoiceId}
+    </delete>
+
+</mapper>

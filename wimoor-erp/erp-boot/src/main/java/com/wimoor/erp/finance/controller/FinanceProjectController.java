@@ -36,16 +36,16 @@ public class FinanceProjectController {
 	}
  
 	@GetMapping("/saveProject")
-	public Result<Map<String, Object>> saveProject(String name){
+	public Result<Map<String, Object>> saveProject(String name,Integer feetype){
 		UserInfo userinfo = UserInfoContext.get();
-		Map<String, Object> result = financeProjectService.saveProject(name,userinfo);
+		Map<String, Object> result = financeProjectService.saveProject(name,feetype,userinfo);
 		return Result.success(result);
 	}
 	
 	@GetMapping("/updateProject")
-	public Result<Map<String, Object>> updateProject(String id,String name){
+	public Result<Map<String, Object>> updateProject(String id,String name,Boolean isdefault,Integer feetype){
 		UserInfo userinfo = UserInfoContext.get();
-		Map<String, Object> result = financeProjectService.updateProject(id, name,userinfo);
+		Map<String, Object> result = financeProjectService.updateProject(id, name, isdefault, feetype, userinfo);
 		return Result.success(result);
 	}
 	

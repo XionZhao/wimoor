@@ -15,7 +15,7 @@
 			<Datepicker :shortIndex="1"  @changedate="changedate" />
 		 </div> 
 		<Owner  ref="ownerRef" @owner="getOwner" />
-		 <el-input v-model="queryParams.search" @input="handleQuery" placeholder="搜索平台SKU" clearable></el-input>
+		 <el-input v-model="queryParams.search" v-debounce-input="handleQuery" placeholder="搜索平台SKU" clearable @clear="handleQuery"></el-input>
 		 <el-button type="primary" @click="handleQuery">查询</el-button>
 		 <el-button type="primary" plain @click="showAccDialog" title="用于锁定汇率">结账</el-button>
 	  </el-space>

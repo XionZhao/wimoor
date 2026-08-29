@@ -1,25 +1,20 @@
 package com.wimoor.feishu.service.impl;
 
-import com.wimoor.feishu.pojo.entity.LeaveCalendar;
-import com.wimoor.feishu.config.FeiShuClientBuilder;
-import com.wimoor.feishu.mapper.LeaveCalendarMapper;
-import com.wimoor.feishu.service.ILeaveCalendarService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.internal.LinkedTreeMap;
 import com.lark.oapi.Client;
 import com.lark.oapi.core.response.RawResponse;
 import com.lark.oapi.core.token.AccessTokenType;
 import com.lark.oapi.core.utils.Jsons;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.wimoor.feishu.config.FeiShuClientBuilder;
+import com.wimoor.feishu.mapper.LeaveCalendarMapper;
+import com.wimoor.feishu.pojo.entity.LeaveCalendar;
+import com.wimoor.feishu.service.ILeaveCalendarService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * <p>
@@ -43,7 +38,7 @@ public class LeaveCalendarServiceImpl extends ServiceImpl<LeaveCalendarMapper, L
                     .eq(LeaveCalendar::getAppid, appid)
                     .eq(LeaveCalendar::getIsdelete, false).list();
 			if(entitys.size()>0) {
-				deleteLeaveCalandar(appid,uuid);
+			   return;
 			}
 			    // 发起请求
 			    RawResponse resp;

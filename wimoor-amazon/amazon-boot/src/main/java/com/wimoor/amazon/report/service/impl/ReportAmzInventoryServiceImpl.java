@@ -1,18 +1,6 @@
 package com.wimoor.amazon.report.service.impl;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Resource;
-
-import org.springframework.stereotype.Service;
-
+import cn.hutool.core.util.StrUtil;
 import com.amazon.spapi.model.reports.CreateReportSpecification;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.wimoor.amazon.auth.pojo.entity.AmazonAuthority;
@@ -23,9 +11,13 @@ import com.wimoor.amazon.product.service.IProductInOptService;
 import com.wimoor.amazon.product.service.IProductInfoService;
 import com.wimoor.amazon.util.AmzDateUtils;
 import com.wimoor.common.GeneralUtil;
-
-import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.*;
  
  
 @Slf4j
@@ -167,10 +159,12 @@ public class ReportAmzInventoryServiceImpl extends ReportServiceImpl{
 						query.eq("marketplaceid", record.getMarketplaceid());
 						query.eq("amazonAuthId", record.getAmazonAuthId());
 						InventoryReport oldone = inventoryReportMapper.selectOne(query);
-						if(oldone!=null) {
-							inventoryReportMapper.update(record, query);
-						}else {
-							inventoryReportMapper.insert(record);
+						if(GeneralUtil.distanceOfDay(oldone.getByday(),new Date())>5){
+							if(oldone!=null) {
+								inventoryReportMapper.update(record, query);
+							}else {
+								inventoryReportMapper.insert(record);
+							}
 						}
 						inventoryReportMapper.newestInsert(record);
 					}catch(Exception e) {

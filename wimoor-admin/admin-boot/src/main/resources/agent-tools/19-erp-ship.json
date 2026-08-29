@@ -1,0 +1,1076 @@
+﻿{
+    "module":  "ERP物流与发货",
+    "description":  "ERP发货计划、物流公司、发货地址、销售计划、发货处理、以及ShipV2新版货件计划管理（含运输方案、分仓方案、装箱方案、配货管理）",
+    "service":  "wimoor-amazon,wimoor-erp",
+    "tools":  [
+                  {
+                      "name":  "shipment_plan_list",
+                      "description":  "查询发货计划列表（ShipV1），展示各站点的产品发货计划和库存情况",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v1/shipForm/getPlanList",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始时间，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束时间，格式：yyyy-MM-dd"
+                                                },
+                                     "auditstatus":  {
+                                                         "type":  "string",
+                                                         "description":  "计划状态"
+                                                     },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持SKU或计划编号"
+                                                },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "查询类型"
+                                                    },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "计划ID",
+                                              "number":  "计划编号",
+                                              "name":  "计划名称",
+                                              "amazongroupid":  "店铺分组ID",
+                                              "marketplaceid":  "站点ID",
+                                              "warehouseid":  "仓库ID",
+                                              "auditstatus":  "审核状态",
+                                              "remark":  "备注",
+                                              "shipmentList":  "货件列表(ShipmentId, name, DestinationFulfillmentCenterId, skucount, toquantity, status, weight, itemlist)",
+                                              "groupname":  "店铺名称",
+                                              "country":  "站点编码(如US)",
+                                              "destination":  "站点名称(如United States)",
+                                              "warename":  "仓库名称",
+                                              "createdate2":  "创建日期(yyyy/MM/dd格式)",
+                                              "createdate":  "创建时间(Date对象)",
+                                              "addressid":  "发货地址ID",
+                                              "creatorname":  "创建人",
+                                              "skunum":  "SKU数量",
+                                              "sumquantity":  "发货总数量",
+                                              "shopid":  "公司ID",
+                                              "address":  "发货地址对象"
+                                          }
+                  },
+                  {
+                      "name":  "transportation_list",
+                      "description":  "查询物流公司列表，展示已配置的物流承运商信息",
+                      "menu_id":  10,
+                      "endpoint":  "/erp/api/v1/shipTransCompany/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，物流公司名称"
+                                                },
+                                     "isdelete":  {
+                                                      "type":  "string",
+                                                      "description":  "是否已删除，默认false"
+                                                  },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "物流公司ID",
+                                              "name":  "物流公司名称",
+                                              "simplename":  "物流公司简称",
+                                              "shopid":  "公司ID",
+                                              "operator":  "操作人名称(已解析为姓名)",
+                                              "opttime":  "操作时间",
+                                              "uploadpath":  "logo图片路径"
+                                          }
+                  },
+                  {
+                      "name":  "transportation_channel_list",
+                      "description":  "查询物流渠道列表，展示已配置的物流渠道信息",
+                      "menu_id":  10,
+                      "endpoint":  "/erp/api/v1/shipTransCompany/channelList",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "渠道ID",
+                                              "name":  "渠道名称",
+                                              "shopid":  "公司ID",
+                                              "disabled":  "是否禁用"
+                                          }
+                  },
+                  {
+                      "name":  "transportation_detail_list",
+                      "description":  "查询物流渠道详情列表，展示物流渠道的价格和时效信息",
+                      "menu_id":  10,
+                      "endpoint":  "/erp/api/v1/shipTransCompany/listitem",
+                      "method":  "POST",
+                      "params":  {
+                                     "company":  {
+                                                     "type":  "string",
+                                                     "description":  "物流公司ID"
+                                                 },
+                                     "channel":  {
+                                                     "type":  "string",
+                                                     "description":  "渠道ID（预留字段）"
+                                                 },
+                                     "transtype":  {
+                                                       "type":  "string",
+                                                       "description":  "运输方式"
+                                                   },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "priceunits":  {
+                                                        "type":  "string",
+                                                        "description":  "价格单位"
+                                                    },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "渠道详情ID",
+                                              "company":  "物流公司ID",
+                                              "cname":  "物流公司名称",
+                                              "channel":  "渠道ID",
+                                              "marketplaceid":  "站点ID",
+                                              "transtype":  "运输方式ID",
+                                              "price":  "单价",
+                                              "priceunits":  "价格单位",
+                                              "pretime":  "预计天数",
+                                              "needday":  "所需天数"
+                                          }
+                  },
+                  {
+                      "name":  "transportation_company_list",
+                      "description":  "获取物流公司精简列表，用于下拉选择",
+                      "menu_id":  10,
+                      "endpoint":  "/erp/api/v1/shipTransCompany/getCompanyList",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "物流公司ID",
+                                              "name":  "物流公司名称",
+                                              "simplename":  "物流公司简称",
+                                              "shopid":  "公司ID",
+                                              "uploadpath":  "logo图片路径",
+                                              "isdelete":  "是否删除"
+                                          }
+                  },
+                  {
+                      "name":  "transportation_channel_by_company",
+                      "description":  "根据物流商获取渠道列表，用于级联选择",
+                      "menu_id":  10,
+                      "endpoint":  "/erp/api/v1/shipTransCompany/getChannel",
+                      "method":  "GET",
+                      "params":  {
+                                     "company":  {
+                                                     "type":  "string",
+                                                     "description":  "物流公司ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "transtype":  {
+                                                       "type":  "string",
+                                                       "description":  "运输方式"
+                                                   }
+                                 },
+                      "required":  [
+                                       "company"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "渠道详情ID",
+                                              "channame":  "渠道显示名称(含分区/运输方式/渠道/渠道名)",
+                                              "name":  "渠道名称(含分区)",
+                                              "price":  "单价",
+                                              "drate":  "材积基数",
+                                              "pretime":  "预计天数",
+                                              "priceunits":  "价格单位(weight/volume)"
+                                          }
+                  },
+                  {
+                      "name":  "ship_address_list",
+                      "description":  "查询发货地址列表，获取公司下的发货地址信息",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v1/shipaddress/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，地址名称"
+                                                },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "isdisable":  {
+                                                       "type":  "string",
+                                                       "description":  "是否已归档"
+                                                   },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "地址ID",
+                                              "name":  "地址名称",
+                                              "countrycode":  "国家编码",
+                                              "stateorprovincecode":  "州/省编码",
+                                              "city":  "城市",
+                                              "addressline1":  "街道地址1",
+                                              "addressline2":  "街道地址2",
+                                              "postalcode":  "邮编",
+                                              "phone":  "联系电话",
+                                              "groupid":  "店铺分组ID",
+                                              "marketplaceid":  "站点ID",
+                                              "isdefault":  "是否默认地址",
+                                              "isfrom":  "是否自建地址(Boolean)",
+                                              "disable":  "是否已归档",
+                                              "shopid":  "公司ID",
+                                              "email":  "邮箱",
+                                              "contact":  "联系人",
+                                              "companyName":  "公司名称"
+                                          }
+                  },
+                  {
+                      "name":  "ship_address_view",
+                      "description":  "查看单个地址详情信息",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v1/shipaddress/view",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "地址ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "地址ID",
+                                              "name":  "地址名称",
+                                              "countrycode":  "国家编码",
+                                              "stateorprovincecode":  "州/省编码",
+                                              "city":  "城市",
+                                              "addressline1":  "街道地址1",
+                                              "addressline2":  "街道地址2",
+                                              "postalcode":  "邮编",
+                                              "phone":  "联系电话",
+                                              "groupid":  "店铺分组ID",
+                                              "marketplaceid":  "站点ID",
+                                              "isdefault":  "是否默认地址",
+                                              "isfrom":  "是否自建地址(Boolean)",
+                                              "disable":  "是否已归档",
+                                              "shopid":  "公司ID",
+                                              "email":  "邮箱",
+                                              "contact":  "联系人",
+                                              "companyName":  "公司名称"
+                                          }
+                  },
+                  {
+                      "name":  "ship_plan_list",
+                      "description":  "查询销售计划列表，展示各站点的产品销售计划和发货建议",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v1/product/salesplan/getPlanModel",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持SKU或产品名称"
+                                                },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "产品名称搜索"
+                                              },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "groupids":  {
+                                                      "type":  "array",
+                                                      "description":  "店铺分组ID列表"
+                                                  },
+                                     "marketplaceids":  {
+                                                            "type":  "array",
+                                                            "description":  "站点ID列表"
+                                                        },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "plantype":  {
+                                                      "type":  "string",
+                                                      "description":  "计划类型：ship(发货计划)、purchase(采购计划)"
+                                                  },
+                                     "status":  {
+                                                    "type":  "string",
+                                                    "description":  "状态筛选"
+                                                },
+                                     "status2":  {
+                                                     "type":  "string",
+                                                     "description":  "二级状态筛选"
+                                                 },
+                                     "categoryid":  {
+                                                        "type":  "string",
+                                                        "description":  "分类ID"
+                                                    },
+                                     "tags":  {
+                                                  "type":  "array",
+                                                  "description":  "标签列表"
+                                              },
+                                     "notag":  {
+                                                   "type":  "string",
+                                                   "description":  "无标签筛选"
+                                               },
+                                     "remark":  {
+                                                    "type":  "string",
+                                                    "description":  "备注搜索"
+                                                },
+                                     "selected":  {
+                                                      "type":  "boolean",
+                                                      "description":  "是否已选中"
+                                                  },
+                                     "ischeck":  {
+                                                     "type":  "string",
+                                                     "description":  "是否勾选"
+                                                 },
+                                     "skuarray":  {
+                                                      "type":  "string",
+                                                      "description":  "SKU数组，逗号分隔"
+                                                  },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "本地SKU",
+                                              "msku":  "本地MSKU",
+                                              "name":  "产品名称",
+                                              "image":  "产品图片",
+                                              "groupid":  "店铺分组ID",
+                                              "marketplaceid":  "站点ID",
+                                              "quantity":  "本地可用库存",
+                                              "canAssembly":  "可组装数量",
+                                              "allquantity":  "总可用库存(可用+可组装)",
+                                              "warehouseid":  "仓库ID",
+                                              "shopid":  "公司ID",
+                                              "needship":  "需发货数量",
+                                              "marketneedship":  "选中站点需发货数量",
+                                              "avgsales":  "日均销量",
+                                              "marketavgsales":  "选中站点日均销量",
+                                              "marketsalesday":  "选中站点可售天数",
+                                              "short_time":  "断货时间",
+                                              "amount":  "建议发货数量",
+                                              "vmsku":  "虚拟MSKU",
+                                              "marketamount":  "选中站点需发货数量",
+                                              "opttime":  "计划更新时间",
+                                              "tags":  "标签列表",
+                                              "expendData":  "展开的国家数据"
+                                          }
+                  },
+                  {
+                      "name":  "ship_handling_list",
+                      "description":  "查询发货处理单（货件）列表，展示各站点的发货单及状态",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v1/shipForm/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持货件编号或SKU"
+                                                },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "auditstatus":  {
+                                                         "type":  "string",
+                                                         "description":  "审核状态"
+                                                     },
+                                     "shipmentid":  {
+                                                        "type":  "string",
+                                                        "description":  "货件ID"
+                                                    },
+                                     "company":  {
+                                                     "type":  "string",
+                                                     "description":  "物流公司ID"
+                                                 },
+                                     "channel":  {
+                                                     "type":  "string",
+                                                     "description":  "物流渠道ID"
+                                                 },
+                                     "transtype":  {
+                                                       "type":  "string",
+                                                       "description":  "运输方式"
+                                                   },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "查询类型"
+                                                    },
+                                     "hasexceptionnum":  {
+                                                             "type":  "string",
+                                                             "description":  "是否有异常"
+                                                         },
+                                     "fromdate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "enddate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "内部ID",
+                                              "shipmentid":  "货件ID(ShipmentId)",
+                                              "name":  "货件名称",
+                                              "planid":  "计划ID",
+                                              "groupid":  "店铺分组ID",
+                                              "groupname":  "店铺名称",
+                                              "marketplaceid":  "站点ID",
+                                              "auditstatus":  "审核状态",
+                                              "shipmentstatus":  "货件状态名称",
+                                              "status":  "货件状态编码",
+                                              "number":  "订单编号",
+                                              "country":  "国家编码",
+                                              "countryCode":  "国家代码",
+                                              "warehouseid":  "仓库ID",
+                                              "warehouse":  "仓库名称",
+                                              "sumQuantity":  "总发货量",
+                                              "skuamount":  "SKU数量",
+                                              "sumshipped":  "SKU实际发货数量",
+                                              "sumrec":  "SKU接受数量",
+                                              "checkinv":  "配货单号",
+                                              "remark":  "备注",
+                                              "createdate":  "创建时间",
+                                              "shopdate":  "发货日期",
+                                              "arrivalTime":  "预计到货日期",
+                                              "company":  "物流公司",
+                                              "transtypename":  "物流渠道",
+                                              "ordernum":  "物流追踪编码",
+                                              "areCasesRequired":  "是否原装发货"
+                                          }
+                  },
+                  {
+                      "name":  "shipment_info",
+                      "description":  "获取单个货件的详细信息，包括商品列表和箱子信息",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v1/shipForm/info/{shipmentid}",
+                      "method":  "GET",
+                      "params":  {
+                                     "shipmentid":  {
+                                                        "type":  "string",
+                                                        "description":  "货件ID，路径参数"
+                                                    }
+                                 },
+                      "required":  [
+                                       "shipmentid"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "内部ID",
+                                              "shipmentid":  "货件ID(ShipmentId)",
+                                              "name":  "货件名称",
+                                              "planid":  "计划ID",
+                                              "groupid":  "店铺分组ID",
+                                              "groupname":  "店铺名称",
+                                              "marketplaceid":  "站点ID(从plan获取)",
+                                              "auditstatus":  "审核状态",
+                                              "shipmentstatus":  "货件状态名称",
+                                              "status":  "货件状态编码",
+                                              "transtyle":  "运输方式(SP/LTL)(从shipment获取)",
+                                              "areCasesRequired":  "是否原装(从plan获取,Boolean)",
+                                              "countryCode":  "国家代码(从marketplace获取)",
+                                              "checkinv":  "配货单号",
+                                              "itemList":  "商品列表(ShipInboundItemVo)",
+                                              "country":  "国家编码",
+                                              "warehouseid":  "仓库ID",
+                                              "warehouse":  "仓库名称"
+                                          }
+                  },
+                  {
+                      "name":  "shipment_plan_v2_list",
+                      "description":  "查询ShipV2新版货件计划列表，支持SP-API新版入库计划管理",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v2/shipInboundPlan/getPlanList",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持计划编号或SKU"
+                                                },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "auditstatus":  {
+                                                         "type":  "string",
+                                                         "description":  "计划状态：1(待审核)、2(已审核)、3(已配货)、4(已装箱)、5(已提交装箱)、6(已发货)、7(已完成物流)、8(已完成)、10(已保持)、11(已驳回)、12(已取消)"
+                                                     },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "formid":  {
+                                                    "type":  "string",
+                                                    "description":  "计划ID精确查询"
+                                                },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "查询类型"
+                                                    },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "计划ID",
+                                              "number":  "计划编号",
+                                              "groupid":  "店铺分组ID",
+                                              "groupname":  "店铺名称",
+                                              "marketplaceid":  "站点ID",
+                                              "marketname":  "站点名称",
+                                              "warehouseid":  "仓库ID",
+                                              "warehouse":  "仓库名称",
+                                              "auditstatus":  "审核状态",
+                                              "invstatus":  "库存状态",
+                                              "transtyle":  "运输方式(SP/LTL)",
+                                              "shippingDate":  "发货日期",
+                                              "itemcount":  "SKU数量",
+                                              "createtime":  "创建时间",
+                                              "remark":  "备注",
+                                              "itemlist":  "商品列表"
+                                          }
+                  },
+                  {
+                      "name":  "shipment_plan_v2_info",
+                      "description":  "获取ShipV2新版货件计划详情，包含商品列表和完整计划信息",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v2/shipInboundPlan/getPlanInfo",
+                      "method":  "GET",
+                      "params":  {
+                                     "formid":  {
+                                                    "type":  "string",
+                                                    "description":  "计划ID"
+                                                }
+                                 },
+                      "required":  [
+                                       "formid"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "计划ID",
+                                              "number":  "计划编号",
+                                              "groupid":  "店铺分组ID",
+                                              "groupname":  "店铺名称",
+                                              "marketplaceid":  "站点ID",
+                                              "marketname":  "站点名称",
+                                              "warehouseid":  "仓库ID",
+                                              "auditstatus":  "审核状态",
+                                              "invstatus":  "库存状态",
+                                              "transtyle":  "运输方式",
+                                              "sourceAddress":  "发货地址ID",
+                                              "itemlist":  "商品列表(sku, msku, fnsku, quantity, confirmQuantity, name, image, invquantity, outbound)",
+                                              "countryname":  "国家名称",
+                                              "amazonauthid":  "Amazon授权ID"
+                                          }
+                  },
+                  {
+                      "name":  "shipment_transportation",
+                      "description":  "查询ShipV2运输方案选项列表，展示可选的运输方式和报价",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v2/shipInboundPlan/transportation/listTransportationOptions",
+                      "method":  "POST",
+                      "params":  {
+                                     "formid":  {
+                                                    "type":  "string",
+                                                    "description":  "货件计划ID"
+                                                },
+                                     "shipmentids":  {
+                                                         "type":  "array",
+                                                         "description":  "货件ID列表"
+                                                     }
+                                 },
+                      "required":  [
+                                       "formid"
+                                   ],
+                      "response_fields":  {
+                                              "transportationOptions":  "运输方案列表(optionId, carrier, shippingMode, charges, expiration)",
+                                              "transportationToken":  "运输令牌",
+                                              "status":  "方案状态"
+                                          }
+                  },
+                  {
+                      "name":  "shipment_placement",
+                      "description":  "查询ShipV2分仓方案选项列表，展示Amazon推荐的分仓方案",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v2/shipInboundPlan/shipment/listPlacementOptions",
+                      "method":  "POST",
+                      "params":  {
+                                     "formid":  {
+                                                    "type":  "string",
+                                                    "description":  "货件计划ID"
+                                                },
+                                     "placementOptionId":  {
+                                                               "type":  "string",
+                                                               "description":  "分仓方案ID（可选，已选方案）"
+                                                           }
+                                 },
+                      "required":  [
+                                       "formid"
+                                   ],
+                      "response_fields":  {
+                                              "options":  "分仓方案列表(placementOptionId, shipmentIds, fees, status, expiration)",
+                                              "pagination":  "分页信息(nextToken)"
+                                          }
+                  },
+                  {
+                      "name":  "shipment_box",
+                      "description":  "查询ShipV2装箱方案选项列表，展示包装箱型和装箱信息",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v2/shipInboundPlan/box/listPackingOptions",
+                      "method":  "POST",
+                      "params":  {
+                                     "formid":  {
+                                                    "type":  "string",
+                                                    "description":  "货件计划ID"
+                                                },
+                                     "packingOptionId":  {
+                                                             "type":  "string",
+                                                             "description":  "装箱方案ID"
+                                                         },
+                                     "shipmentid":  {
+                                                        "type":  "string",
+                                                        "description":  "货件ID"
+                                                    }
+                                 },
+                      "required":  [
+                                       "formid"
+                                   ],
+                      "response_fields":  {
+                                              "options":  "装箱方案列表(packingOptionId, packingGroups, fees, status, expiration)",
+                                              "pagination":  "分页信息(nextToken)"
+                                          }
+                  },
+                  {
+                      "name":  "shipment_quota_info",
+                      "description":  "获取ShipV2配货信息，查看货件计划的库存配货情况",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v2/shipInboundPlan/quota/info/{fromid}",
+                      "method":  "GET",
+                      "params":  {
+                                     "fromid":  {
+                                                    "type":  "string",
+                                                    "description":  "计划ID，路径参数"
+                                                }
+                                 },
+                      "required":  [
+                                       "fromid"
+                                   ],
+                      "response_fields":  {
+                                              "quatoInfo":  "配货信息(formid, warehouseid, list)",
+                                              "shipPlan":  "发货计划详情(id, number, groupid, marketplaceid, warehouseid, itemlist)"
+                                          }
+                  },
+                  {
+                      "name":  "shipment_report_logistics",
+                      "description":  "查询物流发货报表，按物流商维度统计发货数据",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v2/ship/report/getShipmentReportByLoistics",
+                      "method":  "POST",
+                      "params":  {
+                                     "companyid":  {
+                                                       "type":  "string",
+                                                       "description":  "物流公司ID"
+                                                   },
+                                     "channelid":  {
+                                                       "type":  "string",
+                                                       "description":  "物流渠道ID"
+                                                   },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "type":  {
+                                                  "type":  "string",
+                                                  "description":  "类型"
+                                              },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型"
+                                                  },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "查询类型"
+                                                    },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "groupby":  {
+                                                     "type":  "array",
+                                                     "description":  "分组字段列表：channeldetailid, warehouse, warehouseid, groupid, sku, marketplaceid, shipmentid"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "报表数据列表，每条记录包含分组字段及统计字段(gname, market, company, logitics, channame, transtype, warehousename, readweight, totalqty, totalout, totalrec, lessrec, worth, needrec, needout, transweight_kg, transweight_cbm, shipfee, totalbox, totalotherfee, shipmentnum, avgtime, problem)，第一页第一条记录额外嵌入summary汇总字段",
+                                              "total":  "总记录数",
+                                              "summary":  "嵌入在第一条records记录中的汇总数据，仅第一页返回(totalqty, totalout, totalrec, lessrec, worth, needrec, needout, readweight)"
+                                          }
+                  },
+                  {
+                      "name":  "shipment_report_detail",
+                      "description":  "查询货件详情报表，展示货件的详细发货和收货情况",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v2/ship/report/getShipmentDetailReport",
+                      "method":  "POST",
+                      "params":  {
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "company":  {
+                                                     "type":  "string",
+                                                     "description":  "物流公司名称"
+                                                 },
+                                     "hasexceptionnum":  {
+                                                             "type":  "string",
+                                                             "description":  "是否有异常"
+                                                         },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型"
+                                                  },
+                                     "fromdate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "enddate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "报表数据列表",
+                                              "total":  "总记录数"
+                                          }
+                  },
+                  {
+                      "name":  "shipment_report_summary",
+                      "description":  "查询货件汇总报表，按时间维度统计发货情况",
+                      "menu_id":  10,
+                      "endpoint":  "/amazon/api/v2/ship/report/getShipmentReport",
+                      "method":  "POST",
+                      "params":  {
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "company":  {
+                                                     "type":  "string",
+                                                     "description":  "物流公司名称"
+                                                 },
+                                     "companyid":  {
+                                                       "type":  "string",
+                                                       "description":  "物流公司ID"
+                                                   },
+                                     "hasexceptionnum":  {
+                                                             "type":  "string",
+                                                             "description":  "是否有异常"
+                                                         },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型"
+                                                  },
+                                     "fromdate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "enddate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "报表数据列表",
+                                              "total":  "总记录数"
+                                          }
+                  },
+                  {
+                      "name":  "ship_form_inventory_lock",
+                      "description":  "发货库存锁定，将可售库存转为待出库",
+                      "menu_id":  10,
+                      "endpoint":  "/erp/api/v2/shipForm/outBoundShipInventory",
+                      "method":  "POST",
+                      "params":  {
+                                     "formid":  {
+                                                    "type":  "string",
+                                                    "description":  "发货单ID"
+                                                },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "number":  {
+                                                    "type":  "string",
+                                                    "description":  "发货单编号"
+                                                },
+                                     "list":  {
+                                                  "type":  "array",
+                                                  "description":  "商品列表(materialid, sku, msku, quantity)"
+                                              }
+                                 },
+                      "required":  [
+                                       "formid",
+                                       "warehouseid",
+                                       "list"
+                                   ],
+                      "response_fields":  {
+                                              "result":  "操作结果(true/false)"
+                                          }
+                  },
+                  {
+                      "name":  "ship_form_outbound",
+                      "description":  "发货出库，将待出库库存转为已出库",
+                      "menu_id":  10,
+                      "endpoint":  "/erp/api/v2/shipForm/outShipInventory",
+                      "method":  "POST",
+                      "params":  {
+                                     "formid":  {
+                                                    "type":  "string",
+                                                    "description":  "发货单ID"
+                                                },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "number":  {
+                                                    "type":  "string",
+                                                    "description":  "发货单编号"
+                                                },
+                                     "list":  {
+                                                  "type":  "array",
+                                                  "description":  "商品列表(materialid, sku, msku, quantity)"
+                                              }
+                                 },
+                      "required":  [
+                                       "formid",
+                                       "warehouseid",
+                                       "list"
+                                   ],
+                      "response_fields":  {
+                                              "result":  "操作结果(true/false)"
+                                          }
+                  },
+                  {
+                      "name":  "ship_form_cancel",
+                      "description":  "取消出库，将待出库库存释放回可售库存",
+                      "menu_id":  10,
+                      "endpoint":  "/erp/api/v2/shipForm/updateDisable",
+                      "method":  "POST",
+                      "params":  {
+                                     "formid":  {
+                                                    "type":  "string",
+                                                    "description":  "发货单ID"
+                                                },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     }
+                                 },
+                      "required":  [
+                                       "formid"
+                                   ],
+                      "response_fields":  {
+                                              "result":  "操作结果(true/false)"
+                                          }
+                  }
+              ]
+}

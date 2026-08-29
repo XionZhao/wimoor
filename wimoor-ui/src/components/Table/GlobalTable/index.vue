@@ -121,6 +121,10 @@
 								   type:Boolean,
 								   default:false,
 							   },
+							   callbackLoading:{
+								   type:Boolean,
+								   default:false,
+							   },
   	                       });
 	const { tableData,inDialog,inTable,nopage,defaultSort,size,queryParams,lazy,load,treeProps,showHeader,fieldType,scrollbarAlwaysOn,pagesizes,
 	        stripe,border,height,showSummary,summaryMethod,spanMethod,rowKey,rowClassName,cellClassName,highlightCurrentRow,defaultExpandAll} = toRefs(props);
@@ -370,7 +374,7 @@
 		},{ immediate: true });
 		
 		watch(props.tableData,(val)=>{
-			if(state.loading){
+			if(state.loading && !props.callbackLoading){
 				state.loading = false;
 			}
 			if(!props.height&&!props.inTable){

@@ -4,17 +4,25 @@
     <div :style="widthStyle"  >
       <div class="action-bar" >
         <el-space>
-          <el-button type="primary" @click="saveAndNew">保存并新增</el-button>
-          <el-button type="primary" @click="submitForm">保存</el-button>
-          <el-button @click="saveDraft">暂存</el-button>
+          <el-button type="primary" @click="saveAndNew" :disabled="data.periodClosed" :title="data.periodClosed ? '已结账，不可操作' : ''">保存并新增</el-button>
+          <el-button type="primary" @click="submitForm" :disabled="data.periodClosed" :title="data.periodClosed ? '已结账，不可操作' : ''">保存</el-button>
+          <el-button @click="saveDraft" :disabled="data.periodClosed" :title="data.periodClosed ? '已结账，不可操作' : ''">暂存</el-button>
           <el-button @click="handleImportVoucherShow()">导入凭证</el-button>
-          <el-dropdown @command="handleDropdownCommand">
-            <el-button>模板</el-button>
-            <el-dropdown-menu>
-              <el-dropdown-item command="template1">模板1</el-dropdown-item>
-              <el-dropdown-item command="template2">模板2</el-dropdown-item>
-            </el-dropdown-menu>
+          <el-dropdown  @command="handleDropdownCommand">
+    <span class="el-dropdown-link">
+       <el-button  >
+        模板<el-icon class="el-icon--right"><arrow-down /></el-icon>
+      </el-button>
+
+    </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="saveAsTemplate">保存为凭证模版</el-dropdown-item>
+                <el-dropdown-item command="createFromTemplate">从模版生成凭证</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
           </el-dropdown>
+
           <!--      <el-dropdown @command="handlePreferences">
                   <el-button>偏好设置</el-button>
                 </el-dropdown>-->
@@ -30,24 +38,27 @@
 
 
       <el-form ref="vouchersRef"  id="voucherPrintArea" :model="form" :rules="rules" label-width="0" >
-        <div :style="colorStyle">
+        <div class="voucher-body">
           <div class="voucher-header" >
-            <div class="voucher-main-info">
+            <div class="voucher-main-info" style="position:relative;">
+              <img v-if="data.periodClosed" :src="closedStampImg" class="seal-watermark" alt="已结账" />
               <div class="voucher-type-info">
                 <span class="voucher-type-label" >凭证字</span>
                 <el-select v-model="form.voucherType"
                            placeholder="记"
+                           :disabled="data.periodClosed"
                            style="width:80px;margin-right: 5px; border-radius: 0; height: 30px;">
                   <el-option v-for="item in voucherTypeList" :key="item.id" :label="item.name" :value="item.name"></el-option>
                 </el-select>
                 <span class="voucher-no-label">号</span>
-                <el-input v-model="form.voucherNo" placeholder="001" style="width: 50px; text-align: center; height: 30px; border-radius: 0; margin-right: 30px;" />
+                <el-input v-model="form.voucherNo" placeholder="001" :disabled="data.periodClosed" style="width: 50px; text-align: center; height: 30px; border-radius: 0; margin-right: 30px;" />
                 <div class="voucher-date-info">
                   <span class="voucher-date-label">日期</span>
                   <el-date-picker
                       v-model="form.voucherDate"
                       type="date"
                       @change="handleNextVoucherNo"
+                      :disabled="data.periodClosed"
                       value-format="YYYY-MM-DD"
                       style="width: 130px; height: 30px; border-radius: 0;"
                   >
@@ -67,37 +78,37 @@
                   <el-icon><Search /></el-icon>
                 </el-button>
                 <span>附件{{form.files?form.files.length:0}}张</span>
-                <el-button type="primary" link @click="uploadAttachment" size="small">
+                <el-button type="primary" link @click="uploadAttachment" :disabled="data.periodClosed" size="small">
                   <el-icon><Upload /></el-icon>上传附件
                 </el-button>
               </div>
             </div>
           </div>
 
-          <div class="wimoor-voucher-table-wrapper" >
+          <div class="wimoor-voucher-table-wrapper">
             <table class="wimoor-voucher-table">
               <thead>
               <tr>
-                <th class="row-number-col" style="min-width:80px;">序号</th>
+                <th class="row-number-col">序号</th>
                 <th class="summary-col">摘要</th>
                 <th class="account-col">科目</th>
                 <th class="currency-col"  style="min-width:120px;width:10%" v-if="hasQuantity">数量</th>
                 <th class="currency-col" style="min-width:180px;width:15%" v-if="hasCurrency">币别</th>
-                <th  >
+                <th>
                   <div class="amountHeaderWrapper--3TtBf"><div class="amountTitle--146pZ">借方金额</div><div class="amountUnit--XSR71"><div class="amountLineBgWrapper--1MZC6" style="font-size: 12px; font-weight: 400;"><div class="amountLine--2qaEF">亿</div><div class="amountLine--2qaEF">千</div><div class="amountLine--2qaEF">百</div><div class="amountLine--2qaEF">十</div><div class="amountLine--2qaEF">万</div><div class="amountLine--2qaEF">千</div><div class="amountLine--2qaEF">百</div><div class="amountLine--2qaEF">十</div><div class="amountLine--2qaEF">元</div><div class="amountLine--2qaEF">角</div><div class="amountLine--2qaEF">分</div></div></div></div>
                 </th>
-                <th >
+                <th>
                   <div class="amountHeaderWrapper--3TtBf"><div class="amountTitle--146pZ">贷方金额</div><div class="amountUnit--XSR71"><div class="amountLineBgWrapper--1MZC6" style="font-size: 12px; font-weight: 400;"><div class="amountLine--2qaEF">亿</div><div class="amountLine--2qaEF">千</div><div class="amountLine--2qaEF">百</div><div class="amountLine--2qaEF">十</div><div class="amountLine--2qaEF">万</div><div class="amountLine--2qaEF">千</div><div class="amountLine--2qaEF">百</div><div class="amountLine--2qaEF">十</div><div class="amountLine--2qaEF">元</div><div class="amountLine--2qaEF">角</div><div class="amountLine--2qaEF">分</div></div></div></div>
                 </th>
               </tr>
               </thead>
               <tbody>
-              <tr :id="index" v-for="(item, index) in form.entries" :key="index"  @click.stop="clearEdit(form.entries);item.rowEdit=true;"     class="voucher-row">
-                <td class="row-number" @click.stop="clearEdit(form.entries);item.rowEdit=true;">
+              <tr :id="index" v-for="(item, index) in form.entries" :key="index"  @click.stop="data.periodClosed ? null : (clearEdit(form.entries),item.rowEdit=true)"     class="voucher-row">
+                <td class="row-number" @click.stop="data.periodClosed ? null : (clearEdit(form.entries),item.rowEdit=true)">
                   <el-space class="row-actions">
-                    <el-button  link size="small" @click="insertRow(index)" icon="Plus" title="插入行"></el-button>
-                    <el-button link size="small" @click="copyRow(index)" icon="CopyDocument" title="复制行"></el-button>
-                    <el-button link size="small" @click="removeItem(index)" icon="Delete" :disabled="form.entries.length <= 1" title="删除行"></el-button>
+                    <el-button  link size="small" @click="insertRow(index)" icon="Plus" :disabled="data.periodClosed" title="插入行"></el-button>
+                    <el-button link size="small" @click="copyRow(index)" icon="CopyDocument" :disabled="data.periodClosed" title="复制行"></el-button>
+                    <el-button link size="small" @click="removeItem(index)" icon="Delete" :disabled="form.entries.length <= 1 || data.periodClosed" title="删除行"></el-button>
                   </el-space>
 
                   <div class="row-number-text">
@@ -105,12 +116,13 @@
                   </div>
 
                 </td>
-                <td class="summary-col" @click.stop="handleSummaryClick(index)">
-                  <el-row>
+                <td class="summary-col" @click.stop="data.periodClosed ? null : handleSummaryClick(index)">
+                  <div style="width: 100%;">
                     <div class="flex-between" v-show="item.rowEdit">
                       <el-input
                           v-model="item.summary"
                           :ref="el => summaryInputs[index] = el"
+                          :disabled="data.periodClosed"
                           @keyup.enter="focusNextCell($event, 'account', index)"
                           style="border: none; box-shadow: none; padding: 0; height: 60px;width:100%; font-size: 13px;"
                           class="wimoor-input">
@@ -121,6 +133,7 @@
                             size="small"
                             style="width:25px;"
                             class="row-actions"
+                            :disabled="data.periodClosed"
                             @click="showSummarySuggestions(index)"
                             title="摘要选择"
                         >
@@ -129,15 +142,16 @@
                       </div>
                     </div>
                     <div v-show="!item.rowEdit" style="padding-left: 10px">{{item.summary}}</div>
-                  </el-row>
+                  </div>
                 </td>
-                <td class="account-col" @click.stop="handleAccountClick(index)">
+                <td class="account-col" @click.stop="data.periodClosed ? null : handleAccountClick(index)">
                   <el-select
                       v-show="item.rowEdit"
                       v-model="item.subjectId"
                       placeholder=""
                       filterable
                       automatic-dropdown
+                      :disabled="data.periodClosed"
                       :ref="el => accountSelects[index] = el"
                       @change="handleAccountChange(item)"
                       @click.stop="item.rowEdit=true"
@@ -166,7 +180,7 @@
                         circle
                         size="small"
                         style="width:25px;margin-left:4px;"
-                         
+                        :disabled="data.periodClosed"
                         @click.stop="openAuxiliaryDialog(item)"
                         title="辅助核算"
                     >
@@ -174,15 +188,15 @@
                     </el-button>
                   </div>
                 </td>
-                <td  class="quantity-col" v-if="hasQuantity"  @click.stop="handleCurrencyClick(index, item,'quantity')">
+                <td  class="quantity-col" v-if="hasQuantity"  @click.stop="data.periodClosed ? null : handleCurrencyClick(index, item,'quantity')">
                   <div v-show="item.rowEdit &&item.isQuantity" style="padding-left:2px;font-size:12px">
                   <div  class="flex">数量：<el-input
-                      type="number" :disabled="!item.isQuantity"
+                      type="number" :disabled="!item.isQuantity || data.periodClosed"
                       :ref="el => quantityInputs[index] = el"
                       @input="handleInputChange(item)" style="width:60px;" size="small" v-model.number="item.quantity">  </el-input>个</div>
                   <div style="padding-top:2px;">单价：
                              <el-input type="number"
-                             :disabled="!item.isQuantity"
+                             :disabled="!item.isQuantity || data.periodClosed"
                                        @click.stop="item.rowEdit=true"
                              @input="handleInputChange(item)"
                              style="width:70px;" size="small"
@@ -193,7 +207,7 @@
                     <div style="padding-top:2px;padding-left:2px;font-size:12px">单价： {{item.unitPrice}}</div>
                   </div>
                 </td>
-                <td class="currency-col" v-if="hasCurrency" @click.stop="handleCurrencyClick(index, item,'currency')">
+                <td class="currency-col" v-if="hasCurrency" @click.stop="data.periodClosed ? null : handleCurrencyClick(index, item,'currency')">
                   <div v-show="item.rowEdit&&item.isForeignCurrency" style="padding-left:2px;font-size:12px">
                     <div class="flex">
                     <span style="font-size:12px;padding-left:2px">原币：</span><el-select
@@ -202,7 +216,7 @@
                       placeholder="币种"
                       @change="changeCurrency(item)"
                       @click.stop="item.rowEdit=true"
-                      :disabled="!item.isForeignCurrency"
+                      :disabled="!item.isForeignCurrency || data.periodClosed"
                       size="small"
                   >
                     <el-option
@@ -217,12 +231,12 @@
                       </div>
                     </el-option>
                   </el-select>
-                  <el-input      @click.stop="item.rowEdit=true"     :disabled="!item.isForeignCurrency" type="number" style="margin-left:3px;width:70px" placeholder="金额" @input="handleInputChange(item)"  size="small" v-model.number="item.originalAmount"  ></el-input>
+                  <el-input      @click.stop="item.rowEdit=true"     :disabled="!item.isForeignCurrency || data.periodClosed" type="number" style="margin-left:3px;width:70px" placeholder="金额" @input="handleInputChange(item)"  size="small" v-model.number="item.originalAmount"  ></el-input>
                 </div>
                  <div style="padding-top:2px;padding-left:2px">汇率：
                    <el-input type="number"
                              :ref="el => exchangeRateInputs[index] = el"
-                             :disabled="!item.isForeignCurrency"
+                             :disabled="!item.isForeignCurrency || data.periodClosed"
                              @input="handleInputChange(item)"
                              @click.stop="item.rowEdit=true"
                              style="width:132px;margin-left:-3px;" size="small"
@@ -238,12 +252,13 @@
                  <div style="padding-top:2px;padding-left:2px">汇率：  {{item.exchangeRate}}</div>
               </div>
                 </td>
-                <td class="debit-col"  @click.stop="e=>handleEditTrue(e,item,'debitEdit',index)">
+                <td class="debit-col"  @click.stop="e => { if (!data.periodClosed) handleEditTrue(e,item,'debitEdit',index) }">
                   <div class="amount-input-wrapper" v-if="item.debitEdit">
                     <el-input
                         clearable
                         v-model.number="item.debitAmount"
                         type="number"
+                        :disabled="data.periodClosed"
                         @blur="item.debitEdit=false"
                         @click.stop="item.debitEdit=true"
                         @input="calculateTotal(item)"
@@ -285,13 +300,14 @@
                     </div>
                   </div>
                 </td>
-                <td class="credit-col" @click.stop="e=>handleEditTrue(e,item,'creditEdit',index)">
+                <td class="credit-col" @click.stop="e => { if (!data.periodClosed) handleEditTrue(e,item,'creditEdit',index) }">
                   <div class="amount-input-wrapper" v-if="item.creditEdit">
                     <el-input
                         v-model.number="item.creditAmount"
                         @blur="item.creditEdit=false"
                         clearable
                         type="number"
+                        :disabled="data.periodClosed"
                         @click.stop="item.creditEdit=true"
                         @clear="calculateTotal(item)"
                         @input="calculateTotal(item)"
@@ -340,6 +356,7 @@
                       type="primary"
                       size="small"
                       @click="autoBalance"
+                      :disabled="data.periodClosed"
                       v-if="!isBalance"
                       style="border-radius: 0; height: 28px; font-size: 12px; margin-left: 5px;"
                   >    <svg-icon icon-class="calculator-white"  style="color:#fff;width:14px;height:14px" />自动平衡</el-button>
@@ -417,7 +434,7 @@
             <div class="voucher-signatures">
               <div class="signature-item">
                 <span class="signature-label">制单人:</span>
-               <!-- {{nickName}} -->
+                <span>{{ form.preparerBy }}</span>
                 <el-button type="text" size="small" title="选择用户">
                   <el-icon><User /></el-icon>
                 </el-button>
@@ -431,16 +448,26 @@
       <el-dialog
           v-model="showSummaryDialog"
           title="常用摘要"
-          width="400px"
+          width="500px"
+          @open="loadCommonSummaries"
       >
-        <div class="summary-list">
+        <div style="margin-bottom: 12px; display: flex; gap: 8px;">
+          <el-input v-model="newSummaryText" placeholder="输入新摘要" size="small" style="flex: 1" @keyup.enter="handleAddCommonSummary" />
+          <el-button type="primary" size="small" @click="handleAddCommonSummary">添加</el-button>
+        </div>
+        <div class="summary-list" v-loading="summaryLoading" style="max-height: 300px; overflow-y: auto;">
           <div
-              v-for="summary in commonSummaries"
-              :key="summary"
+              v-for="item in commonSummaries"
+              :key="item.id"
               class="summary-item"
-              @click="selectSummary(currentSummaryIndex, summary)"
+              style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0;"
+              @click="selectSummary(currentSummaryIndex, item.summary)"
           >
-            {{ summary }}
+            <span>{{ item.summary }}</span>
+            <el-button link type="danger" size="small" @click.stop="handleDeleteCommonSummary(item)">删除</el-button>
+          </div>
+          <div v-if="commonSummaries.length === 0 && !summaryLoading" style="text-align: center; color: #999; padding: 20px;">
+            暂无常用摘要，请添加
           </div>
         </div>
       </el-dialog>
@@ -479,6 +506,16 @@
       </el-dialog>
       <UploadDialog ref="fileUpload" @change="handleFilesChange" type="finance" :file-type="['pdf','jpg','png']"></UploadDialog>
       <ImportVoucherDialog ref="importVoucherDialog"></ImportVoucherDialog>
+
+      <!-- 凭证模版组件 -->
+      <VoucherTemplate
+        ref="voucherTemplateRef"
+        :account-list="accountList"
+        :entries="data.form.entries"
+        :get-chinese-amount-digits="getChineseAmountDigits"
+        :calculate-total="calculateTotal"
+        @load-template="handleLoadTemplate"
+      />
     </div>
   </div>
 
@@ -493,7 +530,7 @@ import {
   nextVoucherNo,
   updateVouchersFiles
 } from "@/api/finance/vouchers"
-import { ref, reactive, toRefs, onMounted,nextTick } from "vue"
+import { ref, reactive, toRefs, onMounted,nextTick, computed } from "vue"
 import { Search, Upload, User, Delete, Download ,MoreFilled} from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
@@ -505,8 +542,12 @@ import ImportVoucherDialog from './components/ImportVoucherDialog.vue';
 import {listCurrency} from "@/api/finance/currency"
 import {listVoucherTypes} from "@/api/finance/voucher_type"
 import {getCurrentPeriod} from "@/api/finance/periods"
+import {listVoucherSummary,addVoucherSummary,delVoucherSummary} from "@/api/finance/voucher_summary"
+import VoucherTemplate from './components/VoucherTemplate.vue'
 import $ from 'jquery';
 import PrinterBtn from "@/components/header/printer.vue"; // Local import
+import closedStampImg from "@/assets/image/pages/finance/closed.png";
+import { Edit } from '@element-plus/icons-vue'
 const router = useRouter()
 const route = useRoute()
 // const { proxy } = getCurrentInstance()
@@ -518,6 +559,9 @@ const importVoucherDialog=ref();
 const showSuccess = (message) => showMessage(message, 'success')
 const showWarning = (message) => showMessage(message, 'warning')
 const showError = (message) => showMessage(message, 'error')
+
+// 凭证模版组件引用
+const voucherTemplateRef = ref(null)
 
 const showAlert = (options) => {
   return ElMessageBox.alert(options.message, options.title || '提示', {
@@ -559,16 +603,9 @@ const showSummaryDialog = ref(false) // 摘要选择对话框
 const currentSummaryIndex = ref(-1) // 当前摘要输入框索引
 const showAuxiliaryDialog = ref(false)
 const currentAuxiliaryItem = ref(null)
-const commonSummaries = ref([ // 常用摘要
-  '购买办公用品',
-  '支付水电费',
-  '发放工资',
-  '销售收入',
-  '报销差旅费',
-  '银行存款利息',
-  '支付租金',
-  '支付税费'
-])
+const commonSummaries = ref([]) // 常用摘要（从数据库加载）
+const newSummaryText = ref('') // 新增摘要输入
+const summaryLoading = ref(false)
 
 const vouchersRef = ref(null) // 表单引用
 const data = reactive({
@@ -585,8 +622,8 @@ const data = reactive({
     creditTotal:0,
     debitTotalChinese:{},
     creditTotalChinese:{},
-    voucherStatus: 1, // 默认状态
-    preparerId: null,
+    voucherStatus: 3, // 默认状态，后台自动审核过账
+    preparerBy: null,
     auditorId: null,
     postUserId: null,
     postTime: null,
@@ -609,7 +646,7 @@ const data = reactive({
     attachmentCount: null,
     totalAmount: null,
     voucherStatus: null,
-    preparerId: null,
+    preparerBy: null,
     auditorId: null,
     postTime: null,
     createdTime: null,
@@ -627,24 +664,24 @@ const data = reactive({
       { required: true, message: "凭证总金额不能为空", trigger: "blur" },
       { type: 'number', min: 0, message: '凭证总金额不能为负数', trigger: 'blur' }
     ],
-    preparerId: [
+    preparerBy: [
       { required: true, message: "制单人不能为空", trigger: "blur" }
     ],
   },
   "widthStyle":"width:60%",
-  "colorStyle":"background-color:#fff;color:#000",
-  "hasCurrency": false,
-  "hasQuantity":false,
-  "hasAuxiliary":false,
-  "currencyList":[],
-  "auxiliarySettings":[],
-  "auxiliaryTypes":[],
-  "auxiliaryItems":[],
-  "voucherTypeList":[],
-  "currentPeriod":null
+    "hasCurrency": false,
+    "hasQuantity":false,
+    "hasAuxiliary":false,
+    "currencyList":[],
+    "auxiliarySettings":[],
+    "auxiliaryTypes":[],
+    "auxiliaryItems":[],
+    "voucherTypeList":[],
+    "currentPeriod":null,
+    "periodClosed":false
 })
 
-const { queryParams, total,form, rules,subjects,widthStyle,colorStyle,hasCurrency,currencyList,hasQuantity,hasAuxiliary,voucherTypeList } = toRefs(data)  
+const { queryParams, total,form, rules,subjects,widthStyle,hasCurrency,currencyList,hasQuantity,hasAuxiliary,voucherTypeList } = toRefs(data)
 
 // 添加ref数组存储输入元素引用
 const summaryInputs = ref([]);
@@ -704,7 +741,7 @@ function handleCurrencyClick(index, item,type) {
 // 页面加载时获取数据和初始化
 onMounted(async () => {
   // 设置当前用户为制单人
-  form.preparerId = '当前用户'
+  form.preparerBy = '当前用户'
   loadAccountList();
   loadCurrency();
   loadVoucherTypes();
@@ -850,6 +887,11 @@ async function handleQuery(){
       })
 
       Object.assign(data.form, res.rows[0])
+      // 设置lastVoucherYearMonth，防止修改日期时重新请求凭证号
+      if (data.form.voucherDate) {
+        const voucherDate = new Date(data.form.voucherDate);
+        data.lastVoucherYearMonth = `${voucherDate.getFullYear()}-${String(voucherDate.getMonth() + 1).padStart(2, '0')}`;
+      }
       if(data.form.entries&&data.form.entries.length<4){
         for(let i=data.form.entries.length;i<4;i++){
           data.form.entries.push({ summary: '', account: '', debitAmount: '', creditAmount: '',creditAmountChinese:{},debitAmountChinese:{} })
@@ -869,6 +911,8 @@ async function handleQuery(){
     await reset()
   }
 }
+
+
 // 获取凭证详情
 async function getVoucherDetail(id) {
   let groupid=await finStore.getCurrentTenantId();
@@ -886,6 +930,13 @@ async function getVoucherDetail(id) {
         }
       })
       Object.assign(data.form, res.rows[0])
+      // 设置会计期间是否已结账状态
+      data.periodClosed = res.rows[0].periodClosed || false;
+      // 设置lastVoucherYearMonth，防止同一会计期间内修改日期时重新请求凭证号
+      if (data.form.voucherDate) {
+        const voucherDate = new Date(data.form.voucherDate);
+        data.lastVoucherYearMonth = `${voucherDate.getFullYear()}-${String(voucherDate.getMonth() + 1).padStart(2, '0')}`;
+      }
       if(data.form.entries&&data.form.entries.length<4){
         for(let i=data.form.entries.length;i<4;i++){
           data.form.entries.push({ summary: '', account: '', debitAmount: '', creditAmount: '',creditAmountChinese:{},debitAmountChinese:{} })
@@ -922,9 +973,14 @@ function clearEdit(){
 }
 // 表单提交
 function submitForm() {
+  if (data.periodClosed) {
+    showError('会计期间已结账，无法保存凭证');
+    return;
+  }
   vouchersRef.value.validate(async (valid) => {
     if (valid) {
       data.form.groupid=await finStore.getCurrentTenantId();
+      data.form.voucherStatus = 3; // 后台自动审核过账，直接设为已过账状态
       if (data.form.voucherId != null) {
         updateVouchers(data.form).then(() => {
           showSuccess('修改成功')
@@ -942,7 +998,7 @@ async function handleNextVoucherNo(){
   const currentDate = new Date(data.form.voucherDate);
   const currentYearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
   
-  // 如果年月没有变化，不需要重新请求
+  // 如果年月没有变化，不需要重新请求（同一会计期间内修改日期，凭证编号不变）
   if (data.lastVoucherYearMonth === currentYearMonth) {
     return;
   }
@@ -957,10 +1013,19 @@ async function handleNextVoucherNo(){
 }
 // 保存并新增
 function saveAndNew() {
+  if (data.periodClosed) {
+    showError('会计期间已结账，无法保存凭证');
+    return;
+  }
   vouchersRef.value.validate(async (valid) => {
     if (valid) {
       data.form.groupid=await finStore.getCurrentTenantId();
-      await addVouchers(data.form)
+      data.form.voucherStatus = 3; // 后台自动审核过账，直接设为已过账状态
+      if (data.form.voucherId != null) {
+        await updateVouchers(data.form)
+      } else {
+        await addVouchers(data.form)
+      }
       showSuccess('保存成功')
       await reset()
     }
@@ -969,6 +1034,10 @@ function saveAndNew() {
 
 // 保存草稿
 async function saveDraft() {
+  if (data.periodClosed) {
+    showError('会计期间已结账，无法保存凭证');
+    return;
+  }
   data.form.voucherStatus = 0 // 草稿状态
   data.form.groupid=await finStore.getCurrentTenantId();
 
@@ -988,6 +1057,7 @@ async function reset() {
   data.hasCurrency=false;
   data.hasQuantity=false;
   data.hasAuxiliary=false;
+  data.periodClosed=false;
   Object.assign(data.form, {
     voucherId: null,
     tenantId: null,
@@ -996,8 +1066,8 @@ async function reset() {
     voucherDate: data.form.voucherDate,
     attachmentCount: 0,
     totalAmount: 0,
-    voucherStatus: 1,
-    preparerId: '当前用户',
+    voucherStatus: 3,
+    preparerBy: '当前用户',
     auditorId: null,
     postUserId: null,
     postTime: null,
@@ -1150,6 +1220,71 @@ function autoBalance() {
 function showSummarySuggestions(index) {
   currentSummaryIndex.value = index
   showSummaryDialog.value = true
+}
+
+// 加载常用摘要
+async function loadCommonSummaries() {
+  summaryLoading.value = true
+  try {
+    const tenantId = await finStore.getCurrentTenantId();
+    const response = await listVoucherSummary({ groupid: tenantId, pageSize: 2000, pageNum: 1 });
+    if (response && response.code === 200 && response.rows) {
+      commonSummaries.value = response.rows;
+    } else {
+      commonSummaries.value = [];
+    }
+  } catch (error) {
+    console.error('Failed to load summaries:', error);
+    commonSummaries.value = [];
+  } finally {
+    summaryLoading.value = false;
+  }
+}
+
+// 添加常用摘要
+async function handleAddCommonSummary() {
+  if (!newSummaryText.value || !newSummaryText.value.trim()) {
+    ElMessage({ message: '请输入摘要内容', type: 'warning' });
+    return;
+  }
+  try {
+    const tenantId = await finStore.getCurrentTenantId();
+    const response = await addVoucherSummary({
+      summary: newSummaryText.value.trim(),
+      groupid: tenantId
+    });
+    if (response && response.code === 200) {
+      ElMessage({ message: '添加成功', type: 'success' });
+      newSummaryText.value = '';
+      await loadCommonSummaries();
+    } else {
+      ElMessage({ message: '添加失败：' + (response.msg || '未知错误'), type: 'error' });
+    }
+  } catch (error) {
+    ElMessage({ message: '请求失败：' + error.message, type: 'error' });
+  }
+}
+
+// 删除常用摘要
+async function handleDeleteCommonSummary(item) {
+  try {
+    await ElMessageBox.confirm('确定删除该摘要吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    });
+    const response = await delVoucherSummary(item.id);
+    if (response && response.code === 200) {
+      ElMessage({ message: '删除成功', type: 'success' });
+      await loadCommonSummaries();
+    } else {
+      ElMessage({ message: '删除失败：' + (response.msg || '未知错误'), type: 'error' });
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage({ message: '请求失败：' + error.message, type: 'error' });
+    }
+  }
 }
 
 // 选择摘要
@@ -1465,7 +1600,11 @@ function searchVoucher() {
 }
 
 function handleDropdownCommand(command) {
-  // 可以根据需要实现模板功能
+  if (command === 'saveAsTemplate') {
+    openSaveTemplateDialog()
+  } else if (command === 'createFromTemplate') {
+    openFromTemplateDialog()
+  }
 }
 
 function handlePreferences(command) {
@@ -1502,6 +1641,24 @@ function nextVoucher() {
   handleQuery();
 }
 
+// ==================== 凭证模版相关函数 ====================
+
+// 处理从模版加载凭证
+function handleLoadTemplate(newEntries) {
+  data.form.entries = newEntries
+  calculateTotal()
+}
+
+// 打开从模版生成凭证对话框
+function openFromTemplateDialog() {
+  voucherTemplateRef.value.openFromTemplateDialog()
+}
+
+// 打开保存为凭证模版对话框
+function openSaveTemplateDialog() {
+  voucherTemplateRef.value.openSaveTemplateDialog()
+}
+
 </script>
 <style>
 /*   .wimoor-voucher-table-wrapper .wimoor-voucher-table tr:hover{
@@ -1531,6 +1688,18 @@ function nextVoucher() {
 
 </style>
 <style scoped>
+.seal-watermark {
+  position: absolute;
+  top: 10px;
+  right: 20%;
+  width: 120px;
+  height: auto;
+  pointer-events: none;
+  z-index: 100;
+  transform: rotate(-15deg);
+  opacity: 0.75;
+}
+
 .action-bar {
   display: flex;
   justify-content: space-between;
@@ -1571,7 +1740,7 @@ function nextVoucher() {
 .voucher-no-label,
 .voucher-date-label {
   margin-right: 5px;
-  color: #606266;
+  color: var(--el-text-color-regular);
   font-weight: 500;
 }
 
@@ -1583,12 +1752,12 @@ function nextVoucher() {
   margin: 0 0 5px 0;
   font-size: 18px;
   font-weight: bold;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 .voucher-period {
   font-size: 13px;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .voucher-attachment-info {
@@ -1615,7 +1784,7 @@ function nextVoucher() {
 
 .wimoor-voucher-table th {
   font-weight: 500;
-  color: #303133;
+  color: var(--el-text-color-primary);
   font-size: 13px;
 }
 
@@ -1669,13 +1838,13 @@ function nextVoucher() {
   text-align: center;
   font-size: 13px;
   display: block;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 .voucher-row:hover .row-number-text {
   text-align: center;
   font-size: 13px;
   display: none;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 .wimoor-input,
 .wimoor-select {
@@ -1716,14 +1885,14 @@ function nextVoucher() {
 .total-label {
   text-align: right;
   font-size: 14px;
-  color: #303133;
+  color: var(--el-text-color-primary);
   padding-right: 15px;
 }
 
 .total-amount-cell {
   text-align: right;
   font-size: 14px;
-  color: #303133;
+  color: var(--el-text-color-primary);
   padding-right: 15px;
   font-weight: bold;
 }
@@ -1751,7 +1920,7 @@ function nextVoucher() {
 
 .signature-label {
   font-weight: 500;
-  color: #303133;
+  color: var(--el-text-color-primary);
   min-width: 70px;
   font-size: 13px;
 }
@@ -1977,6 +2146,33 @@ function nextVoucher() {
 .ql-bg-purple{
   background-color: #dedede;
   height:calc(100vh - 85px);
+}
+
+/* 暗黑模式适配 */
+:global(.dark) .voucher-body {
+  background-color: var(--el-bg-color);
+  color: var(--el-text-color-primary);
+}
+
+:global(.dark) .voucher-header,
+:global(.dark) .wimoor-voucher-table-wrapper,
+:global(.dark) .wimoor-voucher-footer {
+  background-color: var(--el-bg-color);
+  color: var(--el-text-color-primary);
+  border-color: var(--el-border-color);
+}
+
+:global(.dark) .wimoor-voucher-table th,
+:global(.dark) .wimoor-voucher-table td {
+  border-color: var(--el-border-color);
+}
+
+:global(.dark) .summary-item {
+  border-bottom-color: var(--el-border-color-lighter);
+}
+
+:global(.dark) .summary-item:hover {
+  background-color: var(--el-fill-color-light);
 }
  
 </style>

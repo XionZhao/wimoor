@@ -1,32 +1,7 @@
 package com.wimoor.amazon.inbound.service.impl;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import com.wimoor.amazon.inbound.pojo.dto.ShipTimeDTO;
-import com.wimoor.amazon.inbound.pojo.entity.*;
-import com.wimoor.amazon.inbound.service.*;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Service;
-
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import com.amazon.spapi.model.fulfillmentinbound.Address;
 import com.amazon.spapi.model.fulfillmentinbound.InboundShipmentInfo;
 import com.amazon.spapi.model.fulfillmentinbound.InboundShipmentList;
@@ -48,10 +23,12 @@ import com.wimoor.amazon.common.service.IDaysalesFormulaService;
 import com.wimoor.amazon.common.service.impl.DaysalesFormulaServiceImpl;
 import com.wimoor.amazon.inbound.mapper.ShipInboundPlanMapper;
 import com.wimoor.amazon.inbound.pojo.dto.ShipPlanListDTO;
+import com.wimoor.amazon.inbound.pojo.entity.*;
 import com.wimoor.amazon.inbound.pojo.vo.AmazonShipmentVo;
 import com.wimoor.amazon.inbound.pojo.vo.ShipInboundItemVo;
 import com.wimoor.amazon.inbound.pojo.vo.ShipPlanVo;
 import com.wimoor.amazon.inbound.pojo.vo.SummaryShipmentVo;
+import com.wimoor.amazon.inbound.service.*;
 import com.wimoor.amazon.product.mapper.ProductInfoMapper;
 import com.wimoor.amazon.product.pojo.entity.ProductInfo;
 import com.wimoor.amazon.product.service.IProductInPresaleService;
@@ -62,10 +39,24 @@ import com.wimoor.common.mvc.BizException;
 import com.wimoor.common.result.Result;
 import com.wimoor.common.service.ISerialNumService;
 import com.wimoor.common.user.UserInfo;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.extra.spring.SpringUtil;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.*;
 
 @Service("shipInboundPlanService")
 @RequiredArgsConstructor
@@ -760,6 +751,31 @@ public class ShipInboundPlanServiceImpl extends ServiceImpl<ShipInboundPlanMappe
 		public List<Map<String, Object>> getShipRecord(String shopid,String groupid, String marketplaceid, String sku) {
 			// TODO Auto-generated method stub
 			return this.baseMapper.getShipRecord(groupid, marketplaceid, sku,shopid);
+		}
+		
+		@Override
+		public Map<String, List<Map<String, Object>>> getShipRecordBatch(String shopid, String groupid, String marketplaceid, Set<String> skuSet) {
+			Map<String, List<Map<String, Object>>> result = new HashMap<>();
+			if (skuSet == null || skuSet.isEmpty()) {
+				return result;
+			}
+			List<String> skuList = new ArrayList<>(skuSet);
+			List<Map<String, Object>> records = this.baseMapper.getShipRecordBatch(groupid, marketplaceid, skuList, shopid);
+			for (Map<String, Object> record : records) {
+				String sku = record.get("SellerSKU").toString();
+				// 使用传入的marketplaceid作为key，而不是返回数据中的marketplaceid
+				// 这样当传入"EU"时，所有欧洲站点的记录都会用"EU"作为key的一部分
+				String region = record.get("region").toString();
+				String key = sku + "_" + marketplaceid;
+				List<Map<String, Object>> skuRecords = result.computeIfAbsent(key, k -> new ArrayList<>());
+				skuRecords.add(record);
+				if("EU".equals(region)){
+					String eukey = sku + "_EU";
+					List<Map<String, Object>> euRecords = result.computeIfAbsent(eukey, k -> new ArrayList<>());
+					euRecords.add(record);
+				}
+			}
+			return result;
 		}
 
 		@Override

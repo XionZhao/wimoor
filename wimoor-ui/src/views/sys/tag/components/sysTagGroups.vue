@@ -14,8 +14,8 @@
 				    v-model="queryParams.name"
 				    placeholder="标签分类名称"
 				    clearable
-					@clear = "SearchShow=true;handleQuery"
-				    @input="handleQuery"
+					  @clear = "SearchShow=true;handleQuery"
+            v-debounce-input="handleQuery"
 				  />
 				  <el-button @click="handleAdd" link class="im-but-one " >
 				   <el-icon class="font-base"><Plus /></el-icon>

@@ -46,21 +46,16 @@ import {Search,ArrowDown,Link} from '@element-plus/icons-vue'
 	const state = reactive({ visible:false,timeout:false,title:"",mobile:"",password:"",code:"",token:"" })
 	const{ visible,timeout,title,mobile,password,code,token }=toRefs(state);
 	function handleSubmit(){
-		userApi.verifySmsCode({"key":state.key,"code":state.code}).then((res)=>{
-			if(res.data=="success"){
-				var loginForm={"operate":"reset"};
-				loginForm.mobile=state.mobile;
-				loginForm.password=state.password;
-				 supplierApi.submitlogin(state.token,loginForm).then(res=>{
-				 	state.visible = false
-				 })
-				
-			}else{
-				 ElMessage.success("验证码错误");
-			}
-		});
-		
-	}
+	// 将验证码 key 和 code 传递给后端进行校验
+	var loginForm={"operate":"reset"};
+	loginForm.mobile=state.mobile;
+	loginForm.password=state.password;
+	loginForm.key=state.key;
+	loginForm.code=state.code;
+	supplierApi.submitlogin(state.token,loginForm).then(res=>{
+		state.visible = false
+	})
+}
 	 function timeOut(t){
 		state.timeout=t;
 		state.title=t+"秒";

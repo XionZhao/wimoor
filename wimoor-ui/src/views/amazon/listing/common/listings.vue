@@ -6,7 +6,7 @@
   			<el-row>
 				<el-space>
 				<Group ref="groups" @change="getData" defaultValue="all"/>
-  				<el-input v-model="queryParams.search" @input="loadData" placeholder="搜索产品SKU">
+  				<el-input v-model="queryParams.search" v-debounce-input="loadData" placeholder="搜索产品SKU">
   					<template #suffix>
   						<el-icon :size="16">
   							<Search />
@@ -60,6 +60,8 @@
 	import materialApi from '@/api/erp/material/materialApi.js';
 	import GlobalTable from "@/components/Table/GlobalTable/index.vue";
 	import Group from '@/components/header/group.vue';
+
+
 	const state=reactive({
 		tableData:{records: [],total: 0},
 		ids:[],
@@ -84,7 +86,7 @@
 		if (globalTableRef.value && globalTableRef.value["loadTable"]) {
 			   state.queryParams.searchtype="sku";
 			   globalTableRef.value.loadTable(state.queryParams);
-		} 
+		}
 	}
 	
 	function rowClick(row){

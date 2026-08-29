@@ -30,13 +30,13 @@
    </select>
   <select id="findByCondition" resultType="java.util.Map" parameterType="java.util.Map">
 	select * from (
-	SELECT t.id,tp.name name,'' number ,'' sku,ftype,amount,remark,date_format(createtime, '%Y-%m-%d %H:%i') createtime,t.operator,1 isable,
+	SELECT t.id,t.acct,t.groupid,tp.name name,'' number ,'' sku,ftype,amount,remark,date_format(createtime, '%Y-%m-%d %H:%i') createtime,t.operator,1 isable,
 	  '' supplier
 	from t_erp_fin_journalaccount t 
 	left join t_erp_fin_project tp on tp.id=t.projectid  
 	where t.shopid=#{shopid,jdbcType=CHAR} and
 		createtime&gt;=#{fromDate,jdbcType=DATE} and
-		createtime&lt;=#{endDate,jdbcType=DATE}
+		createtime&lt;=#{toDate,jdbcType=DATE}
 		and t.ftype in ('in','out')
 		 <if test="projectid !=null">
 			and  tp.id = #{projectid,jdbcType=CHAR}
@@ -44,8 +44,11 @@
 		  <if test="acc !=null">
 			and  t.acct = #{acc,jdbcType=CHAR}
 		 </if>
+		 <if test="groupid !=null">
+			and  t.groupid = #{groupid,jdbcType=CHAR}
+		 </if>
 	union 
-		   select p.id,tp2.name name,form.number,m.sku,case when p.payprice&gt;0 then 'out'
+		   select p.id,p.acct,form.groupid,tp2.name name,form.number,m.sku,case when p.payprice&gt;0 then 'out'
 			else 'in' end ftype,case when p.payprice&lt;0 then p.payprice*-1 else p.payprice end amount,p.remark, 
 			 date_format(p.createdate, '%Y-%m-%d %H:%i') createtime,p.operator,0 isable,
 			  c.name supplier
@@ -57,12 +60,15 @@
 	    left join t_erp_purchase_form form on form.id=e.formid
 	    where form.shopid=#{shopid,jdbcType=CHAR} and p.auditstatus=1 and
 		p.createdate&gt;=#{fromDate,jdbcType=DATE} and
-		p.createdate&lt;=#{endDate,jdbcType=DATE}
+		p.createdate&lt;=#{toDate,jdbcType=DATE}
 		<if test="projectid !=null">
 			and  tp2.id = #{projectid,jdbcType=CHAR}
 		 </if>
 		  <if test="acc !=null">
 			and  p.acct = #{acc,jdbcType=CHAR}
+		 </if>
+		  <if test="groupid !=null">
+			and  form.groupid = #{groupid,jdbcType=CHAR}
 		 </if>
 	   ) V
 	 <if test="search!=null">
@@ -87,6 +93,9 @@
 		 </if>
 		  <if test="param.acc !=null">
 			and  t.acct = #{param.acc,jdbcType=CHAR}
+		 </if>
+		  <if test="param.groupid !=null">
+			and  t.groupid = #{param.groupid,jdbcType=CHAR}
 		 </if>
 	union 
 		 select p.id,tp2.id projectid,tp2.name name,form.number number,m.sku sku,
@@ -115,6 +124,9 @@
 		  <if test="param.acc !=null">
 			and  p.acct = #{param.acc,jdbcType=CHAR}
 		 </if>
+		  <if test="param.groupid !=null">
+			and  form.groupid = #{param.groupid,jdbcType=CHAR}
+		 </if>
 	   ) V
  
 	
@@ -141,7 +153,7 @@
 	            left join t_erp_fin_project tp on tp.id=t.projectid
 	            where t.shopid=#{param.shopid,jdbcType=CHAR} and
 			     createtime &gt;=#{param.fromDate,jdbcType=DATE} and
-			     createtime &lt;=#{param.endDate,jdbcType=DATE}
+			     createtime &lt;=#{param.toDate,jdbcType=DATE}
 			      and t.ftype in ('in','out')
 			   	 <if test="param.search!=null">
 		           and  tp.name like #{param.search,jdbcType=CHAR}
@@ -166,7 +178,7 @@
 	           left join t_erp_purchase_form form on form.id=e.formid
 	           where form.shopid=#{param.shopid,jdbcType=CHAR} and p.auditstatus=1 and
 		       p.createdate &gt;=#{param.fromDate,jdbcType=DATE} and
-		       p.createdate &lt;=#{param.endDate,jdbcType=DATE}
+		       p.createdate &lt;=#{param.toDate,jdbcType=DATE}
 		        <if test="param.search!=null">
 		           and ( tp2.name like #{param.search,jdbcType=CHAR}
 		                or m.sku like #{param.search,jdbcType=CHAR}
@@ -317,5 +329,31 @@
 	 </if>
 	group by t.byday
   </select>
-  
+
+  <!-- 按opttime日期查询台账记录（用于凭证生成），按groupid筛选 -->
+  <select id="findJournalForVoucher" resultType="java.util.Map">
+    SELECT
+      t.id,
+      t.acct,
+      a.name AS accountName,
+      t.ftype,
+      t.projectid,
+      p.name AS projectName,
+      t.amount,
+      t.remark,
+      t.operator,
+      t.opttime,
+      t.creator,
+      t.createtime,
+      t.groupid,
+      t.shopid
+    FROM t_erp_fin_journalaccount t
+    LEFT JOIN t_erp_fin_project p ON p.id = t.projectid
+    LEFT JOIN t_erp_fin_account a ON a.id = t.acct
+    WHERE t.groupid = #{groupid}
+      AND DATE(t.opttime) = #{optDate}
+      AND t.ftype IN ('out', 'in', 'cancel')
+    ORDER BY t.opttime ASC
+  </select>
+
 </mapper>

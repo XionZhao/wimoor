@@ -28,7 +28,20 @@
 
         <!-- 凭证设置 -->
         <section class="form-section">
-          <div class="section-title">凭证设置</div>
+          <div class="section-title">凭证设置
+            <el-popover placement="top" :width="350" trigger="click">
+              <template #reference>
+                <el-icon class="help-icon"><QuestionFilled /></el-icon>
+              </template>
+              <div>
+                <p style="font-weight: bold; margin-bottom: 8px;">凭证设置说明</p>
+                <p style="margin-bottom: 4px; font-size: 13px;">设置结转损益生成凭证的基本信息。</p>
+                <p style="margin-bottom: 4px; font-size: 13px;">凭证日期：生成凭证的记账日期，通常为月末最后一天。</p>
+                <p style="margin-bottom: 4px; font-size: 13px;">凭证字：凭证的分类标识，如"记"表示记账凭证。</p>
+                <p style="font-size: 13px;">凭证分类：选择收益与损益是分开结转（生成两张凭证）还是同时结转（生成一张凭证）。</p>
+              </div>
+            </el-popover>
+          </div>
           <div class="section-content">
             <div class="form-row-wrap">
               <div class="form-row-inline mb14">
@@ -43,7 +56,7 @@
               </div>
               <div class="form-row-inline mb14">
                 <label class="form-label label-w60">凭证字：</label>
-                <el-select v-model="form.voucherType" placeholder="记" style="width: 80px; height: 32px;">
+                <el-select v-model="form.voucherType" placeholder="转" style="width: 80px; height: 32px;">
                   <el-option v-for="item in voucherTypeList" :key="item.id" :label="item.name" :value="item.name"></el-option>
                 </el-select>
               </div>
@@ -65,7 +78,18 @@
 
         <!-- 借贷方设置 -->
         <section class="form-section">
-          <div class="section-title">借贷方设置</div>
+          <div class="section-title">借贷方设置
+            <el-popover placement="top" :width="350" trigger="click">
+              <template #reference>
+                <el-icon class="help-icon"><QuestionFilled /></el-icon>
+              </template>
+              <div>
+                <p style="font-weight: bold; margin-bottom: 8px;">借贷方设置说明</p>
+                <p style="margin-bottom: 4px; font-size: 13px;">设置当损益科目余额方向与科目默认方向不一致时的处理方式。</p>
+                <p style="font-size: 13px;">例如：费用科目默认为借方，但如果出现贷方余额，可选择按科目方向反向结转或按金额正数结转。</p>
+              </div>
+            </el-popover>
+          </div>
           <div class="form-row">
             <label class="form-label label-w314">
               当待结转损益科目的余额与科目方向不一致时
@@ -83,7 +107,24 @@
 
         <!-- 本年利润处理 -->
         <section class="form-section">
-          <div class="section-title">本年利润处理</div>
+          <div class="section-title">本年利润处理
+            <el-popover placement="top" :width="350" trigger="click">
+              <template #reference>
+                <el-icon class="help-icon"><QuestionFilled /></el-icon>
+              </template>
+              <div>
+                <p style="font-weight: bold; margin-bottom: 8px;">本年利润处理说明</p>
+                <p style="margin-bottom: 4px; font-size: 13px;">设置损益类科目的结转目标科目。</p>
+                <p style="margin-bottom: 4px; font-size: 13px;">"损益类科目"的结转科目：科目编码以5开头的费用类科目（如销售费用、管理费用等）的余额将结转到此科目。默认为"本年利润"（3103）。</p>
+                <p style="margin-bottom: 4px; font-size: 13px;">"本年利润"的结转科目：年末时将"本年利润"科目的余额结转到此科目。默认为"未分配利润"（310415）。</p>
+                <p style="font-size: 13px;">注意：收入类科目（6开头）不在此次结转范围内。</p>
+              </div>
+            </el-popover>
+          </div>
+          <div class="form-tip">
+            <el-icon><InfoFilled /></el-icon>
+            <span>结转损益类科目只会将科目编码5开头的科目结算到损益目标科目</span>
+          </div>
           <div class="form-row">
             <label class="form-label label-w184">"损益类科目"的结转科目：</label>
             <el-select
@@ -121,7 +162,19 @@
 
         <!-- 以前年度损益处理 -->
         <section class="form-section">
-          <div class="section-title">以前年度损益处理</div>
+          <div class="section-title">以前年度损益处理
+            <el-popover placement="top" :width="350" trigger="click">
+              <template #reference>
+                <el-icon class="help-icon"><QuestionFilled /></el-icon>
+              </template>
+              <div>
+                <p style="font-weight: bold; margin-bottom: 8px;">以前年度损益调整说明</p>
+                <p style="margin-bottom: 4px; font-size: 13px;">设置以前年度损益调整科目的结转规则。</p>
+                <p style="margin-bottom: 4px; font-size: 13px;">"以前年度损益调整"科目：用于核算需要调整以前年度损益的事项。默认科目编码为6000。</p>
+                <p style="font-size: 13px;">结转科目：调整完成后，将余额结转到此科目。默认为"未分配利润"（310415）。</p>
+              </div>
+            </el-popover>
+          </div>
           <div class="form-row">
             <label class="form-label label-w254">"以前年度损益调整"科目：</label>
             <el-select
@@ -163,7 +216,7 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { QuestionFilled } from '@element-plus/icons-vue'
+import { QuestionFilled, InfoFilled } from '@element-plus/icons-vue'
 import { addFinClosingTemplate, updateFinClosingTemplate } from '@/api/finance/closing_template.js'
 import { getProfitLossConfigByTemplateId, addProfitLossConfig, updateProfitLossConfig } from '@/api/finance/closing_template_profit_loss.js'
 import { listAll } from '@/api/finance/subjects.js'
@@ -196,7 +249,7 @@ const form = reactive({
   transferCycle: '0',
   transferMethod: '0',
   voucherDate: new Date().toISOString().split('T')[0],
-  voucherType: '记',
+  voucherType: '转',
   summary: '结转本期损益',
   voucherClassify: '1',
   directionHandling: 'false',
@@ -252,10 +305,8 @@ const loadExistingTemplateItems = async () => {
 
   const tpl = props.selectedTemplate
 
-  // 加载模板基础字段
-  if (tpl.voucherType) {
-    form.voucherType = tpl.voucherType
-  }
+  // 凭证字固定为"转"
+  form.voucherType = '转'
   if (tpl.voucherClass !== undefined && tpl.voucherClass !== null) {
     form.voucherClassify = String(tpl.voucherClass)
   }
@@ -469,7 +520,7 @@ watch(() => props.selectedTemplate, (newTemplate) => {
 
 .help-icon {
   font-size: 14px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   cursor: pointer;
 }
 
@@ -492,7 +543,7 @@ watch(() => props.selectedTemplate, (newTemplate) => {
 .section-title {
   font-size: 15px;
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
   margin-bottom: 14px;
   padding-bottom: 8px;
   border-bottom: 1px solid #ebeef5;
@@ -508,6 +559,23 @@ watch(() => props.selectedTemplate, (newTemplate) => {
   margin-left: 10px;
 }
 
+.form-tip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  background-color: #f4f4f5;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
+
+.form-tip .el-icon {
+  color: var(--el-text-color-secondary);
+  font-size: 14px;
+}
+
 .btn-detail-subject {
   margin-left: 10px;
   font-size: 14px;
@@ -516,5 +584,12 @@ watch(() => props.selectedTemplate, (newTemplate) => {
 .el-radio-group {
   display: flex;
   gap: 20px;
+}
+</style>
+
+<style>
+/* 暗黑模式适配 */
+.dark .form-tip {
+  background-color: var(--el-fill-color-lighter);
 }
 </style>

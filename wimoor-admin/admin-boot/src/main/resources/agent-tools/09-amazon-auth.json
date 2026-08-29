@@ -1,0 +1,361 @@
+﻿{
+    "module":  "Amazon授权与店铺管理",
+    "description":  "Amazon店铺授权绑定、分组管理、站点管理、绩效查询等店铺基础配置管理",
+    "service":  "wimoor-amazon",
+    "tools":  [
+                  {
+                      "name":  "amz_query_bind_seller",
+                      "description":  "查询已绑定的Amazon卖家列表，展示所有已授权的Amazon店铺信息",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/amzauthority/getBindSeller",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "groupid":  "店铺分组ID",
+                                              "gname":  "店铺分组名称",
+                                              "regions":  "授权区域Map，key为区域代码(如NA/EU/FE)，value包含sellerid(卖家ID)、region(区域)、regionname(区域名称)、adauth(广告授权状态)、sellerauth(店铺授权状态)、authid(授权ID)、advid(广告授权ID)、countrysList(国家列表数组，每项含countrycode、countryname、marketplaceid、sellerid、disable)",
+                                              "regionslist":  "授权区域数组，结构同regions中各value"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_amazon_group",
+                      "description":  "查询当前用户的Amazon店铺分组列表，获取所有店铺分组信息",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/amzauthority/getAmazonGroup",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "分组ID",
+                                              "name":  "分组名称",
+                                              "shopid":  "公司ID",
+                                              "profitcfgid":  "利润计算方案ID",
+                                              "financeprofitid":  "财务模块利润计算方案ID",
+                                              "company":  "公司名称",
+                                              "isfinance":  "是否财务账套",
+                                              "findex":  "排序索引",
+                                              "isdelete":  "是否删除",
+                                              "opttime":  "操作时间",
+                                              "createtime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_amazon_group_list",
+                      "description":  "查询Amazon店铺分组详细列表",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/amzgroup/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "分组ID",
+                                              "name":  "分组名称",
+                                              "shopid":  "公司ID",
+                                              "findex":  "排序索引",
+                                              "isdelete":  "是否删除",
+                                              "createtime":  "创建时间",
+                                              "opttime":  "操作时间"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_amazon_group_detail",
+                      "description":  "查询单个店铺分组详情信息",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/amzgroup/info/{groupid}",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 }
+                                 },
+                      "required":  [
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "groupid":  "分组ID",
+                                              "displayName":  "显示名称",
+                                              "legalName":  "法定名称/公司名称"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_market_bind",
+                      "description":  "查询当前公司已绑定的Amazon站点/市场列表",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/amzauthority/getMarketBind",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "marketplaceid":  "Amazon站点ID(如ATVPDKIKX0DER)",
+                                              "market":  "国家代码(US/UK/DE等)",
+                                              "name":  "站点名称",
+                                              "regionName":  "区域名称",
+                                              "region":  "区域(NA/EU/FE)",
+                                              "endPoint":  "API端点",
+                                              "pointName":  "站点域名简称(如Amazon.com)",
+                                              "currency":  "币种"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_market_all",
+                      "description":  "查询所有Amazon站点列表(含未绑定的)",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/amzauthority/getMarketAll",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "marketplaceid":  "Amazon站点ID",
+                                              "market":  "国家代码",
+                                              "name":  "站点名称",
+                                              "regionName":  "区域名称",
+                                              "region":  "区域",
+                                              "endPoint":  "API端点",
+                                              "pointName":  "站点域名简称",
+                                              "currency":  "币种"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_market_by_group",
+                      "description":  "按店铺分组查询关联的站点列表",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/amzauthority/getMarketByGroup",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 }
+                                 },
+                      "required":  [
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "marketplaceid":  "Amazon站点ID",
+                                              "market":  "国家代码",
+                                              "name":  "站点名称",
+                                              "regionName":  "区域名称",
+                                              "region":  "区域",
+                                              "endPoint":  "API端点",
+                                              "pointName":  "站点域名简称",
+                                              "currency":  "币种"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_market_by_sku",
+                      "description":  "按SKU查询关联的站点信息",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/amzmarketplace/getBySku",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 }
+                                 },
+                      "required":  [
+                                       "sku",
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "SKU编码",
+                                              "marketplaceid":  "站点ID",
+                                              "marketName":  "站点名称",
+                                              "countryCode":  "国家代码",
+                                              "currency":  "币种"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_market_by_country",
+                      "description":  "按国家代码查询站点信息",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/amzmarketplace/getByCountry",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "country":  {
+                                                     "type":  "string",
+                                                     "description":  "国家代码，如US、UK、DE、JP等"
+                                                 }
+                                 },
+                      "required":  [
+                                       "country"
+                                   ],
+                      "response_fields":  {
+                                              "marketplaceid":  "Amazon站点ID",
+                                              "market":  "国家代码",
+                                              "name":  "站点名称",
+                                              "regionName":  "区域名称",
+                                              "region":  "区域",
+                                              "endPoint":  "API端点",
+                                              "pointName":  "站点域名简称",
+                                              "currency":  "币种"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_auth_performance",
+                      "description":  "查询Amazon店铺绩效数据，包括ODR、退货率、配送绩效等",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/amzauthority/getPerformance",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "marketplaceid"
+                                   ],
+                      "response_fields":  {
+                                              "amazonauthid":  "授权ID(主键)",
+                                              "sellerid":  "卖家ID",
+                                              "marketplaceid":  "站点ID",
+                                              "performanceJson":  "绩效解析后的JSONObject（含mfn订单缺陷率、shipping准时发货率、customerExperience买家体验等子对象）",
+                                              "performance":  "绩效原始JSON字符串",
+                                              "accountstatus":  "站点账户状态",
+                                              "refreshtime":  "数据刷新时间"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_auth_region_by_group",
+                      "description":  "按店铺分组查询关联的Amazon区域信息",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/amzauthority/getRegionByGroup",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 }
+                                 },
+                      "required":  [
+                                       "groupid"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "授权ID",
+                                              "region":  "区域代码(NA/EU/FE)",
+                                              "groupid":  "分组ID",
+                                              "sellerid":  "卖家ID"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_auth_marketplace",
+                      "description":  "查询授权的Amazon站点详情(格式: authid-marketplaceid)",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/amzauthority/getAuthMaketplace",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "label":  "显示标签，格式：【国家代码】店铺名称-授权名称",
+                                              "value":  "复合标识，格式：站点ID-授权ID"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_report_task_list",
+                      "description":  "查询Amazon报表任务列表，展示报表下载/同步任务的执行状态",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/report/selectTaskInfoList",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，与sellerid二选一"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "reportType":  {
+                                                        "type":  "string",
+                                                        "description":  "报表类型"
+                                                    },
+                                     "sellerid":  {
+                                                      "type":  "string",
+                                                      "description":  "卖家ID，与groupid二选一"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "cname":  "报表类型中文名称",
+                                              "report_processing_status":  "报表处理状态(如DONE、IN_PROGRESS等)",
+                                              "lastupdate":  "最后更新时间"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_auth_id_by_group",
+                      "description":  "按店铺分组和站点查询授权ID",
+                      "menu_id":  43,
+                      "endpoint":  "/amazon/api/v1/amzauthority/getAmazonAuthIdByGroupId",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "marketplaceid"
+                                   ],
+                      "response_fields":  {
+                                              "_note":  "直接返回授权ID字符串（Result.success(auth.getId())），非对象结构"
+                                          }
+                  }
+              ]
+}

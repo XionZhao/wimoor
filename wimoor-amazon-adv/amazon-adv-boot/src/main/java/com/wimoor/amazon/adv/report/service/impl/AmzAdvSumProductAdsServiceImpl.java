@@ -502,7 +502,12 @@ public class AmzAdvSumProductAdsServiceImpl implements IAmzAdvSumProductAdsServi
 			e.printStackTrace();
 			 return new HashMap<String,Object>();
 		}
-		
-		
+
+
+	}
+
+	@Override
+	public List<Map<String, Object>> getCostGroupByMonth(Map<String, Object> param) {
+		return amzAdvSumProductAdsMapper.getCostGroupByMonth(param);
 	}
 }

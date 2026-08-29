@@ -25,7 +25,7 @@
 					 defaultText="全部海外仓库"
 					:isform="true" />
 					<Datepicker ref="datepickers" v-if="activeStatus!='1' && activeStatus!='2' && activeStatus!='3'" @changedate="changedate" />
-					<el-input  v-model="searchKeywords" clearable input-style="width:200px" placeholder="输入查询条件" @input="handleQuery" class="input-with-select" >
+					<el-input  v-model="searchKeywords" clearable @clear="handleQuery" input-style="width:200px" placeholder="输入查询条件" v-debounce-input="handleQuery" class="input-with-select" >
 					    <template #prepend>
 					           <el-select v-model="queryParam.searchtype" placeholder="请选择查询类型" style="width: 115px">
 					             <el-option label="单据编码" value="number" />
@@ -209,6 +209,6 @@
 	}
 	.font-48{
 		font-size: 48px;
-		    color: #999;
+		    color: var(--el-text-color-secondary);
 	}
 </style>

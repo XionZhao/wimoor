@@ -51,7 +51,8 @@ INSERT INTO `t_amz_report_request_type` (`id`, `cname`, `ename`, `code`, `descri
 	(33, '反馈报表', 'FeedbackReport', 'GET_SELLER_FEEDBACK_DATA', '反馈报表', 'reportAmzFeedbackService', 30, b'0', ''),
 	(34, 'VAT发票报表', 'VATInvoiceDataReport', 'GET_FLAT_FILE_VAT_INVOICE_DATA_REPORT', 'VAT发票报表', 'reportAmzInvoiceDataService', 30, b'1', ''),
 	(35, 'VAT报表', 'FBAVatTransaction', 'GET_VAT_TRANSACTION_DATA', 'VAT报表', 'reportFBAVatTransactionReportService', 0, b'0', ''),
-	(36, 'EPR报表', 'EPRMonthlyReport', 'GET_EPR_MONTHLY_REPORTS', 'EPR报表', 'reportEPRMonthlyReportService', 10, b'0', '');
+	(36, 'EPR报表', 'EPRMonthlyReport', 'GET_EPR_MONTHLY_REPORTS', 'EPR报表', 'reportEPRMonthlyReportService', 10, b'0', ''),
+	(37, '交易报告', 'TransactionReport', 'GET_DATE_RANGE_FINANCIAL_TRANSACTION_DATA', '亚马逊交易报告', 'reportAmzTransactionService', 89, b'0', NULL);
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

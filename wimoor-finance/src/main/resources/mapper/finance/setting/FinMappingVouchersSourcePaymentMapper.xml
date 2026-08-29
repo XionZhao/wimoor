@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.setting.mapper.FinMappingVouchersSourcePaymentMapper">
+
+    <resultMap type="com.wimoor.finance.setting.domain.FinMappingVouchersSourcePayment" id="FinMappingVouchersSourcePaymentResult">
+        <result property="id"           column="id"/>
+        <result property="groupid"      column="groupid"/>
+        <result property="orderId"      column="order_id"/>
+        <result property="paymentId"    column="payment_id"/>
+        <result property="paymentDate"  column="payment_date"/>
+        <result property="amount"       column="amount"/>
+        <result property="feeTypeId"    column="fee_type_id"/>
+        <result property="feeTypeName"  column="fee_type_name"/>
+        <result property="accountId"    column="account_id"/>
+        <result property="accountName"  column="account_name"/>
+        <result property="orderNumber"  column="order_number"/>
+        <result property="warehouseName" column="warehouse_name"/>
+        <result property="supplierName" column="supplier_name"/>
+        <result property="voucherId"    column="voucher_id"/>
+        <result property="entryIds"     column="entry_ids"/>
+        <result property="syncStatus"   column="sync_status"/>
+        <result property="paymentStatus" column="payment_status"/>
+        <result property="dataHash"     column="data_hash"/>
+        <result property="syncTime"     column="sync_time"/>
+        <result property="createdTime"  column="created_time"/>
+        <result property="updatedTime"  column="updated_time"/>
+        <result property="createBy"     column="create_by"/>
+        <result property="modifyBy"     column="modify_by"/>
+    </resultMap>
+
+    <sql id="selectFinMappingVouchersSourcePaymentVo">
+        select r.id, r.groupid, r.order_id, r.payment_id,
+               r.payment_date, r.amount, r.fee_type_id, r.fee_type_name,
+               r.account_id, r.account_name, r.order_number, r.warehouse_name, r.supplier_name,
+               r.voucher_id, r.entry_ids, r.sync_status, r.payment_status, r.data_hash,
+               r.sync_time, r.created_time, r.updated_time, r.create_by, r.modify_by
+        from fin_mapping_vouchers_source_payment r
+    </sql>
+
+    <select id="selectFinMappingVouchersSourcePaymentList" parameterType="com.wimoor.finance.setting.domain.FinMappingVouchersSourcePayment" resultMap="FinMappingVouchersSourcePaymentResult">
+        <include refid="selectFinMappingVouchersSourcePaymentVo"/>
+        <where>
+            <if test="groupid != null"> and r.groupid = #{groupid}</if>
+            <if test="orderId != null"> and r.order_id = #{orderId}</if>
+            <if test="syncStatus != null"> and r.sync_status = #{syncStatus}</if>
+            <if test="voucherId != null"> and r.voucher_id = #{voucherId}</if>
+        </where>
+        order by r.id desc
+    </select>
+
+    <select id="selectFinMappingVouchersSourcePaymentById" parameterType="Long" resultMap="FinMappingVouchersSourcePaymentResult">
+        <include refid="selectFinMappingVouchersSourcePaymentVo"/>
+        where r.id = #{id}
+    </select>
+
+    <select id="selectByOrderId" resultMap="FinMappingVouchersSourcePaymentResult">
+        <include refid="selectFinMappingVouchersSourcePaymentVo"/>
+        where r.groupid = #{groupid} and r.order_id = #{orderId}
+    </select>
+
+    <select id="selectByPaymentId" resultMap="FinMappingVouchersSourcePaymentResult">
+        <include refid="selectFinMappingVouchersSourcePaymentVo"/>
+        where r.groupid = #{groupid} and r.payment_id = #{paymentId}
+        limit 1
+    </select>
+
+    <select id="selectNeedSync" resultMap="FinMappingVouchersSourcePaymentResult">
+        <include refid="selectFinMappingVouchersSourcePaymentVo"/>
+        where r.groupid = #{groupid}
+          and r.sync_status in (0, 2)
+        order by r.order_id, r.payment_id
+    </select>
+
+    <insert id="insertFinMappingVouchersSourcePayment" parameterType="com.wimoor.finance.setting.domain.FinMappingVouchersSourcePayment" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_mapping_vouchers_source_payment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="groupid != null">groupid,</if>
+            <if test="orderId != null">order_id,</if>
+            <if test="paymentId != null">payment_id,</if>
+            <if test="paymentDate != null">payment_date,</if>
+            <if test="amount != null">amount,</if>
+            <if test="feeTypeId != null">fee_type_id,</if>
+            <if test="feeTypeName != null">fee_type_name,</if>
+            <if test="accountId != null">account_id,</if>
+            <if test="accountName != null">account_name,</if>
+            <if test="orderNumber != null">order_number,</if>
+            <if test="warehouseName != null">warehouse_name,</if>
+            <if test="supplierName != null">supplier_name,</if>
+            <if test="voucherId != null">voucher_id,</if>
+            <if test="entryIds != null">entry_ids,</if>
+            <if test="syncStatus != null">sync_status,</if>
+            <if test="paymentStatus != null">payment_status,</if>
+            <if test="dataHash != null">data_hash,</if>
+            <if test="syncTime != null">sync_time,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="modifyBy != null">modify_by,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="groupid != null">#{groupid},</if>
+            <if test="orderId != null">#{orderId},</if>
+            <if test="paymentId != null">#{paymentId},</if>
+            <if test="paymentDate != null">#{paymentDate},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="feeTypeId != null">#{feeTypeId},</if>
+            <if test="feeTypeName != null">#{feeTypeName},</if>
+            <if test="accountId != null">#{accountId},</if>
+            <if test="accountName != null">#{accountName},</if>
+            <if test="orderNumber != null">#{orderNumber},</if>
+            <if test="warehouseName != null">#{warehouseName},</if>
+            <if test="supplierName != null">#{supplierName},</if>
+            <if test="voucherId != null">#{voucherId},</if>
+            <if test="entryIds != null">#{entryIds},</if>
+            <if test="syncStatus != null">#{syncStatus},</if>
+            <if test="paymentStatus != null">#{paymentStatus},</if>
+            <if test="dataHash != null">#{dataHash},</if>
+            <if test="syncTime != null">#{syncTime},</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="modifyBy != null">#{modifyBy},</if>
+        </trim>
+    </insert>
+
+    <insert id="batchInsertFinMappingVouchersSourcePayment">
+        insert into fin_mapping_vouchers_source_payment
+        (groupid, order_id, payment_id, payment_date, amount,
+         fee_type_id, fee_type_name, account_id, account_name, order_number, warehouse_name, supplier_name,
+         voucher_id, entry_ids, sync_status, payment_status, data_hash,
+         created_time, updated_time, create_by, modify_by)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.groupid}, #{item.orderId}, #{item.paymentId},
+             #{item.paymentDate}, #{item.amount}, #{item.feeTypeId}, #{item.feeTypeName},
+             #{item.accountId}, #{item.accountName}, #{item.orderNumber}, #{item.warehouseName}, #{item.supplierName},
+             #{item.voucherId}, #{item.entryIds}, #{item.syncStatus}, #{item.paymentStatus}, #{item.dataHash},
+             #{item.createdTime}, #{item.updatedTime}, #{item.createBy}, #{item.modifyBy})
+        </foreach>
+    </insert>
+
+    <update id="updateFinMappingVouchersSourcePayment" parameterType="com.wimoor.finance.setting.domain.FinMappingVouchersSourcePayment">
+        update fin_mapping_vouchers_source_payment
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="paymentDate != null">payment_date = #{paymentDate},</if>
+            <if test="supplierName != null">supplier_name = #{supplierName},</if>
+            <if test="orderNumber != null">order_number = #{orderNumber},</if>
+            <if test="warehouseName != null">warehouse_name = #{warehouseName},</if>
+            <if test="feeTypeId != null">fee_type_id = #{feeTypeId},</if>
+            <if test="feeTypeName != null">fee_type_name = #{feeTypeName},</if>
+            <if test="accountId != null">account_id = #{accountId},</if>
+            <if test="accountName != null">account_name = #{accountName},</if>
+            <if test="voucherId != null">voucher_id = #{voucherId},</if>
+            <if test="entryIds != null">entry_ids = #{entryIds},</if>
+            <if test="dataHash != null">data_hash = #{dataHash},</if>
+            <if test="syncStatus != null">sync_status = #{syncStatus},</if>
+            <if test="paymentStatus != null">payment_status = #{paymentStatus},</if>
+            <if test="syncTime != null">sync_time = #{syncTime},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime},</if>
+            <if test="modifyBy != null">modify_by = #{modifyBy},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="batchUpdateSyncStatus">
+        update fin_mapping_vouchers_source_payment
+        set sync_status = #{syncStatus},
+            voucher_id = #{voucherId},
+            sync_time = #{syncTime}
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <delete id="deleteFinMappingVouchersSourcePaymentById" parameterType="Long">
+        delete from fin_mapping_vouchers_source_payment where id = #{id}
+    </delete>
+
+    <delete id="deleteFinMappingVouchersSourcePaymentByIds">
+        delete from fin_mapping_vouchers_source_payment where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectByOrderIds" resultMap="FinMappingVouchersSourcePaymentResult">
+        <include refid="selectFinMappingVouchersSourcePaymentVo"/>
+        where r.groupid = #{groupid}
+        <if test="orderIds != null and orderIds.size() > 0">
+            and r.order_id in
+            <foreach collection="orderIds" item="orderId" open="(" separator="," close=")">
+                #{orderId}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectSyncedOrderIds" resultType="java.lang.String">
+        select distinct r.order_id
+        from fin_mapping_vouchers_source_payment r
+        where r.groupid = #{groupid}
+          and r.sync_status = 1
+    </select>
+
+    <delete id="deleteByOrderId">
+        delete from fin_mapping_vouchers_source_payment
+        where groupid = #{groupid} and order_id = #{orderId}
+    </delete>
+
+    <delete id="deleteByOrderIds">
+        delete from fin_mapping_vouchers_source_payment
+        where groupid = #{groupid}
+        <if test="orderIds != null and orderIds.size() > 0">
+            and order_id in
+            <foreach collection="orderIds" item="orderId" open="(" separator="," close=")">
+                #{orderId}
+            </foreach>
+        </if>
+    </delete>
+
+</mapper>

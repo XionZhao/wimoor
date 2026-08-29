@@ -235,9 +235,44 @@ public class SysQueryFieldServiceImpl extends ServiceImpl<SysQueryFieldMapper, S
 		}
 
 		@Override
-		public List<SysQueryVersionFeild> getVersionFieldById(String id) {
-			LambdaQueryWrapper<SysQueryVersionFeild> queryWrapper=new LambdaQueryWrapper<SysQueryVersionFeild>();
-			queryWrapper.eq(SysQueryVersionFeild::getFversionid, new BigInteger(id));
-			return SysQueryVersionFeildMapper.selectList(queryWrapper);
+	public List<SysQueryVersionFeild> getVersionFieldById(String id) {
+		LambdaQueryWrapper<SysQueryVersionFeild> queryWrapper=new LambdaQueryWrapper<SysQueryVersionFeild>();
+		queryWrapper.eq(SysQueryVersionFeild::getFversionid, new BigInteger(id));
+		return SysQueryVersionFeildMapper.selectList(queryWrapper);
+	}
+	
+	@Override
+	public List<String> getDistinctQueryNames() {
+		return this.baseMapper.getDistinctQueryNames();
+	}
+	
+	@Override
+	public boolean saveField(SysQueryField field) {
+		if(field.getCreatedate() == null) {
+			field.setCreatedate(new Date());
 		}
+		// 使用 MyBatis-Plus 的 saveOrUpdate 方法
+		LambdaQueryWrapper<SysQueryField> queryWrapper = new LambdaQueryWrapper<>();
+		queryWrapper.eq(SysQueryField::getFquery, field.getFquery());
+		queryWrapper.eq(SysQueryField::getFfield, field.getFfield());
+		SysQueryField existing = this.baseMapper.selectOne(queryWrapper);
+		if(existing != null) {
+			// 更新
+			existing.setTitle(field.getTitle());
+			existing.setWidth(field.getWidth());
+			existing.setFindex(field.getFindex());
+			return this.baseMapper.updateById(existing) > 0;
+		} else {
+			// 新增
+			return this.baseMapper.insert(field) > 0;
+		}
+	}
+	
+	@Override
+	public boolean deleteField(String fquery, String ffield) {
+		LambdaQueryWrapper<SysQueryField> queryWrapper = new LambdaQueryWrapper<>();
+		queryWrapper.eq(SysQueryField::getFquery, fquery);
+		queryWrapper.eq(SysQueryField::getFfield, ffield);
+		return this.baseMapper.delete(queryWrapper) > 0;
+	}
 }

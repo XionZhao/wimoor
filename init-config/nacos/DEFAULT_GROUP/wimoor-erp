@@ -34,3 +34,4 @@ db:
   otherTables: 
     - db_admin.t_userinfo
     - db_amazon.t_amz_product_sales_plan
+    - db_amazon.t_amazon_group

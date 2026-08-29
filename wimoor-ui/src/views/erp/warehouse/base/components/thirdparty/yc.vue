@@ -4,7 +4,7 @@
 							  <div class='rt-btn-group'>
 								<el-space>
 									<div class="font-extraSmall">更新时间：{{refreshtime}}</div>
-									<el-input clearable  placeholder="请输入SKU" v-model="queryParam.sku" @input="handleQueryInv"/>
+									<el-input clearable @clear="handleQueryInv"  placeholder="请输入SKU" v-model="queryParam.sku" v-debounce-input="handleQueryInv"/>
 									<el-button @click="handleSyncInv">同步库存</el-button>
 									<el-button @click="handleSyncOrder">同步订单</el-button>
 								</el-space>

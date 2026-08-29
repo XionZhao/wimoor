@@ -10,7 +10,7 @@
 		  >
 		  <div class="con-header">
 			  <el-row>
-			<el-input   v-model="search"  @input="loadData" placeholder="搜索供应商名称或编码">
+			<el-input   v-model="search"  v-debounce-input="loadData" placeholder="搜索供应商名称或编码">
 				<template #suffix >
 					<el-icon :size="16" @click="loadData"><Search/></el-icon>
 				</template>
@@ -51,6 +51,8 @@
 	import {Search,ArrowDown,} from '@element-plus/icons-vue'
     import customerApi from '@/api/erp/material/customerApi.js';
 	import {ElMessage } from 'element-plus';
+
+
 	const globalTable=ref();	
 	const emit = defineEmits(['getdata']);
 	 

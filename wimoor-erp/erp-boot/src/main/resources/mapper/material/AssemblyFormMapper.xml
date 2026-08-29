@@ -87,11 +87,15 @@
 
 	<select id="findByCondition" resultType="java.util.Map" parameterType="com.wimoor.erp.material.pojo.dto.AssemblyFormListDTO">
 		select ta.id,ta.number number,ta.ftype,m.sku sku, ta.amount,u.name creator, 
-			ta.auditstatus auditstatus, ta.remark remark,ta.opttime opttime , 
-			v.needpo purchaseneed, v.hasqty,v.needin ,ta.createdate,
-			p.location image,m.name,ta.amount_handle,v2.shipmentids,w.name wname,w.id warehouseid,ta.check_inv,
-			ifnull(pur.puramount,-1) puramount
-		from t_erp_assembly_form ta
+		ta.auditstatus auditstatus, ta.remark remark,ta.opttime opttime , 
+		v.needpo purchaseneed, v.hasqty,v.needin ,ta.createdate,
+		p.location image,m.name,ta.amount_handle,v2.shipmentids,w.name wname,w.id warehouseid,ta.check_inv,
+		ifnull(pur.puramount,-1) puramount,
+		(select group_concat(distinct pf.number) from t_erp_assembly_form_entry afe 
+		 left join t_erp_purchase_form_entry pfe on afe.purchase_from_entry_id=pfe.id
+		 left join t_erp_purchase_form pf on pfe.formid=pf.id
+		 where afe.formid=ta.id and pf.number is not null) purchaseNumbers
+	from t_erp_assembly_form ta
 		left join t_erp_inventory i on ta.mainmid=i.materialid and i.warehouseid=ta.warehouseid
 			and i.shopid=ta.shopid and i.`status` ='fulfillable'
 		left join t_erp_warehouse w on w.id=ta.warehouseid
@@ -426,7 +430,11 @@ SELECT b.number,d.name warehousename,g.name,g.sku,c.sku subsku,
 b.amount,b.amount_handle,a.amount subamount,(floor((b.amount-b.amount_handle)*(a.amount/b.amount)))AS subneed, 
 v.fulfillable subfulfillable,v.inbound subinbound,
 n.fulfillable,n.inbound,
-b.creator,b.opttime
+b.creator,b.opttime,
+(select group_concat(distinct pf.number) from t_erp_assembly_form_entry afe 
+ left join t_erp_purchase_form_entry pfe on afe.purchase_from_entry_id=pfe.id
+ left join t_erp_purchase_form pf on pfe.formid=pf.id
+ where afe.id=a.id and pf.number is not null) purchaseNumbers
 from t_erp_assembly_form_entry a 
 LEFT JOIN t_erp_assembly_form b ON b.id = a.formid 
 LEFT JOIN t_erp_material c ON a.materialid = c.id #子SKU
@@ -448,10 +456,10 @@ SUM(case when STATUS LIKE 'outbound_%' then quantity ELSE 0 END ) outbound
 FROM t_erp_inventory
 GROUP BY shopid,materialid ) n 
 ON n.shopid=b.shopid AND n.materialid=c.id
-where b.shopid=#{param.shopid,jdbcType=CHAR} AND b.auditstatus = 2
+where b.shopid=#{param.shopid,jdbcType=CHAR}
 		<if test="param.search != null">
 		     <if test="param.searchtype == 'sku'">
-			and (g.sku like #{param.search,jdbcType=CHAR})
+			and (g.sku like #{param.search,jdbcType=CHAR} or c.sku like #{param.search,jdbcType=CHAR})
 			</if>
 			<if test="param.searchtype == 'number'">
 			 and b.number like #{param.search,jdbcType=CHAR} 
@@ -459,20 +467,14 @@ where b.shopid=#{param.shopid,jdbcType=CHAR} AND b.auditstatus = 2
 		</if>
 		<if test="param.auditstatus !=null ">
 			<if test='param.auditstatus =="2" '>
-				and (ta.auditstatus=2 or ta.auditstatus=1 )
+				and (b.auditstatus=2 or b.auditstatus=1 )
 			</if>
 			<if test='param.auditstatus !="2" '>
-				and (ta.auditstatus= #{param.auditstatus,jdbcType=CHAR} )
+				and (b.auditstatus= #{param.auditstatus,jdbcType=CHAR} )
 			</if>
 		</if>
 		<if test="param.owner!=null">
 		    and g.owner=#{param.owner,jdbcType=CHAR}
-		</if>
-		<if test='param.auditstatus =="2" and  param.operate=="true"'>
-			and v.needpo=0
-		</if>
-		<if test='param.auditstatus =="2" and  param.operate=="false"'>
-			and v.needpo=1
 		</if>
 		<if test="param.ftype !=null ">
 			and (b.ftype= #{param.ftype,jdbcType=CHAR} )
@@ -485,7 +487,7 @@ where b.shopid=#{param.shopid,jdbcType=CHAR} AND b.auditstatus = 2
 		and b.createdate &lt;= #{param.toDate,jdbcType=TIMESTAMP}
 		</if>
 		<if test="param.warehouseid !=null ">
-			and (w.id= #{param.warehouseid,jdbcType=CHAR} )
+			and (b.warehouseid= #{param.warehouseid,jdbcType=CHAR} )
 		</if>
 ORDER BY b.opttime DESC,c.sku
 </select>
@@ -499,14 +501,18 @@ SELECT a.number ,w.name warehousename,b.sku ,b.name ,a.amount ,
                 when a.auditstatus=5 then '已作废' 
                 ELSE '其他'  END) AS auditstatus,
 
-a.remark ,a.creator,a.createdate
+a.remark ,a.creator,a.createdate,
+(select group_concat(distinct pf.number) from t_erp_assembly_form_entry afe 
+ left join t_erp_purchase_form_entry pfe on afe.purchase_from_entry_id=pfe.id
+ left join t_erp_purchase_form pf on pfe.formid=pf.id
+ where afe.formid=a.id and pf.number is not null) purchaseNumbers
 FROM t_erp_assembly_form a 
 LEFT JOIN t_erp_warehouse w on w.id=a.warehouseid
 LEFT JOIN t_erp_material b ON a.mainmid = b.id
 WHERE a.shopid = #{param.shopid,jdbcType=CHAR}  
 		<if test="param.search != null">
 		     <if test="param.searchtype == 'sku'">
-			and (b.sku like #{param.search,jdbcType=CHAR})
+			and (b.sku like #{param.search,jdbcType=CHAR} or exists (select 1 from t_erp_assembly_form_entry e left join t_erp_material m2 on e.materialid=m2.id where e.formid=a.id and m2.sku like #{param.search,jdbcType=CHAR}))
 			</if>
 			<if test="param.searchtype == 'number'">
 			 and a.number like #{param.search,jdbcType=CHAR} 

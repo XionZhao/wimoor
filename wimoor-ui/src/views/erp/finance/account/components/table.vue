@@ -2,19 +2,6 @@
 	<div class="pag-radius-bor m-t-16">
 		<el-row>
 		<el-space>
-		<el-button type="primary" v-if="queryParams.acc"  @click="showAccDialog">
-		  <plus theme="outline" size="18" fill="#fff" :strokeWidth="4"/>
-		  <span>记账</span>
-		</el-button>
-		 
-
-		<el-tooltip  v-else placement="top" content="必须选择具体账户后才能操作">
-			<el-button type="primary"  >
-			  <plus theme="outline" size="18" fill="#fff" :strokeWidth="4"/>
-			  <span>记账</span>
-			</el-button>
-		</el-tooltip>
-	
 		<el-button @click="handleFeeItem">费用项管理</el-button>
 		<el-button @click="handleDownload">导出</el-button>
 		<el-button @click="openUpload" v-if="finAcct?.paymeth==3||finAcct?.paymeth==7">
@@ -28,9 +15,9 @@
 				<el-option  key=""  label="全部费用项" value="" ></el-option>
 				<el-option v-for="item in feeTypeList" :key="item.id"  :label="item.name" :value="item.id" ></el-option>
 			</el-select>
-			<el-input  @input="handleQuery"
-			  placeholder="请输入费用项,SKU,单据号"
-			  v-model="queryParams.search">
+			<el-input  v-debounce-input="handleQuery"
+		  placeholder="请输入费用项,SKU,单据号"
+		  v-model="queryParams.search">
 			  <template #suffix>
 				   <el-icon class="ic-cen font-medium">
 					<search />
@@ -58,10 +45,10 @@
 							scrollbar-always-on
 							 :data="props.row.expandTable">
 								<el-table-column label="时间"  prop="createtime" />
-								<el-table-column label="收支项" prop="name" />
-								<el-table-column label="关联单号" prop="number" />
-								<el-table-column label="关联SKU" prop="sku" />
-								<el-table-column label="金额(￥)" prop="amount">
+							<el-table-column label="收支项" prop="name" />
+							<el-table-column label="关联单号" prop="number" />
+							<el-table-column label="关联SKU" prop="sku" />
+							<el-table-column label="金额(￥)" prop="amount">
 									<template #default="scope">
 										<span v-if="scope.row.ftype=='in'">+</span>
 										<span v-if="scope.row.ftype=='out'">-</span>{{scope.row.amount}}

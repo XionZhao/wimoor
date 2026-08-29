@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<el-row>
 		<el-space>
 			<el-select v-model="adstate" placeholder="广告状态" @change="handleQuery"  >
@@ -10,14 +10,14 @@
 			      <el-radio-button label="近7天" />
 			      <el-radio-button label="近30天" />
 			    </el-radio-group>
-			<el-input v-model="queryParams.search" @input="handleQuery" placeholder="搜索商品投放">
-					 <template #suffix>
-					  <el-icon @click.stop="handleQuery"><Search /></el-icon>
-					 </template>
-			</el-input>	
-			<el-button @click="clearSearch">重置</el-button>
-			<DataFilter :activeName="activeName"  @change="changeDataFilter"/>
-		</el-space>
+			<el-input v-model="queryParams.search" v-debounce-input="handleQuery" placeholder="搜索商品投放">
+				 <template #suffix>
+				  <el-icon @click.stop="handleQuery"><Search /></el-icon>
+				 </template>
+		</el-input>	
+		<el-button @click="clearSearch">重置</el-button>
+		<DataFilter :activeName="activeName"  @change="changeDataFilter"/>
+	</el-space>
 	</el-row>
 	<el-row class="flex-center-between">
 		<el-space>

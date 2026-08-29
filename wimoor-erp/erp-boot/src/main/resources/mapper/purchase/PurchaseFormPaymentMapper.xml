@@ -14,133 +14,571 @@
     id, formentryid, payprice, opttime, operator,projectid
   </sql>
   <select id="paymentReport" resultType="java.util.Map" >
-        select ifnull(e.paydate,pay.opttime) opttime,pay.payprice,form.number,entry.paystatus,entry.totalin,
-        form.createdate,m.sku,
-		p.location image,m.name mname,entry.amount purchases,w.name wname,c.name cname,
-		tp.name fee_type ,
-		pay.remark,
-		entry.orderprice,
-		pmd.name payment_method,entry.totalpay,
-		(entry.orderprice-entry.totalpay) need_pay,
-		u.name 
-		from t_erp_purchase_form_payment pay
-        left join t_erp_purchase_form_payment_method pmd on pmd.id=pay.payment_method
-		left join t_erp_fin_project tp on tp.id=pay.projectid  
-		left join t_erp_purchase_form_entry entry on entry.id=pay.formentryid
-		left join t_erp_purchase_form_entry_alibabainfo_ext e on e.entryid=pay.formentryid
-		left join t_erp_purchase_alibaba_settlement_order o on o.orderid=e.alibaba_orderid
-		left join t_erp_purchase_alibaba_settlement st on st.id=o.settlementid
-		left join t_userinfo u on u.id=pay.operator
-		left join t_erp_material m on m.id=entry.materialid
-		left join t_erp_purchase_form form on form.id=entry.formid 
-		left join t_erp_customer c on c.id=entry.supplier
-        left join t_picture p on p.id=m.image
-        left join t_erp_warehouse w on w.id=form.warehouseid
-	where  form.shopid=#{param.shopid,jdbcType=CHAR}   and pay.auditstatus=1
-	<if test="param.settlementid!=null">
-	  and o.settlementid=#{param.settlementid,jdbcType=CHAR}
-	  and st.acct=pay.acct
-	</if>
-	<if test="param.settlementid==null">
-		and entry.auditstatus>1 
-		<if test="param.datetype=='paydate'">
-		and pay.opttime &gt;=#{param.fromDate,jdbcType=DATE}
-	    and pay.opttime &lt;=#{param.endDate,jdbcType=DATE} 
+	        select pay.id,
+			ifnull(
+				(SELECT e2.paydate FROM t_erp_purchase_form_entry_alibabainfo_ext e2 WHERE e2.entryid = pay.formentryid LIMIT 1),
+				pay.opttime
+			) opttime,pay.payprice,form.number,entry.paystatus,entry.totalin,
+	        form.createdate,m.sku,
+			p.location image,m.name mname,entry.amount purchases,w.name wname,c.name cname,
+			tp.name fee_type ,
+			pay.remark,
+			entry.orderprice,
+			pmd.name payment_method,fa.name acctname,pay.acct,entry.totalpay,
+			(entry.orderprice-entry.totalpay) need_pay,
+			u.name,
+			gp.name groupname
+			from t_erp_purchase_form_payment pay
+	        left join t_erp_purchase_form_payment_method pmd on pmd.id=pay.payment_method
+			left join t_erp_fin_project tp on tp.id=pay.projectid  
+			left join t_erp_purchase_form_entry entry on entry.id=pay.formentryid
+			left join t_userinfo u on u.id=pay.operator
+			left join t_erp_material m on m.id=entry.materialid
+			left join t_amazon_group gp on gp.id=m.groupid
+			left join t_erp_purchase_form form on form.id=entry.formid 
+			left join t_erp_customer c on c.id=entry.supplier
+	        left join t_picture p on p.id=m.image
+	        left join t_erp_warehouse w on w.id=form.warehouseid
+			left join t_erp_fin_account fa on fa.id=pay.acct
+		where  form.shopid=#{param.shopid,jdbcType=CHAR}   and pay.auditstatus=1
+		<if test="param.showSettled != true">
+		and pay.period_rollover_id IS NULL
 		</if>
-		<if test="param.datetype=='recdate'">
-		and e.paydate &gt;=#{param.fromDate,jdbcType=DATE}
-	    and e.paydate &lt;=#{param.endDate,jdbcType=DATE} 
+		<if test="param.acct!=null and param.acct!=''">
+		and pay.acct = #{param.acct,jdbcType=CHAR}
 		</if>
-	   <if test="param.datetype=='countdate'">
-		and e.countdate &gt;=#{param.fromDate,jdbcType=DATE}
-	    and e.countdate &lt;=#{param.endDate,jdbcType=DATE} 
+		<if test="param.settlementid!=null">
+		  and EXISTS (
+			SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+			INNER JOIN t_erp_purchase_alibaba_settlement_order o2 ON o2.orderid = e2.alibaba_orderid
+			INNER JOIN t_erp_purchase_alibaba_settlement st2 ON st2.id = o2.settlementid
+			WHERE e2.entryid = pay.formentryid 
+			AND o2.settlementid = #{param.settlementid,jdbcType=CHAR}
+			AND st2.acct = pay.acct
+		  )
 		</if>
-	</if>
-    <if test="param.search!=null">
-    	<if test="param.searchtype!=null">
-    		<if test="param.searchtype=='sku'">
-    			and	m.sku like #{param.search,jdbcType=CHAR}
-    		</if>
-    		<if test="param.searchtype=='number'">
-    			 and (form.number like #{param.search,jdbcType=CHAR} )
-    		</if>
-    		<if test="param.searchtype=='orderid'">
-    			 and (o.orderid like #{param.search,jdbcType=CHAR} )
-    		</if>
-    	</if>
-     </if>
- 		<if test="param.projectid!=null">
-    			 and   pay.projectid= #{param.projectid,jdbcType=CHAR} 
-   		</if>
-   		<if test="param.warehouseid!=null">
-    			 and   form.warehouseid= #{param.warehouseid,jdbcType=CHAR} 
-   		</if>
-   		<if test="param.supplierid!=null">
-    			 and   entry.supplier= #{param.supplierid,jdbcType=CHAR} 
-   		</if>
-   		<if test="param.paymethod!=null">
-    			 and   pay.payment_method= #{param.paymethod,jdbcType=CHAR} 
-   		</if>
-    	 
+		<if test="param.settlementid==null">
+			and entry.auditstatus>1 
+			<if test="param.datetype=='paydate'">
+			and pay.createdate &gt;=#{param.fromDate,jdbcType=DATE}
+		    and pay.createdate &lt;=#{param.endDate,jdbcType=DATE} 
+			</if>
+			<if test="param.datetype=='recdate'">
+			and EXISTS (
+				SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+				WHERE e2.entryid = pay.formentryid 
+				AND e2.paydate &gt;= #{param.fromDate,jdbcType=DATE}
+				AND e2.paydate &lt;= #{param.endDate,jdbcType=DATE}
+			)
+			</if>
+		   <if test="param.datetype=='countdate'">
+			and EXISTS (
+				SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+				WHERE e2.entryid = pay.formentryid 
+				AND e2.countdate &gt;= #{param.fromDate,jdbcType=DATE}
+				AND e2.countdate &lt;= #{param.endDate,jdbcType=DATE}
+			)
+			</if>
+		</if>
+	    <if test="param.search!=null">
+	    	<if test="param.searchtype!=null">
+	    		<if test="param.searchtype=='sku'">
+	    			and	m.sku like #{param.search,jdbcType=CHAR}
+	    		</if>
+	    		<if test="param.searchtype=='number'">
+	    			 and (form.number like #{param.search,jdbcType=CHAR} )
+	    		</if>
+	    		<if test="param.searchtype=='remark'">
+	    			 and pay.remark like CONCAT('%',#{param.search,jdbcType=CHAR})
+	    		</if>
+	    		<if test="param.searchtype=='orderid'">
+	    			 and EXISTS (
+						SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+						INNER JOIN t_erp_purchase_alibaba_settlement_order o2 ON o2.orderid = e2.alibaba_orderid
+						WHERE e2.entryid = pay.formentryid 
+						AND o2.orderid like #{param.search,jdbcType=CHAR}
+					)
+	    		</if>
+	    	</if>
+	     </if>
+	 		<if test="param.projectid!=null">
+	    			 and   pay.projectid= #{param.projectid,jdbcType=CHAR} 
+	   		</if>
+	   		<if test="param.warehouseid!=null">
+	    			 and   form.warehouseid= #{param.warehouseid,jdbcType=CHAR} 
+	   		</if>
+	   		<if test="param.supplierid!=null">
+	    			 and   entry.supplier= #{param.supplierid,jdbcType=CHAR} 
+	   		</if>
+	   		<if test="param.paymethod!=null">
+	    			 and   pay.payment_method= #{param.paymethod,jdbcType=CHAR} 
+	   		</if>
+	   		<if test="param.groupid!=null">
+	    			 and   m.groupid= #{param.groupid,jdbcType=CHAR} 
+	   		</if>
+	    	 
   </select>
+
+  <!-- 付款明细查询的WHERE条件片段（与paymentReport完全一致） -->
+  <sql id="payment_where_condition">
+    form.shopid=#{param.shopid,jdbcType=CHAR} and pay.auditstatus=1
+    <if test="param.showSettled != true">
+    and pay.period_rollover_id IS NULL
+    </if>
+    <if test="param.acct!=null and param.acct!=''">
+      and pay.acct = #{param.acct,jdbcType=CHAR}
+    </if>
+    <if test="param.settlementid!=null">
+      and EXISTS (
+        SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2
+        INNER JOIN t_erp_purchase_alibaba_settlement_order o2 ON o2.orderid = e2.alibaba_orderid
+        INNER JOIN t_erp_purchase_alibaba_settlement st2 ON st2.id = o2.settlementid
+        WHERE e2.entryid = pay.formentryid
+        AND o2.settlementid = #{param.settlementid,jdbcType=CHAR}
+        AND st2.acct = pay.acct
+      )
+    </if>
+    <if test="param.settlementid==null">
+      and entry.auditstatus>1
+      <if test="param.datetype=='paydate'">
+        and pay.createdate &gt;=#{param.fromDate,jdbcType=DATE}
+        and pay.createdate &lt;=#{param.endDate,jdbcType=DATE}
+      </if>
+      <if test="param.datetype=='recdate'">
+        and EXISTS (
+          SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2
+          WHERE e2.entryid = pay.formentryid
+          AND e2.paydate &gt;= #{param.fromDate,jdbcType=DATE}
+          AND e2.paydate &lt;= #{param.endDate,jdbcType=DATE}
+        )
+      </if>
+      <if test="param.datetype=='countdate'">
+        and EXISTS (
+          SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2
+          WHERE e2.entryid = pay.formentryid
+          AND e2.countdate &gt;= #{param.fromDate,jdbcType=DATE}
+          AND e2.countdate &lt;= #{param.endDate,jdbcType=DATE}
+        )
+      </if>
+    </if>
+    <if test="param.search!=null">
+      <if test="param.searchtype!=null">
+        <if test="param.searchtype=='sku'">
+          and m.sku like #{param.search,jdbcType=CHAR}
+        </if>
+        <if test="param.searchtype=='number'">
+          and (form.number like #{param.search,jdbcType=CHAR})
+        </if>
+        <if test="param.searchtype=='remark'">
+          and pay.remark like CONCAT('%',#{param.search,jdbcType=CHAR},'%')
+        </if>
+        <if test="param.searchtype=='orderid'">
+          and EXISTS (
+            SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2
+            INNER JOIN t_erp_purchase_alibaba_settlement_order o2 ON o2.orderid = e2.alibaba_orderid
+            WHERE e2.entryid = pay.formentryid
+            AND o2.orderid like #{param.search,jdbcType=CHAR}
+          )
+        </if>
+      </if>
+    </if>
+    <if test="param.projectid!=null">
+      and pay.projectid= #{param.projectid,jdbcType=CHAR}
+    </if>
+    <if test="param.warehouseid!=null">
+      and form.warehouseid= #{param.warehouseid,jdbcType=CHAR}
+    </if>
+    <if test="param.supplierid!=null">
+      and entry.supplier= #{param.supplierid,jdbcType=CHAR}
+    </if>
+    <if test="param.paymethod!=null">
+      and pay.payment_method= #{param.paymethod,jdbcType=CHAR}
+    </if>
+    <if test="param.groupid!=null">
+      and m.groupid= #{param.groupid,jdbcType=CHAR}
+    </if>
+  </sql>
+
+  <!-- 按条件统计未结转记录数量（与paymentReport完全一致的WHERE条件） -->
+  <select id="countUnsettledByCondition" resultType="int">
+    SELECT COUNT(*)
+    FROM t_erp_purchase_form_payment pay
+    LEFT JOIN t_erp_purchase_form_entry entry ON entry.id=pay.formentryid
+    LEFT JOIN t_erp_purchase_form form ON form.id=entry.formid
+    LEFT JOIN t_erp_material m ON m.id=entry.materialid
+    WHERE
+    <include refid="payment_where_condition"/>
+  </select>
+
+  <!-- 按条件获取未结转记录ID列表（与paymentReport完全一致的WHERE条件） -->
+  <select id="getUnsettledIdsByCondition" resultType="java.lang.String">
+    SELECT pay.id
+    FROM t_erp_purchase_form_payment pay
+    LEFT JOIN t_erp_purchase_form_entry entry ON entry.id=pay.formentryid
+    LEFT JOIN t_erp_purchase_form form ON form.id=entry.formid
+    LEFT JOIN t_erp_material m ON m.id=entry.materialid
+    WHERE
+    <include refid="payment_where_condition"/>
+  </select>
+
 <select id="paymentReportSummary" resultType="java.util.Map">
           select sum(pay.payprice) totalpayprice,
                  sum(entry.amount*entry.itemprice-entry.totalpay) totalneedpay ,
                  sum(entry.orderprice) totalorderprice
 		from t_erp_purchase_form_payment pay
 		left join t_erp_purchase_form_entry entry on entry.id=pay.formentryid
-		left join t_erp_purchase_form_entry_alibabainfo_ext e on e.entryid=pay.formentryid
-		left join t_erp_purchase_alibaba_settlement_order o on o.orderid=e.alibaba_orderid
-		left join t_erp_purchase_alibaba_settlement st on st.id=o.settlementid
 		left join t_userinfo u on u.id=pay.operator
 		left join t_erp_material m on m.id=entry.materialid
 		left join t_erp_purchase_form form on form.id=entry.formid 
 	where  form.shopid=#{shopid,jdbcType=CHAR} and pay.auditstatus=1
-	<if test="settlementid!=null">
-	  and o.settlementid=#{settlementid,jdbcType=CHAR}
-	  and st.acct=pay.acct
-	</if>
-	<if test="settlementid==null">
-		and entry.auditstatus>1 
-		<if test="datetype=='paydate'">
-		and pay.opttime &gt;=#{fromDate,jdbcType=DATE}
-	    and pay.opttime &lt;=#{endDate,jdbcType=DATE} 
+		<if test="acct!=null and acct!=''">
+		and pay.acct = #{acct,jdbcType=CHAR}
 		</if>
-		<if test="datetype=='recdate'">
-		and e.paydate &gt;=#{fromDate,jdbcType=DATE}
-	    and e.paydate &lt;=#{endDate,jdbcType=DATE} 
+		<if test="settlementid!=null">
+		  and EXISTS (
+			SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+			INNER JOIN t_erp_purchase_alibaba_settlement_order o2 ON o2.orderid = e2.alibaba_orderid
+			INNER JOIN t_erp_purchase_alibaba_settlement st2 ON st2.id = o2.settlementid
+			WHERE e2.entryid = pay.formentryid 
+			AND o2.settlementid = #{settlementid,jdbcType=CHAR}
+			AND st2.acct = pay.acct
+		  )
 		</if>
-		<if test="datetype=='countdate'">
-		and e.countdate &gt;=#{fromDate,jdbcType=DATE}
-	    and e.countdate &lt;=#{endDate,jdbcType=DATE} 
+		<if test="settlementid==null">
+			and entry.auditstatus>1 
+			<if test="datetype=='paydate'">
+			and pay.opttime &gt;=#{fromDate,jdbcType=DATE}
+		    and pay.opttime &lt;=#{endDate,jdbcType=DATE} 
+			</if>
+			<if test="datetype=='recdate'">
+			and EXISTS (
+				SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+				WHERE e2.entryid = pay.formentryid 
+				AND e2.paydate &gt;= #{fromDate,jdbcType=DATE}
+				AND e2.paydate &lt;= #{endDate,jdbcType=DATE}
+			)
+			</if>
+			<if test="datetype=='countdate'">
+			and EXISTS (
+				SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+				WHERE e2.entryid = pay.formentryid 
+				AND e2.countdate &gt;= #{fromDate,jdbcType=DATE}
+				AND e2.countdate &lt;= #{endDate,jdbcType=DATE}
+			)
+			</if>
 		</if>
-	</if>
-    <if test="search!=null">
-    	<if test="searchtype!=null">
-    		<if test="searchtype=='sku'">
-    			and	m.sku like #{search,jdbcType=CHAR}
-    		</if>
-    		<if test="searchtype=='number'">
-    			 and  form.number like #{search,jdbcType=CHAR} 
-    		</if>
-    		<if test="searchtype=='number'">
-    			 and  form.number like #{search,jdbcType=CHAR} 
-    		</if>
-    		
-    	</if>
-     </if>
-     <if test="warehouseid!=null">
-    			 and   form.warehouseid= #{warehouseid,jdbcType=CHAR} 
-   		</if>
-     <if test="projectid!=null">
-    			 and   pay.projectid= #{projectid,jdbcType=CHAR} 
-   		</if>
-   		<if test="supplierid!=null">
-    			 and   entry.supplier= #{supplierid,jdbcType=CHAR} 
-   		</if>
-   		<if test="paymethod!=null">
-    			 and   pay.payment_method= #{paymethod,jdbcType=CHAR} 
-   		</if>
-</select>
- 
+	    <if test="search!=null">
+	    	<if test="searchtype!=null">
+	    		<if test="searchtype=='sku'">
+	    			and	m.sku like #{search,jdbcType=CHAR}
+	    		</if>
+	    		<if test="searchtype=='number'">
+	    			 and  form.number like #{search,jdbcType=CHAR} 
+	    		</if>
+	    		<if test="searchtype=='number'">
+	    			 and  form.number like #{search,jdbcType=CHAR} 
+	    		</if>
+	    		
+	    	</if>
+	     </if>
+	     <if test="warehouseid!=null">
+	    			 and   form.warehouseid= #{warehouseid,jdbcType=CHAR} 
+	   		</if>
+	     <if test="projectid!=null">
+	    			 and   pay.projectid= #{projectid,jdbcType=CHAR} 
+	   		</if>
+	   		<if test="supplierid!=null">
+	    			 and   entry.supplier= #{supplierid,jdbcType=CHAR} 
+	   		</if>
+	   		<if test="paymethod!=null">
+	    			 and   pay.payment_method= #{paymethod,jdbcType=CHAR} 
+	   		</if>
+	   		<if test="groupid!=null">
+	    			 and   m.groupid= #{groupid,jdbcType=CHAR} 
+	   		</if>
+	</select>
+
+  <!-- 已结转订单列表（已通过period_rollover_id结转的付款记录） -->
+  <select id="matchedOrders" resultType="java.util.Map">
+        select ifnull(
+			(SELECT e2.paydate FROM t_erp_purchase_form_entry_alibabainfo_ext e2 WHERE e2.entryid = pay.formentryid LIMIT 1),
+			pay.opttime
+		) opttime,pay.opttime paytime,pay.payprice,form.number,entry.paystatus,entry.totalin,
+        form.createdate,m.sku,
+		p.location image,m.name mname,entry.amount purchases,w.name wname,c.name cname,
+		tp.name fee_type ,
+		pay.remark,
+		entry.orderprice,
+		pmd.name payment_method,fa.name acctname,pay.acct,entry.totalpay,
+		(entry.orderprice-entry.totalpay) need_pay,
+		u.name,
+		gp.name groupname
+		from t_erp_purchase_form_payment pay
+        left join t_erp_purchase_form_payment_method pmd on pmd.id=pay.payment_method
+		left join t_erp_fin_project tp on tp.id=pay.projectid
+		left join t_erp_purchase_form_entry entry on entry.id=pay.formentryid
+		left join t_userinfo u on u.id=pay.operator
+		left join t_erp_material m on m.id=entry.materialid
+		left join t_amazon_group gp on gp.id=m.groupid
+		left join t_erp_purchase_form form on form.id=entry.formid
+		left join t_erp_customer c on c.id=entry.supplier
+        left join t_picture p on p.id=m.image
+        left join t_erp_warehouse w on w.id=form.warehouseid
+		left join t_erp_fin_account fa on fa.id=pay.acct
+	where pay.acct=#{param.acct,jdbcType=CHAR} and pay.auditstatus=1
+		and pay.period_rollover_id IS NOT NULL
+		<if test="param.fromDate!=null and param.toDate!=null">
+			<choose>
+				<when test="param.datetype=='recdate'">
+					and EXISTS (
+						SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+						WHERE e2.entryid = pay.formentryid 
+						AND e2.paydate &gt;= #{param.fromDate,jdbcType=DATE}
+						AND e2.paydate &lt;= #{param.toDate,jdbcType=DATE}
+					)
+				</when>
+				<when test="param.datetype=='countdate'">
+					and EXISTS (
+						SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+						WHERE e2.entryid = pay.formentryid 
+						AND e2.countdate &gt;= #{param.fromDate,jdbcType=DATE}
+						AND e2.countdate &lt;= #{param.toDate,jdbcType=DATE}
+					)
+				</when>
+				<otherwise>
+					and pay.opttime &gt;= #{param.fromDate,jdbcType=DATE}
+					and pay.opttime &lt;= #{param.toDate,jdbcType=DATE}
+				</otherwise>
+			</choose>
+		</if>
+	    <if test="param.search!=null and param.search!=''">
+	    	and form.number like CONCAT('%',#{param.search,jdbcType=CHAR},'%')
+	    </if>
+  </select>
+
+  <select id="matchedOrdersPage" resultType="java.util.Map">
+        select ifnull(
+			(SELECT e2.paydate FROM t_erp_purchase_form_entry_alibabainfo_ext e2 WHERE e2.entryid = pay.formentryid LIMIT 1),
+			pay.opttime
+		) opttime,pay.opttime paytime,pay.payprice,form.number,entry.paystatus,entry.totalin,
+        form.createdate,m.sku,
+		p.location image,m.name mname,entry.amount purchases,w.name wname,c.name cname,
+		tp.name fee_type ,
+		pay.remark,
+		entry.orderprice,
+		pmd.name payment_method,fa.name acctname,pay.acct,entry.totalpay,
+		(entry.orderprice-entry.totalpay) need_pay,
+		u.name,
+		gp.name groupname
+		from t_erp_purchase_form_payment pay
+        left join t_erp_purchase_form_payment_method pmd on pmd.id=pay.payment_method
+		left join t_erp_fin_project tp on tp.id=pay.projectid
+		left join t_erp_purchase_form_entry entry on entry.id=pay.formentryid
+		left join t_userinfo u on u.id=pay.operator
+		left join t_erp_material m on m.id=entry.materialid
+		left join t_amazon_group gp on gp.id=m.groupid
+		left join t_erp_purchase_form form on form.id=entry.formid
+		left join t_erp_customer c on c.id=entry.supplier
+        left join t_picture p on p.id=m.image
+        left join t_erp_warehouse w on w.id=form.warehouseid
+		left join t_erp_fin_account fa on fa.id=pay.acct
+	where pay.acct=#{param.acct,jdbcType=CHAR} and pay.auditstatus=1
+		and pay.period_rollover_id IS NOT NULL
+		<if test="param.fromDate!=null and param.toDate!=null">
+			<choose>
+				<when test="param.datetype=='recdate'">
+					and EXISTS (
+						SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+						WHERE e2.entryid = pay.formentryid 
+						AND e2.paydate &gt;= #{param.fromDate,jdbcType=DATE}
+						AND e2.paydate &lt;= #{param.toDate,jdbcType=DATE}
+					)
+				</when>
+				<when test="param.datetype=='countdate'">
+					and EXISTS (
+						SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+						WHERE e2.entryid = pay.formentryid 
+						AND e2.countdate &gt;= #{param.fromDate,jdbcType=DATE}
+						AND e2.countdate &lt;= #{param.toDate,jdbcType=DATE}
+					)
+				</when>
+				<otherwise>
+					and pay.opttime &gt;= #{param.fromDate,jdbcType=DATE}
+					and pay.opttime &lt;= #{param.toDate,jdbcType=DATE}
+				</otherwise>
+			</choose>
+		</if>
+	    <if test="param.search!=null and param.search!=''">
+	    	and form.number like CONCAT('%',#{param.search,jdbcType=CHAR},'%')
+	    </if>
+  </select>
+
+  <!-- 未结转订单列表（未通过period_rollover_id结转的付款记录） -->
+  <select id="unsettledList" resultType="java.util.Map">
+        select ifnull(
+			(SELECT e2.paydate FROM t_erp_purchase_form_entry_alibabainfo_ext e2 WHERE e2.entryid = pay.formentryid LIMIT 1),
+			pay.opttime
+		) opttime,pay.opttime paytime,pay.payprice,form.number,entry.paystatus,entry.totalin,
+        form.createdate,m.sku,
+		p.location image,m.name mname,entry.amount purchases,w.name wname,c.name cname,
+		tp.name fee_type ,
+		pay.remark,
+		entry.orderprice,
+		pmd.name payment_method,fa.name acctname,pay.acct,entry.totalpay,
+		(entry.orderprice-entry.totalpay) need_pay,
+		u.name,
+		gp.name groupname
+		from t_erp_purchase_form_payment pay
+        left join t_erp_purchase_form_payment_method pmd on pmd.id=pay.payment_method
+		left join t_erp_fin_project tp on tp.id=pay.projectid
+		left join t_erp_purchase_form_entry entry on entry.id=pay.formentryid
+		left join t_userinfo u on u.id=pay.operator
+		left join t_erp_material m on m.id=entry.materialid
+		left join t_amazon_group gp on gp.id=m.groupid
+		left join t_erp_purchase_form form on form.id=entry.formid
+		left join t_erp_customer c on c.id=entry.supplier
+        left join t_picture p on p.id=m.image
+        left join t_erp_warehouse w on w.id=form.warehouseid
+		left join t_erp_fin_account fa on fa.id=pay.acct
+	where pay.acct=#{param.acct,jdbcType=CHAR} and pay.auditstatus=1
+		and pay.period_rollover_id IS NULL
+		<if test="param.fromDate!=null and param.toDate!=null">
+			<choose>
+				<when test="param.datetype=='recdate'">
+					and EXISTS (
+						SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+						WHERE e2.entryid = pay.formentryid 
+						AND e2.paydate &gt;= #{param.fromDate,jdbcType=DATE}
+						AND e2.paydate &lt;= #{param.toDate,jdbcType=DATE}
+					)
+				</when>
+				<when test="param.datetype=='countdate'">
+					and EXISTS (
+						SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+						WHERE e2.entryid = pay.formentryid 
+						AND e2.countdate &gt;= #{param.fromDate,jdbcType=DATE}
+						AND e2.countdate &lt;= #{param.toDate,jdbcType=DATE}
+					)
+				</when>
+				<otherwise>
+					and pay.opttime &gt;= #{param.fromDate,jdbcType=DATE}
+					and pay.opttime &lt;= #{param.toDate,jdbcType=DATE}
+				</otherwise>
+			</choose>
+		</if>
+	    <if test="param.search!=null and param.search!=''">
+	    	and form.number like CONCAT('%',#{param.search,jdbcType=CHAR},'%')
+	    </if>
+  </select>
+
+  <select id="unsettledListPage" resultType="java.util.Map">
+        select ifnull(
+			(SELECT e2.paydate FROM t_erp_purchase_form_entry_alibabainfo_ext e2 WHERE e2.entryid = pay.formentryid LIMIT 1),
+			pay.opttime
+		) opttime,pay.opttime paytime,pay.payprice,form.number,entry.paystatus,entry.totalin,
+        form.createdate,m.sku,
+		p.location image,m.name mname,entry.amount purchases,w.name wname,c.name cname,
+		tp.name fee_type ,
+		pay.remark,
+		entry.orderprice,
+		pmd.name payment_method,fa.name acctname,pay.acct,entry.totalpay,
+		(entry.orderprice-entry.totalpay) need_pay,
+		u.name,
+		gp.name groupname
+		from t_erp_purchase_form_payment pay
+        left join t_erp_purchase_form_payment_method pmd on pmd.id=pay.payment_method
+		left join t_erp_fin_project tp on tp.id=pay.projectid
+		left join t_erp_purchase_form_entry entry on entry.id=pay.formentryid
+		left join t_userinfo u on u.id=pay.operator
+		left join t_erp_material m on m.id=entry.materialid
+		left join t_amazon_group gp on gp.id=m.groupid
+		left join t_erp_purchase_form form on form.id=entry.formid
+		left join t_erp_customer c on c.id=entry.supplier
+        left join t_picture p on p.id=m.image
+        left join t_erp_warehouse w on w.id=form.warehouseid
+		left join t_erp_fin_account fa on fa.id=pay.acct
+	where pay.acct=#{param.acct,jdbcType=CHAR} and pay.auditstatus=1
+		and pay.period_rollover_id IS NULL
+		<if test="param.fromDate!=null and param.toDate!=null">
+			<choose>
+				<when test="param.datetype=='recdate'">
+					and EXISTS (
+						SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+						WHERE e2.entryid = pay.formentryid 
+						AND e2.paydate &gt;= #{param.fromDate,jdbcType=DATE}
+						AND e2.paydate &lt;= #{param.toDate,jdbcType=DATE}
+					)
+				</when>
+				<when test="param.datetype=='countdate'">
+					and EXISTS (
+						SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2 
+						WHERE e2.entryid = pay.formentryid 
+						AND e2.countdate &gt;= #{param.fromDate,jdbcType=DATE}
+						AND e2.countdate &lt;= #{param.toDate,jdbcType=DATE}
+					)
+				</when>
+				<otherwise>
+					and pay.opttime &gt;= #{param.fromDate,jdbcType=DATE}
+					and pay.opttime &lt;= #{param.toDate,jdbcType=DATE}
+				</otherwise>
+			</choose>
+		</if>
+	    <if test="param.search!=null and param.search!=''">
+	    	and form.number like CONCAT('%',#{param.search,jdbcType=CHAR},'%')
+	    </if>
+  </select>
+
+  <!-- 获取当前筛选条件下的未结转记录ID -->
+  <select id="getAllUnsettledIds" resultType="java.lang.String">
+    SELECT pay.id
+    FROM t_erp_purchase_form_payment pay
+    INNER JOIN t_erp_purchase_form_entry entry ON entry.id = pay.formentryid
+    INNER JOIN t_erp_purchase_form form ON form.id = entry.formid
+    WHERE form.shopid = #{param.shopid}
+      AND pay.auditstatus = 1
+      AND pay.period_rollover_id IS NULL
+      AND pay.acct = #{param.acct}
+      AND entry.auditstatus > 1
+    <if test="param.fromDate != null and param.fromDate != '' and param.endDate != null and param.endDate != ''">
+      <choose>
+        <when test="param.datetype == 'recdate'">
+          AND EXISTS (
+            SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2
+            WHERE e2.entryid = pay.formentryid
+            AND e2.paydate &gt;= #{param.fromDate,jdbcType=DATE}
+            AND e2.paydate &lt;= #{param.endDate,jdbcType=DATE}
+          )
+        </when>
+        <when test="param.datetype == 'countdate'">
+          AND EXISTS (
+            SELECT 1 FROM t_erp_purchase_form_entry_alibabainfo_ext e2
+            WHERE e2.entryid = pay.formentryid
+            AND e2.countdate &gt;= #{param.fromDate,jdbcType=DATE}
+            AND e2.countdate &lt;= #{param.endDate,jdbcType=DATE}
+          )
+        </when>
+        <otherwise>
+          AND pay.opttime &gt;= #{param.fromDate,jdbcType=DATE}
+          AND pay.opttime &lt;= #{param.endDate,jdbcType=DATE}
+        </otherwise>
+      </choose>
+    </if>
+  </select>
+
+  <!-- 根据订单编码和SKU获取未结转记录ID列表 -->
+  <select id="getUnsettledIdsByOrderAndSku" resultType="java.lang.String">
+    SELECT pay.id
+    FROM t_erp_purchase_form_payment pay
+    INNER JOIN t_erp_purchase_form_entry entry ON entry.id = pay.formentryid
+    INNER JOIN t_erp_purchase_form form ON form.id = entry.formid
+    INNER JOIN t_erp_material m ON m.id = entry.materialid
+    WHERE form.shopid = #{param.shopid}
+      AND pay.auditstatus = 1
+      AND pay.period_rollover_id IS NULL
+      AND pay.acct = #{param.acct}
+      AND entry.auditstatus > 1
+      AND form.number = #{param.orderId}
+      AND m.sku = #{param.sku}
+  </select>
+
 </mapper>

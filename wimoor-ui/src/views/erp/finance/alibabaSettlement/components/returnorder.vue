@@ -64,8 +64,8 @@
 	   defineExpose({ show});
 	  function loadTableData(params){
 	  		  purchaseAlibabaSettlementApi.orderReturnList(params).then(res=>{
-	  				 state.tableData.records=res.data.records;
-	  				 state.tableData.total=res.data.total;
+	  				 state.tableData.records=res.data.records || [];
+	  				 state.tableData.total=res.data.total || 0;
 	  		  })
 	  }
 	 function downLoadExcel(){

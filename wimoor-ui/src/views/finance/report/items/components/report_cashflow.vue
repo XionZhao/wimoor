@@ -272,3 +272,19 @@ const formatAmount = (value) => {
   gap: 8px;
 }
 </style>
+
+<style>
+/* 暗黑模式适配 */
+.dark .report-table .el-table__header th {
+  background-color: var(--el-fill-color-light) !important;
+  color: var(--el-text-color-regular) !important;
+}
+
+.dark .report-table .report-header-row {
+  background-color: var(--el-fill-color-light) !important;
+}
+
+.dark .report-table .report-header-row td {
+  background-color: var(--el-fill-color-light) !important;
+}
+</style>

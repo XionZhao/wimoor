@@ -11,6 +11,7 @@
 			<el-row>
 			 <el-space>
 			 <Supplier ref="supplierRef" @change="changeSupplier"  />
+			 <GroupSelect :value="queryParam.groupid" defaultValue="all" @change="changeGroup" />
 			 <el-select class="width120" v-model="queryParam.paymethod" placeholder="支付方式" @change="handleQuery">
 				 <el-option  v-for="item in payMethodList"   :key="item.id"  :label="item.name" :value="item.id"  ></el-option>
 			 </el-select>
@@ -24,7 +25,7 @@
 			 	</el-select>
 			 	<Datepicker ref="datepickers" :shortIndex="3" @changedate="changedate" />
 			 </div>
-			   <el-input  v-model="searchKeywords" placeholder="请输入" @input="handleQuery" class="input-with-select" >
+			   <el-input  v-model="searchKeywords" placeholder="请输入" v-debounce-input="handleQuery" class="input-with-select" >
 			      <template #prepend>
 			        <el-select v-model="searchtype" @change="handleQuery" style="width:100px">
 			          <el-option label="请款单号" value="order"></el-option>
@@ -64,6 +65,9 @@
 			   <!--功能区域 -->
 			  <el-row>
 			   <el-space >
+				 <el-button type="primary" class="im-but-one" @click="showAddPaymentDialog">
+				   <span>新增请款单</span>
+				 </el-button>
 				 <el-button v-if="activeName==0 && activeName!=''" type="primary" class="im-but-one" @click="approveAll">
 				   <span>审核通过</span>
 				 </el-button>
@@ -86,6 +90,7 @@
 			   </div>
 			</el-row>
 			<Table ref="tableRef" @getCheckRow="getCheckRow"/>
+			<AddPaymentDialog ref="addPaymentDialogRef" @refresh="handleQuery"/>
 		</div>
 		 <el-dialog
 		    v-model="dialogVisible"
@@ -165,7 +170,8 @@
 		import { ref,reactive,onMounted,toRefs} from 'vue'
 		import Table from"./components/table.vue"
 		import Supplier from '@/components/header/supplier.vue';
-		import Datepicker from '@/components/header/datepicker.vue';
+	import GroupSelect from '@/components/header/group_select.vue';
+	import Datepicker from '@/components/header/datepicker.vue';
 		import {Search,ArrowDown,} from '@element-plus/icons-vue'
 		import NullTransform from"@/utils/null-transform";
 		import {useRouter } from 'vue-router';
@@ -176,7 +182,9 @@
 		import faccountApi from '@/api/erp/finances/faccountApi.js';
 		import purchaseFinlistApi from '@/api/erp/purchase/finance/listApi.js';
 		import Helper from '@/components/header/helper.vue';
+		import AddPaymentDialog from"./components/addPaymentDialog.vue"
 		const supplierRef=ref();
+		const addPaymentDialogRef=ref();
 		const router = useRouter();
 		const ponumber = router.currentRoute.value.query.number;
 		const tableRef=ref();
@@ -319,9 +327,14 @@
 			}
 			handleQuery();
 		}
+		function changeGroup(val){
+			state.queryParam.groupid=val;
+			handleQuery();
+		}
 		function clearSearch(){
 			supplierRef.value.reset();
 			state.queryParam.supplierid="";
+			state.queryParam.groupid="";
 			state.searchKeywords="";
 			state.queryParam.paymethod="";
 			handleQuery();
@@ -435,6 +448,9 @@
 					handleQuery();
 				}
 			});
+		}
+		function showAddPaymentDialog(){
+			addPaymentDialogRef.value.show();
 		}
 	</script>
 	

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.setting.mapper.FinMappingInvoiceMapper">
+
+    <resultMap type="com.wimoor.finance.setting.domain.FinMappingInvoice" id="FinMappingInvoiceResult">
+        <result property="id"    column="id"    />
+        <result property="groupid"    column="groupid"    />
+        <result property="summary"    column="summary"    />
+        <result property="invoiceType"    column="invoice_type"    />
+        <result property="debitSubjectId"    column="debit_subject_id"    />
+        <result property="creditSubjectId"    column="credit_subject_id"    />
+        <result property="createdTime"    column="created_time"    />
+        <result property="updatedTime"    column="updated_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="updateBy"    column="modify_by"    />
+    </resultMap>
+
+    <sql id="selectFinMappingInvoiceVo">
+        select id, groupid, summary, invoice_type, debit_subject_id, credit_subject_id, created_time, updated_time, create_by, modify_by from fin_mapping_invoice
+    </sql>
+
+    <select id="selectFinMappingInvoiceList" parameterType="com.wimoor.finance.setting.domain.FinMappingInvoice" resultMap="FinMappingInvoiceResult">
+        <include refid="selectFinMappingInvoiceVo"/>
+        <where>
+            <if test="groupid != null and groupid != ''"> and groupid = #{groupid}</if>
+            <if test="summary != null and summary != ''"> and summary = #{summary}</if>
+            <if test="invoiceType != null"> and invoice_type = #{invoiceType}</if>
+            <if test="debitSubjectId != null and debitSubjectId != ''"> and debit_subject_id = #{debitSubjectId}</if>
+            <if test="creditSubjectId != null and creditSubjectId != ''"> and credit_subject_id = #{creditSubjectId}</if>
+        </where>
+        order by created_time desc
+    </select>
+
+    <select id="selectFinMappingInvoiceById" parameterType="String" resultMap="FinMappingInvoiceResult">
+        <include refid="selectFinMappingInvoiceVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFinMappingInvoice" parameterType="com.wimoor.finance.setting.domain.FinMappingInvoice" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_mapping_invoice
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="groupid != null">groupid,</if>
+            <if test="summary != null">summary,</if>
+            <if test="invoiceType != null">invoice_type,</if>
+            <if test="debitSubjectId != null">debit_subject_id,</if>
+            <if test="creditSubjectId != null">credit_subject_id,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">modify_by,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="groupid != null">#{groupid},</if>
+            <if test="summary != null">#{summary},</if>
+            <if test="invoiceType != null">#{invoiceType},</if>
+            <if test="debitSubjectId != null">#{debitSubjectId},</if>
+            <if test="creditSubjectId != null">#{creditSubjectId},</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFinMappingInvoice" parameterType="com.wimoor.finance.setting.domain.FinMappingInvoice">
+        update fin_mapping_invoice
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="groupid != null">groupid = #{groupid},</if>
+            <if test="summary != null">summary = #{summary},</if>
+            <if test="invoiceType != null">invoice_type = #{invoiceType},</if>
+            <if test="debitSubjectId != null">debit_subject_id = #{debitSubjectId},</if>
+            <if test="creditSubjectId != null">credit_subject_id = #{creditSubjectId},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime},</if>
+            <if test="updateBy != null">modify_by = #{updateBy},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinMappingInvoiceById" parameterType="String">
+        delete from fin_mapping_invoice where id = #{id}
+    </delete>
+
+    <delete id="deleteFinMappingInvoiceByIds" parameterType="java.util.List">
+        delete from fin_mapping_invoice where id in
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

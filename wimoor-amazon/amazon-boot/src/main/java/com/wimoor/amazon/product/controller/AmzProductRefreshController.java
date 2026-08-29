@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.wimoor.amazon.product.service.*;
+import com.wimoor.amazon.product.pojo.entity.AmzProductRefreshType;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +23,6 @@ import com.amazon.spapi.model.productpricing.GetPricingResponse;
 import com.wimoor.amazon.auth.pojo.entity.AmazonAuthority;
 import com.wimoor.amazon.auth.service.IAmazonAuthorityService;
 import com.wimoor.amazon.product.pojo.dto.ProductCatalogItemsDTO;
-import com.wimoor.amazon.product.pojo.entity.AmzProductRefresh;
 import com.wimoor.common.result.Result;
 
 import cn.hutool.core.util.StrUtil;
@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/v1/report/product/amzProductRefresh")
 public class AmzProductRefreshController {
 
-	final IAmzProductRefreshService iAmzProductRefreshService;
+	final IAmzProductRefreshTypeService iAmzProductRefreshTypeService;
 	final IProductListingsItemService iProductListingsItemService;
 	final IAmazonAuthorityService amazonAuthorityService;
 	final IProductCatalogItemService iProductCatalogItemService;
@@ -61,7 +61,7 @@ public class AmzProductRefreshController {
 			@Override
 			public void run() {
 				// TODO Auto-generated method stub
-				iAmzProductRefreshService.insert();
+				iAmzProductRefreshTypeService.insert();
 			}
     	}).start();
         return Result.judge(true);
@@ -141,10 +141,11 @@ public class AmzProductRefreshController {
     @GetMapping("/refreshCatalogBySKU")
     public Result<?> refreshCatalogBySKUAction(String groupid,String marketplaceid,String asin,String sku) {
     	AmazonAuthority auth = amazonAuthorityService.selectByGroupAndMarket(groupid, marketplaceid);
-    	AmzProductRefresh skuRefresh=new AmzProductRefresh();
+    	AmzProductRefreshType skuRefresh=new AmzProductRefreshType();
     	skuRefresh.setAmazonauthid(new BigInteger(auth.getId()));
-    	skuRefresh.setSku(sku);
     	skuRefresh.setAsin(asin);
+    	skuRefresh.setSku(sku);
+    	skuRefresh.setMarketplaceid(marketplaceid);
 		com.amazon.spapi.model.catalogitems.Item item = iProductCatalogItemService.captureCatalogProduct(auth, skuRefresh, Arrays.asList(marketplaceid));
 		iProductCatalogItemService.handlerResult(auth, skuRefresh, item); 
         return Result.success(item);

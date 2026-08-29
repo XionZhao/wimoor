@@ -175,9 +175,10 @@ function uploadFiles(item){
 }
 // 上传成功回调
 function handleUploadSuccess(res, file) {
-  const code = res.data.code || 200
+  const code = res.code || 200
   if (code === 200) {
-    uploadList.value.push({ name: file.name, url: res.data,type:file.type })
+    const fileData = typeof res.data === 'object' ? res.data : { url: res.data };
+    uploadList.value.push({ name: file.name, url: fileData.url, type: file.type, fileId: fileData.id })
     uploadedSuccessfully();
     proxy.$modal.msgSuccess("上传文件成功")
   } else {

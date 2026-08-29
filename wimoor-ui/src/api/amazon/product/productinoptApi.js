@@ -75,19 +75,22 @@ import downloadhandler from "@/utils/download-handler.js";
  	 return request.get("/amazon/api/v1/report/product/productInOpt/selectFeeRate")
  }
  function downloadFeeRateList(data){
- 	return request({url:"/amazon/api/v1/report/product/productInOpt/downloadFeeRateList",
- 				                    responseType:"blob",
- 									params:data,
- 									method:'get'}).then(res => {
- 											downloadhandler.downloadSuccess(res,"feeRateListDetail.xlsx")
- 									}).catch(e=>{
- 											downloadhandler.downloadFail();
- 									}); 
+	return request({url:"/amazon/api/v1/report/product/productInOpt/downloadFeeRateList",
+				                    responseType:"blob",
+									params:data,
+									method:'get'}).then(res => {
+											downloadhandler.downloadSuccess(res,"feeRateListDetail.xlsx")
+									}).catch(e=>{
+											downloadhandler.downloadFail();
+									}); 
  }
- 
+ function refreshAllProductFees(){
+	 return request.get("/amazon/api/v1/report/product/productInOpt/refreshAllProductFees")
+ }
+
  export default{
  	updateOptMsku,updateOptProfitId,getProRemarkHis,updateRemark,updateOptStatus,getOptStatusById,
 	findPriceById,saveProductTags,findProductTags,findOwnerById,updateOwnerById,refreshPrice,loadformula,
 	formulaSave,downExcelMSKUData,uploadMskuFile,findPriceListByPid,updateOptOwner,updateFeeRate,
-	selectFeeRate,downloadFeeRateList,
+	selectFeeRate,downloadFeeRateList,refreshAllProductFees,
  }

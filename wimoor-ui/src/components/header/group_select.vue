@@ -33,8 +33,10 @@
 				}
 				groupList.value=res.data;
 				if(res.data&&res.data.length>0){
-					// 优先使用value属性，允许value为null
-					if(props.value !== undefined){
+					// defaultValue=only 时默认选择第一个店铺
+					if(props.defaultValue=='only'){
+						groupid.value = res.data[0].id;
+					}else if(props.value !== undefined && props.value !== ''){
 						groupid.value=props.value;
 					}else if(props.defaultValue=='all'){
 						groupid.value="";

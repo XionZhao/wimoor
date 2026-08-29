@@ -44,4 +44,10 @@ public class LargeFileUser {
      * 创建时间
      */
     private Date createtime;
+
+    /**
+     * 文件可访问URL（非数据库字段，接口返回时动态填充）
+     */
+    @TableField(exist = false)
+    private String url;
 }

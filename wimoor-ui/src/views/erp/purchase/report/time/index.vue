@@ -5,7 +5,7 @@
 		    <el-space >
 				<Datepicker ref="datepickersRef" :days="1"  @changedate="changedate" />
 				 <Warehouse @changeware="getWarehouse"   />
-		   <el-input  v-model="searchKeywords" clearable @input="handleQuery" placeholder="请输入" class="input-with-select" >
+		   <el-input  v-model="searchKeywords" clearable @clear="handleQuery" v-debounce-input="handleQuery" placeholder="请输入" class="input-with-select" >
 		      <template #prepend> 
 		        <el-select v-model="selectlabel"  placeholder="SKU" style="width: 110px">
 		          <el-option label="SKU" value="sku"></el-option>

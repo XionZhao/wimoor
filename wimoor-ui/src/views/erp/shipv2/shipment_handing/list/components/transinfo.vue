@@ -1,68 +1,70 @@
 <template>
 	<el-dialog v-model="dialogTransVisible" class="transdailog"   width="80%" top="1vh" center>
 		<div v-loading="loading"  >
+		
+		<!-- ZH 物流信息显示 -->
 		<div v-if="systemType=='ZH'">
-		  	   	<el-col :span="24">
-			    <el-card   style="margin-bottom:10px;margin-top:-30px;">
-					<el-descriptions :column="3" border>
-					  <el-descriptions-item>
-					      <template #label>
-					        <div class="cell-item">
-					          服务类型
-					        </div>
-					      </template>
-					      {{shipment.service_name}}
-					    </el-descriptions-item>
-					    <el-descriptions-item>
-					      <template #label>
-					        <div class="cell-item">
-					          客户订单号
-					        </div>
-					      </template>
-					      {{shipment.shipment_id}} / {{shipment.client_reference}}
-					    </el-descriptions-item>
-					    <el-descriptions-item>
-					      <template #label>
-					        <div class="cell-item">
-					          运费
-					        </div>
-					      </template>
-					      ￥ {{shipment.charge_amount}}
-					    </el-descriptions-item>
-					    <el-descriptions-item>
-					      <template #label>
-					        <div class="cell-item">
-					          状态
-					        </div>
-					      </template>
-					      <el-tag size="small"> {{shipment.status}}</el-tag>
-					    </el-descriptions-item>
-					    <el-descriptions-item>
-					      <template #label>
-					        <div class="cell-item">
-					         箱数
-					        </div>
-					      </template>
-					      {{shipment.parcel_count}}
-					    </el-descriptions-item>
-						<el-descriptions-item>
-						  <template #label>
-						    <div class="cell-item">
-						     申报数量
-						    </div>
-						  </template>
-						  {{shipment.sumqty}}
-						</el-descriptions-item>
-						<el-descriptions-item>
-						  <template #label>
-						    <div class="cell-item">
-						     申报价格
-						    </div>
-						  </template>
-						  {{shipment.sumprice}}
-						</el-descriptions-item>
-					  </el-descriptions>
-			   	    </el-card>
+	  	   	<el-col :span="24">
+		    <el-card   style="margin-bottom:10px;margin-top:-30px;">
+				<el-descriptions :column="3" border>
+				  <el-descriptions-item>
+				      <template #label>
+				        <div class="cell-item">
+				          服务类型
+				        </div>
+				      </template>
+				      {{shipment.service_name}}
+				    </el-descriptions-item>
+				    <el-descriptions-item>
+				      <template #label>
+				        <div class="cell-item">
+				          客户订单号
+				        </div>
+				      </template>
+				      {{shipment.shipment_id}} / {{shipment.client_reference}}
+				    </el-descriptions-item>
+				    <el-descriptions-item>
+				      <template #label>
+				        <div class="cell-item">
+				          运费
+				        </div>
+				      </template>
+				      ￥ {{shipment.charge_amount}}
+				    </el-descriptions-item>
+				    <el-descriptions-item>
+				      <template #label>
+				        <div class="cell-item">
+				          状态
+				        </div>
+				      </template>
+				      <el-tag size="small"> {{shipment.status}}</el-tag>
+				    </el-descriptions-item>
+				    <el-descriptions-item>
+				      <template #label>
+				        <div class="cell-item">
+				         箱数
+				        </div>
+				      </template>
+				      {{shipment.parcel_count}}
+				    </el-descriptions-item>
+					<el-descriptions-item>
+					  <template #label>
+					    <div class="cell-item">
+					     申报数量
+					    </div>
+					  </template>
+					  {{shipment.sumqty}}
+					</el-descriptions-item>
+					<el-descriptions-item>
+					  <template #label>
+					    <div class="cell-item">
+					     申报价格
+					    </div>
+					  </template>
+					  {{shipment.sumprice}}
+					</el-descriptions-item>
+				  </el-descriptions>
+		   	    </el-card>
 			</el-col>
 			
 		  <el-row :gutter="20" style="margin-bottom:10px">
@@ -227,17 +229,14 @@
 						    </el-table-column>
 						</el-table>
 				 </el-row>
- </div>
-	 
+		</div>
 
-
+		<!-- ZM 物流信息显示 -->
 		<div class="row" v-if="systemType=='ZM'">
 			<div class="col-md-12">
 				<div class="box box-widget" style="height:500px;">
 					<div class="box-title"><img :src="$require('@/assets/pages/shipment/transinfo/inventory_detail_icon03.png')"> 路由信息</div>
 					<div id="transship2" style="margin-left:15px;margin-top:10px;">
-
-
 						<p>运单号码:{{zmData.jobno}}</p>
 						<div class="left-line"></div>
 						<div style="padding-left:15px;max-height:400px;width:100%;overflow:auto;">
@@ -247,12 +246,54 @@
 								<p style="margin-left:8px;">{{traces.remark}}</p>
 							</div>
 						</div>
-
-
 					</div>
 				</div>
 			</div>
 		</div>
+
+		<!-- WTO 物流信息显示 -->
+		<div v-if="systemType=='WTO'">
+			<el-col :span="24">
+				<el-card style="margin-bottom:10px;margin-top:-30px;">
+					<el-descriptions :column="3" border>
+						<el-descriptions-item label="发货人运单号">{{wtoData.trackNumber?.data?.shipperHawbCode}}</el-descriptions-item>
+						<el-descriptions-item label="物流运单号">{{wtoData.trackNumber?.data?.logisticsHawbCode}}</el-descriptions-item>
+						<el-descriptions-item label="目的国家">{{wtoData.track?.data?.destinationCountry}}</el-descriptions-item>
+					</el-descriptions>
+				</el-card>
+			</el-col>
+			
+			<el-row :gutter="20" style="margin-bottom:10px">
+				<el-col :span="12">
+					<el-card>
+						<div class="box-title">箱号信息</div>
+						<el-table :data="wtoData.trackNumber?.data?.boxs" border style="margin-top:10px;" height="600">
+							<el-table-column prop="boxNo" label="箱号" />
+							<el-table-column prop="logisticsNo" label="物流单号" />
+							<el-table-column prop="trackNo" label="跟踪号" />
+						</el-table>
+					</el-card>
+				</el-col>
+				<el-col :span="12">
+					<el-card>
+						<div class="box-title">物流轨迹</div>
+						<el-scrollbar height="600px">
+							<el-timeline style="max-width: 600px;margin-top:20px;padding-left:15px;">
+								<el-timeline-item
+									v-for="(track, index) in wtoData.track?.data?.tracks"
+									:key="index"
+									:timestamp="track.trackTime"
+								>
+									{{track.trackContent}}
+									<span v-if="track.trackArea" style="color:#999;margin-left:10px;">[{{track.trackArea}}]</span>
+								</el-timeline-item>
+							</el-timeline>
+						</el-scrollbar>
+					</el-card>
+				</el-col>
+			</el-row>
+		</div>
+
 		</div>
 		<template #footer  >
 			<span class="dialog-footer">
@@ -276,6 +317,7 @@
 			let shipment=ref({});
 			let loading=ref(false);
 			let zhTrans=ref({});
+			let wtoData=ref({});
 			let systemType=ref("ZH");
 			function loadZmApiDetail(data){
 					if(data&&data.message&&data.message=="请求成功"){
@@ -310,11 +352,17 @@
 						     }
 				   }
 		      }
+		function loadWtoApiDetail(data){
+				if(data){
+					wtoData.value=data;
+				}
+		}
 		function loadTransDetialInfo(companyid,shipmentid,ordernum){
 								var html="";
 								loading.value=true;
 								shipment.value="";
 								zmData.value="";
+								wtoData.value={};
 								transportationApi.shipTransDetial({"companyid": companyid,"shipmentid":shipmentid,"ordernum":ordernum}).then(res=>{
 									loading.value=false;
 									if(res && res.data.ftype=="ZH"){
@@ -325,11 +373,15 @@
 										systemType.value="ZM";
 										loadZmApiDetail(res.data);
 									}
+									if(res && res.data.ftype=="WTO"){
+										systemType.value="WTO";
+										loadWtoApiDetail(res.data);
+									}
 								})
 							    dialogTransVisible.value=true;
 		}
 	  return {dialogTransVisible,zmData,loading,
-	         shipment,zhTrans,loadTransDetialInfo,systemType,dateFormat
+	         shipment,zhTrans,wtoData,loadTransDetialInfo,systemType,dateFormat
 			}
 	    }
 	}

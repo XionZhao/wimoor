@@ -123,7 +123,6 @@ defineExpose({
 
 <style scoped>
 .template-content {
-  max-height: 800px;
   overflow-y: auto;
   padding: 10px;
   border-left: 1px solid #e4e7ed;
@@ -134,5 +133,12 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
+}
+</style>
+
+<style>
+/* 暗黑模式适配 */
+.dark .template-content {
+  border-left-color: var(--el-border-color);
 }
 </style>

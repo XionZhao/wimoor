@@ -30,4 +30,13 @@ public interface ISysQueryFieldService extends IService<SysQueryField> {
 	List<SysQueryUserVersion> getMyVersionFieldByUser(String id, String queryname);
 	List<SysQueryVersionFeild> getVersionFieldByUserQueryName(String usersid, String queryname);
 	List<SysQueryVersionFeild> getVersionFieldById(String id);
+	
+	// 管理员接口：获取所有去重的查询名称列表
+	List<String> getDistinctQueryNames();
+	
+	// 管理员接口：保存字段配置（新增或修改）
+	boolean saveField(SysQueryField field);
+	
+	// 管理员接口：删除字段配置
+	boolean deleteField(String fquery, String ffield);
 }

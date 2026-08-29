@@ -39,6 +39,11 @@ public interface ShipInboundPlanMapper extends BaseMapper<ShipInboundPlan> {
 
 	List<Map<String, Object>> getShipRecord(@Param("groupid") String groupid,@Param("marketplaceid") String marketplaceid, @Param("sku") String sku, @Param("shopid") String shopid);
 	
+	/**
+	 * 批量查询发货记录
+	 */
+	List<Map<String, Object>> getShipRecordBatch(@Param("groupid") String groupid,@Param("marketplaceid") String marketplaceid, @Param("skuList") List<String> skuList, @Param("shopid") String shopid);
+	
 	List<Map<String, Object>> getShipBadRecord(@Param("marketplaceid") String marketplaceid, @Param("sku") String sku, @Param("shopid") String shopid);
 	List<Map<String, Object>> getShipArrivalTimeRecord(@Param("shopid") String shopid, @Param("marketplaceid") String marketplaceid, @Param("sku") String sku);
 

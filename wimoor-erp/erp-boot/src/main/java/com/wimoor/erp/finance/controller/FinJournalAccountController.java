@@ -125,10 +125,10 @@ public class FinJournalAccountController {
 		}
 		String toDate = dto.getToDate();
 		if (StrUtil.isNotEmpty(toDate)) {
-			param.put("endDate", toDate.trim());
+			param.put("toDate", toDate.trim());
 		} else {
 			toDate = sdf.format(new Date());
-			param.put("endDate", toDate);
+			param.put("toDate", toDate);
 		}
 		IPage<Map<String, Object>> list = finJournalAccountService.findByCondition(dto.getPage(),param);
 		return Result.success(list);
@@ -252,6 +252,58 @@ public class FinJournalAccountController {
 		return Result.success(query.getListPage(list));
 	}
 	
+	@PostMapping(value = "findDetailList")
+	public Result<List<Map<String,Object>>> findDetailListAction(@RequestBody FinQueryDTO dto)  {
+		UserInfo userinfo = UserInfoContext.get();
+		String shopid = userinfo.getCompanyid();
+		Map<String, Object> param = new HashMap<String, Object>();
+		String search =dto.getSearch();
+		if (StrUtil.isEmpty(search)) {
+			search = null;
+		} else {
+			search ="%"+ search.trim() + "%";
+		}
+		param.put("shopid", shopid);
+		param.put("search", search);
+		String project=dto.getProject();
+		if(StrUtil.isNotEmpty(project)){
+			param.put("projectid", project);
+		}else{
+			param.put("projectid", null);
+		}
+		String acc=dto.getAcc();
+		if(StrUtil.isNotEmpty(acc)){
+			param.put("acc", acc);
+		}else{
+			param.put("acc", null);
+		}
+		String groupid=dto.getGroupid();
+		if(StrUtil.isNotEmpty(groupid)){
+			param.put("groupid", groupid);
+		}else{
+			param.put("groupid", null);
+		}
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		String fromDate = dto.getFromDate();
+		if (StrUtil.isNotEmpty(fromDate)) {
+			param.put("fromDate", fromDate.trim());
+		} else {
+			Calendar cal = Calendar.getInstance();
+			cal.add(Calendar.DAY_OF_MONTH, -30);
+			fromDate = sdf.format(cal.getTime());
+			param.put("fromDate", fromDate);
+		}
+		String toDate = dto.getToDate();
+		if (StrUtil.isNotEmpty(toDate)) {
+			param.put("toDate", toDate.trim());
+		} else {
+			toDate = sdf.format(new Date());
+			param.put("toDate", toDate);
+		}
+		List<Map<String,Object>> list = finJournalAccountService.findDetailList(param);
+		return Result.success(list);
+	}
+	
 	@PostMapping(value = "/downExcelDate")
 	public void downExcelDateAction(@RequestBody FinQueryDTO dto, HttpServletResponse response){
 		// 创建新的Excel工作薄
@@ -292,10 +344,10 @@ public class FinJournalAccountController {
 		}
 		String toDate = dto.getToDate();
 		if (StrUtil.isNotEmpty(toDate)) {
-			param.put("endDate", toDate.trim());
+			param.put("toDate", toDate.trim());
 		} else {
 			toDate = sdf.format(new Date());
-			param.put("endDate", toDate);
+			param.put("toDate", toDate);
 		}
 		finJournalAccountService.setExcelBook(workbook, param);
 		
@@ -333,6 +385,15 @@ public class FinJournalAccountController {
 		
 	}
 	
+	/**
+	 * 按opttime日期查询台账记录（供财务模块凭证生成调用）
+	 */
+	@GetMapping("/journalForVoucher")
+	public Result<List<Map<String, Object>>> findJournalForVoucher(String groupid, String optDate) {
+		List<Map<String, Object>> list = finJournalAccountService.findJournalForVoucher(groupid, optDate);
+		return Result.success(list);
+	}
+
 	@GetMapping("/getLineData")
 	public  Result<Map<Integer,Map<String,Object>>> findLineDataAction(String acc,String year ,String month){
 		UserInfo userinfo = UserInfoContext.get();

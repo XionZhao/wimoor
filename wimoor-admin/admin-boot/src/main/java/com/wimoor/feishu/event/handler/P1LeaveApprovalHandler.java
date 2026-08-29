@@ -1,30 +1,24 @@
 package com.wimoor.feishu.event.handler;
- 
-import java.util.HashMap;
-import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import com.lark.oapi.Client;
 import com.lark.oapi.core.request.EventReq;
-import com.lark.oapi.core.response.RawResponse;
-import com.lark.oapi.core.token.AccessTokenType;
 import com.lark.oapi.core.utils.Jsons;
 import com.lark.oapi.event.CustomEventHandler;
 import com.lark.oapi.event.EventDispatcher;
-import com.lark.oapi.service.im.v1.enums.MsgTypeEnum;
-import com.lark.oapi.service.im.v1.model.ext.MessageText;
-import com.wimoor.feishu.config.FeiShuClientBuilder;
+import com.wimoor.feishu.pojo.entity.LeaveCalendar;
 import com.wimoor.feishu.service.ILeaveCalendarService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
 @Component
 public class P1LeaveApprovalHandler extends CustomEventHandler {
 
 	EventDispatcher eventDispatcher=null;
     @Autowired 
     ILeaveCalendarService iLeaveCalendarService;
-    @Autowired 
-    FeiShuClientBuilder clientBuilder;
+    @Autowired
+    MessageSendHandler messageSendHandler;
 	 
 	public void setEventDispatcher(EventDispatcher eventDispatcher) {
 		// TODO Auto-generated constructor stub
@@ -41,38 +35,56 @@ public class P1LeaveApprovalHandler extends CustomEventHandler {
         // 解析关键字段
         Map<String,Object> json = Jsons.DEFAULT.fromJson(plainEventJsonStr,Map.class);
         Map<String,Object> eventmap=json.get("event")!=null?(Map<String, Object>) json.get("event"):null;
+        Map<String,Object> headermap=json.get("header")!=null?(Map<String, Object>) json.get("header"):null;
+        
+        // 获取appid和type，支持V1和V2版本
+        String appid = null;
+        String type = null;
+        if(headermap!=null) {
+        	// V2版本：从header中获取
+        	appid = headermap.get("app_id")!=null?headermap.get("app_id").toString():null;
+        	type = headermap.get("event_type")!=null?headermap.get("event_type").toString():null;
+        }
+        if(eventmap!=null && appid==null) {
+        	// V1版本：从event中获取
+        	appid = eventmap.get("app_id")!=null?eventmap.get("app_id").toString():null;
+        	type = eventmap.get("type")!=null?eventmap.get("type").toString():null;
+        }
+        
         if(eventmap!=null) {
-        	String appid=eventmap.get("app_id")!=null?eventmap.get("app_id").toString():null;
-        	String type=eventmap.get("type")!=null?eventmap.get("type").toString():null;
         	String  employee_id=eventmap.get("employee_id")!=null?eventmap.get("employee_id").toString():null;
+			String instance_code=eventmap.get("instance_code")!=null?eventmap.get("instance_code").toString():null;
           	//String  tenantKey=eventmap.get("tenant_key")!=null?eventmap.get("tenant_key").toString():null;
           	//String  open_id=eventmap.get("open_id")!=null?eventmap.get("open_id").toString():null;
             // 验签逻辑
-            if(appid!=null&&type!=null&&employee_id!=null) {
-            	if(type.equals("leave_approval")) {
+            if(appid!=null&&type!=null) {
+            	if(type.equals("leave_approval") && employee_id!=null) {
+					// 检查数据库中是否已有该instance_code对应的记录
+					List<LeaveCalendar> existingRecords = iLeaveCalendarService.lambdaQuery()
+							.eq(LeaveCalendar::getUuid, instance_code)
+							.eq(LeaveCalendar::getAppid, appid)
+							.list();
+					
+					if(existingRecords != null && !existingRecords.isEmpty()) {
+						// 已有记录
+						LeaveCalendar existingRecord = existingRecords.get(0);
+						if(existingRecord.getIsdelete() != null && existingRecord.getIsdelete()) {
+							// 如果是已删除状态，改为未删除
+							existingRecord.setIsdelete(false);
+							iLeaveCalendarService.updateById(existingRecord);
+							System.out.println("恢复已删除的请假日程: instance_code=" + instance_code);
+						} else {
+							// 如果是未删除状态，不做任何处理
+							System.out.println("请假日程已存在且未删除，跳过处理: instance_code=" + instance_code);
+						}
+						return;
+					}
+					
+					// 没有记录，走创建逻辑
                 	try {
-                        // 发送请求
-                		Client client = clientBuilder.getClient(appid);
-                		 Map<String, Object> body = new HashMap<>();
-                		    body.put("receive_id", employee_id);
-                		    body.put("content", MessageText.newBuilder()
-                		        .atUser(employee_id, "深圳市科方达科技有限公司")
-                		        .text("审核已处理，并自动为您创建请假日程，感谢您的辛苦工作")
-                		        .build());
-                		    body.put("msg_type", MsgTypeEnum.MSG_TYPE_TEXT.getValue());
-
-                		    // 发起请求
-                		    RawResponse resp = client.post(
-                		        "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=user_id"
-                		        , body
-                		        , AccessTokenType.Tenant);
-                		 // 处理结果
-                		    System.out.println(resp.getStatusCode());
-                		    System.out.println(Jsons.DEFAULT.toJson(resp.getHeaders()));
-                		    System.out.println(new String(resp.getBody()));
-                		    System.out.println(resp.getRequestID());
-                		    
-                		String instance_code=eventmap.get("instance_code").toString();
+                        // 发送消息通知
+                		messageSendHandler.sendLeaveApprovalMessage(appid, employee_id);
+                	
                 		String leave_start_time=eventmap.get("leave_start_time").toString();
                 		String leave_end_time=eventmap.get("leave_end_time").toString();
                 		iLeaveCalendarService.addLeaveCalandar(appid,instance_code,employee_id,leave_start_time ,leave_end_time,plainEventJsonStr);
@@ -81,8 +93,25 @@ public class P1LeaveApprovalHandler extends CustomEventHandler {
                 	}
                 }
                 if(type.equals("leave_approval_revert")) {
-                	String instance_code=eventmap.get("instance_code").toString();
-                	iLeaveCalendarService.removeLeaveCalandar(appid,instance_code);
+                	 
+                	iLeaveCalendarService.deleteLeaveCalandar(appid,instance_code);
+                }
+				if(type.equals("approval_instance")) {
+					String status=eventmap.get("status")!=null?eventmap.get("status").toString():null;
+					// CANCELED: 审批中撤回, REVERTED: 已通过后撤销
+					if("CANCELED".equals(status) || "REVERTED".equals(status)) {
+						 
+						iLeaveCalendarService.deleteLeaveCalandar(appid,instance_code);
+					}
+				}
+                // 处理V2版本的撤回事件 (approval.instance.status_changed_v4)
+                if(type.equals("approval.instance.status_changed_v4")) {
+                	String status=eventmap.get("status")!=null?eventmap.get("status").toString():null;
+                	// CANCELED: 审批中撤回, REVERTED: 已通过后撤销
+                	if("CANCELED".equals(status) || "REVERTED".equals(status)) {
+                		 
+                		iLeaveCalendarService.deleteLeaveCalandar(appid,instance_code);
+                	}
                 }
             }
             

@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-row :gutter="10">
       <el-col :span="10" :xs="24">
-        <el-card style="border-left:none;border-top:none;border-bottom:none;height:calc(100vh - 150px);" shadow="never">
+        <el-card style="border-left:none;border-top:none;border-bottom:none;height:calc(100vh - 150px);overflow:auto;" shadow="never">
           <template #header>
             <svg-icon icon-class="menu" />
             菜单列表

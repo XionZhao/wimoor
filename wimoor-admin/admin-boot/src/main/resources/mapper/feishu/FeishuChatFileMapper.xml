@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.feishu.mapper.FeishuChatFileMapper">
+
+    <resultMap id="BaseResultMap" type="com.wimoor.feishu.pojo.entity.FeishuChatFile">
+        <id column="id" property="id" />
+        <result column="message_id" property="messageId" />
+        <result column="chat_id" property="chatId" />
+        <result column="sender_id" property="senderId" />
+        <result column="file_type" property="fileType" />
+        <result column="file_name" property="fileName" />
+        <result column="file_size" property="fileSize" />
+        <result column="file_key" property="fileKey" />
+        <result column="image_key" property="imageKey" />
+        <result column="local_path" property="localPath" />
+        <result column="duration" property="duration" />
+        <result column="download_status" property="downloadStatus" />
+        <result column="app_id" property="appId" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+</mapper>

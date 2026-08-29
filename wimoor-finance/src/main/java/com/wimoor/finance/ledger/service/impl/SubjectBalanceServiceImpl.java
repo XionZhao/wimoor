@@ -1,0 +1,371 @@
+package com.wimoor.finance.ledger.service.impl;
+
+import com.wimoor.finance.ledger.domain.FinDetailLedger;
+import com.wimoor.finance.ledger.domain.dto.SubjectBalanceDTO;
+import com.wimoor.finance.ledger.mapper.FinDetailLedgerMapper;
+import com.wimoor.finance.ledger.mapper.FinGeneralLedgerMapper;
+import com.wimoor.finance.ledger.service.IFinGeneralLedgerService;
+import com.wimoor.finance.ledger.service.ISubjectBalanceService;
+import com.wimoor.finance.setting.domain.FinAccountingSubjects;
+import com.wimoor.finance.setting.mapper.FinAccountingSubjectsMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+public class SubjectBalanceServiceImpl implements ISubjectBalanceService {
+
+    @Autowired
+    private FinDetailLedgerMapper finDetailLedgerMapper;
+
+    @Autowired
+    private FinGeneralLedgerMapper finGeneralLedgerMapper;
+
+    @Autowired
+    IFinGeneralLedgerService finGeneralLedgerService;
+
+    @Autowired
+    private FinAccountingSubjectsMapper finAccountingSubjectsMapper;
+
+    private static final DateTimeFormatter PERIOD_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
+
+    @Override
+    public BigDecimal getSubjectBalance(String groupid, String period, String subjectCodes, String amountType) {
+        try {
+            // 解析期间
+            LocalDate[] dateRange = parsePeriod(period);
+            LocalDate startDate = dateRange[0];
+            LocalDate endDate = dateRange[1];
+
+            // 解析科目编码（支持多个科目用逗号分隔）
+            List<String> subjectCodeList = parseSubjectCodes(subjectCodes);
+
+            if (subjectCodeList.isEmpty()) {
+                return BigDecimal.ZERO;
+            }
+
+            // 如果是单个科目编码且不包含通配符
+            if (subjectCodeList.size() == 1 && !subjectCodeList.get(0).contains("%")) {
+                return calculateSingleSubjectBalance(groupid, subjectCodeList.get(0), startDate, endDate, amountType);
+            } else {
+                // 多个科目或包含通配符的科目
+                return calculateMultipleSubjectsBalance(groupid, subjectCodeList, startDate, endDate, amountType);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("获取科目余额失败: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Map<String, BigDecimal> getSubjectBalances(String groupid, String period, List<String> subjectCodes, String amountType) {
+        Map<String, BigDecimal> result = new HashMap<>();
+
+        try {
+            LocalDate[] dateRange = parsePeriod(period);
+            LocalDate startDate = dateRange[0];
+            LocalDate endDate = dateRange[1];
+
+            // 批量查询科目余额
+            List<SubjectBalanceDTO> balanceDTOs = finDetailLedgerMapper.selectSubjectBalances(
+                    Map.of("groupid", groupid, "subjectCodes", subjectCodes, "startDate", startDate, "endDate", endDate));
+
+            for (SubjectBalanceDTO dto : balanceDTOs) {
+                BigDecimal amount = getAmountByType(dto, amountType);
+                result.put(dto.getSubjectCode(), amount);
+            }
+
+            // 处理未找到的科目
+            for (String subjectCode : subjectCodes) {
+                if (!result.containsKey(subjectCode)) {
+                    result.put(subjectCode, BigDecimal.ZERO);
+                }
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("批量获取科目余额失败: " + e.getMessage(), e);
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<FinDetailLedger> getSubjectDetails(String groupid, String period, String subjectCode) {
+        LocalDate[] dateRange = parsePeriod(period);
+        return finDetailLedgerMapper.selectBySubjectAndPeriod(groupid, subjectCode, dateRange[0], dateRange[1]);
+    }
+
+    @Override
+    public SubjectBalanceDTO getSubjectBalanceDetail(String groupid, String period, String subjectCode) {
+        try {
+            LocalDate[] dateRange = parsePeriod(period);
+            LocalDate startDate = dateRange[0];
+            LocalDate endDate = dateRange[1];
+
+            // 获取科目信息
+            FinAccountingSubjects subject = finAccountingSubjectsMapper.selectByTenantIdAndSubjectCode(groupid, subjectCode);
+            if (subject == null) {
+                throw new RuntimeException("科目不存在: " + subjectCode);
+            }
+
+            // 获取余额信息
+            List<SubjectBalanceDTO> balanceDTOs = finDetailLedgerMapper.selectSubjectBalances(
+                    Map.of("groupid", groupid, "subjectCodes", Collections.singletonList(subjectCode), "startDate", startDate, "endDate", endDate));
+
+            if (!balanceDTOs.isEmpty()) {
+                return balanceDTOs.get(0);
+            } else {
+                // 如果没有明细记录，返回空余额信息
+                SubjectBalanceDTO dto = new SubjectBalanceDTO();
+                dto.setSubjectCode(subjectCode);
+                dto.setSubjectName(subject.getSubjectName());
+                dto.setSubjectType(subject.getSubjectType());
+                dto.setDirection(subject.getDirection());
+                dto.setBeginBalance(BigDecimal.ZERO);
+                dto.setBeginDirection(subject.getDirection());
+                dto.setDebitTotal(BigDecimal.ZERO);
+                dto.setCreditTotal(BigDecimal.ZERO);
+                dto.setEndBalance(BigDecimal.ZERO);
+                dto.setEndDirection(subject.getDirection());
+                return dto;
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("获取科目余额详情失败: " + e.getMessage(), e);
+        }
+    }
+
+    private BigDecimal calculateSingleSubjectBalance(String groupid, String subjectCode,
+                                                   LocalDate startDate, LocalDate endDate,
+                                                   String amountType) {
+        // 获取科目信息
+        FinAccountingSubjects subject = finAccountingSubjectsMapper.selectByTenantIdAndSubjectCode(groupid, subjectCode);
+        if (subject == null) {
+            return BigDecimal.ZERO;
+        }
+
+        // 如果amountType为空，默认使用END_BALANCE
+        if (amountType == null || amountType.isEmpty()) {
+            amountType = "END_BALANCE";
+        }
+
+        switch (amountType) {
+            case "BEGIN_BALANCE":
+                return getBeginBalance(groupid, subjectCode, startDate, subject.getDirection());
+
+            case "END_BALANCE":
+                return getEndBalance(groupid, subjectCode, endDate, subject.getDirection());
+
+            case "DEBIT_TOTAL":
+                return finDetailLedgerMapper.sumDebitAmountBySubjectAndPeriod(groupid, subjectCode, startDate, endDate);
+
+            case "CREDIT_TOTAL":
+                return finDetailLedgerMapper.sumCreditAmountBySubjectAndPeriod(groupid, subjectCode, startDate, endDate);
+
+            case "NET_AMOUNT":
+                BigDecimal debitTotal = finDetailLedgerMapper.sumDebitAmountBySubjectAndPeriod(groupid, subjectCode, startDate, endDate);
+                BigDecimal creditTotal = finDetailLedgerMapper.sumCreditAmountBySubjectAndPeriod(groupid, subjectCode, startDate, endDate);
+                if (subject.getDirection() == 1) { // 借方科目
+                    return debitTotal.subtract(creditTotal);
+                } else { // 贷方科目
+                    return creditTotal.subtract(debitTotal);
+                }
+
+            default:
+                throw new IllegalArgumentException("不支持的金额类型: " + amountType);
+        }
+    }
+
+    private BigDecimal calculateMultipleSubjectsBalance(String groupid, List<String> subjectCodes,
+                                                       LocalDate startDate, LocalDate endDate,
+                                                       String amountType) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (String subjectCode : subjectCodes) {
+            if (subjectCode.contains("%")) {
+                // 处理通配符科目编码
+                BigDecimal amount = finDetailLedgerMapper.calculateSubjectGroupBalance(
+                    groupid, subjectCode, startDate, endDate, amountType);
+                total = total.add(amount);
+            } else {
+                // 单个科目
+                BigDecimal amount = calculateSingleSubjectBalance(groupid, subjectCode, startDate, endDate, amountType);
+                total = total.add(amount);
+            }
+        }
+
+        return total;
+    }
+
+    private BigDecimal getBeginBalance(String groupid, String subjectCode, LocalDate startDate, Integer defaultDirection) {
+        List<FinDetailLedger> latestRecords = finDetailLedgerMapper.selectLatestBalanceBeforeDate(groupid, subjectCode, startDate);
+        if (!latestRecords.isEmpty()) {
+            FinDetailLedger latest = latestRecords.get(0);
+            return adjustBalanceByDirection(latest.getBalance(), latest.getBalanceDirection());
+        }
+        return BigDecimal.ZERO;
+    }
+
+    private BigDecimal getEndBalance(String groupid, String subjectCode, LocalDate endDate, Integer defaultDirection) {
+        List<FinDetailLedger> latestRecords = finDetailLedgerMapper.selectLatestBalanceByDate(groupid, subjectCode, endDate);
+        if (!latestRecords.isEmpty()) {
+            FinDetailLedger latest = latestRecords.get(0);
+            return adjustBalanceByDirection(latest.getBalance(), latest.getBalanceDirection());
+        }
+        return BigDecimal.ZERO;
+    }
+
+    private BigDecimal adjustBalanceByDirection(BigDecimal balance, Integer direction) {
+        if (balance == null) {
+            return BigDecimal.ZERO;
+        }
+        // 借方余额(direction=1)返回正数，贷方余额(direction=2)返回负数
+        if (direction != null && direction == 2) {
+            return balance.abs().negate();
+        }
+        return balance.abs();
+    }
+
+    public  Map<String,BigDecimal> getAllSubjectBalance(String groupid,String period) {
+        Map<String,BigDecimal> result = new HashMap<>();
+        // 使用带前推查找的方法：如果某科目在指定期间没有记录，会查找最近的记录
+        List<Map<String, Object>> list = finGeneralLedgerService.getAllSubjectBalanceWithFallback(groupid, period);
+        for(Map<String, Object> map : list) {
+            BigDecimal endBalance = map.get("endBalance")!=null?new BigDecimal(map.get("endBalance").toString()):BigDecimal.ZERO;
+            Integer endDirection = map.get("endDirection")!=null?Integer.parseInt(map.get("endDirection").toString()):null;
+
+            // 统一输出：借方余额为正数，贷方余额为负数
+            // 兼容新旧两种存储格式：
+            //   旧格式：endBalance 已带符号（贷方为负），endDirection=2
+            //   新格式：endBalance 为绝对值，endDirection=2
+            if (endDirection != null && endDirection == 2) {
+                // 贷方余额应为负数，取绝对值后再取反，兼容旧数据
+                endBalance = endBalance.abs().negate();
+            } else {
+                // 借方余额应为正数，取绝对值
+                endBalance = endBalance.abs();
+            }
+
+            result.put("ACC_" + map.get("subjectCode").toString(), endBalance);
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String,BigDecimal> getAllSubjectDebitTotal(String groupid,String period) {
+        Map<String,BigDecimal> result = new HashMap<>();
+        List<Map<String, Object>> list = finGeneralLedgerService.getAllSubjectBalance(groupid, period);
+        for(Map<String, Object> map : list) {
+            BigDecimal debitTotal = map.get("debitTotal")!=null?new BigDecimal(map.get("debitTotal").toString()):BigDecimal.ZERO;
+            result.put("ACC_" + map.get("subjectCode").toString(), debitTotal);
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String,BigDecimal> getAllSubjectCreditTotal(String groupid,String period) {
+        Map<String,BigDecimal> result = new HashMap<>();
+        List<Map<String, Object>> list = finGeneralLedgerService.getAllSubjectBalance(groupid, period);
+        for(Map<String, Object> map : list) {
+            BigDecimal creditTotal = map.get("creditTotal")!=null?new BigDecimal(map.get("creditTotal").toString()):BigDecimal.ZERO;
+            result.put("ACC_" + map.get("subjectCode").toString(), creditTotal);
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, BigDecimal> getAllSubjectYearToDateBalance(String groupid, String period) {
+        Map<String, BigDecimal> result = new HashMap<>();
+        // 从明细账汇总本年累计，参考科目余额表逻辑
+        List<Map<String, Object>> list = finGeneralLedgerMapper.sumYearToDateEntriesBySubject(groupid, period);
+
+        for (Map<String, Object> map : list) {
+            String subjectCode = map.get("subjectCode").toString();
+            Integer direction = map.get("direction") != null ? Integer.parseInt(map.get("direction").toString()) : 1;
+
+            BigDecimal ytdDebitTotal = map.get("ytdDebitTotal") != null ?
+                    new BigDecimal(map.get("ytdDebitTotal").toString()) : BigDecimal.ZERO;
+            BigDecimal ytdCreditTotal = map.get("ytdCreditTotal") != null ?
+                    new BigDecimal(map.get("ytdCreditTotal").toString()) : BigDecimal.ZERO;
+
+            // 年初余额（绝对值）
+            BigDecimal yearStartBalance = map.get("yearStartBalance") != null ?
+                    new BigDecimal(map.get("yearStartBalance").toString()) : BigDecimal.ZERO;
+            // 年初余额方向：1=借方，2=贷方
+            Integer yearStartDirection = map.get("yearStartDirection") != null ?
+                    Integer.parseInt(map.get("yearStartDirection").toString()) : direction;
+            // 转为带符号值：借方为正，贷方为负
+            BigDecimal signedOpening = yearStartDirection == 2 ?
+                    yearStartBalance.negate() : yearStartBalance;
+
+            // YTD余额 = 年初余额(带符号) + 本年累计借方 - 本年累计贷方
+            BigDecimal ytdBalance = signedOpening.add(ytdDebitTotal).subtract(ytdCreditTotal);
+
+            // 统一输出：借方余额为正数，贷方余额为负数
+            if (direction == 2) {
+                // 贷方科目：取反
+                result.put("ACC_" + subjectCode, ytdBalance.negate());
+            } else {
+                // 借方科目：保持原值
+                result.put("ACC_" + subjectCode, ytdBalance);
+            }
+        }
+        return result;
+    }
+
+    private BigDecimal getAmountByType(SubjectBalanceDTO dto, String amountType) {
+        switch (amountType) {
+            case "BEGIN_BALANCE":
+                return adjustBalanceByDirection(dto.getBeginBalance(), dto.getBeginDirection());
+
+            case "END_BALANCE":
+                return adjustBalanceByDirection(dto.getEndBalance(), dto.getEndDirection());
+
+            case "DEBIT_TOTAL":
+                return dto.getDebitTotal();
+
+            case "CREDIT_TOTAL":
+                return dto.getCreditTotal();
+
+            case "NET_AMOUNT":
+                if (dto.getDirection() == 1) { // 借方科目
+                    return dto.getDebitTotal().subtract(dto.getCreditTotal());
+                } else { // 贷方科目
+                    return dto.getCreditTotal().subtract(dto.getDebitTotal());
+                }
+
+            default:
+                throw new IllegalArgumentException("不支持的金额类型: " + amountType);
+        }
+    }
+
+    private LocalDate[] parsePeriod(String period) {
+        if (period.length() != 6) {
+            throw new IllegalArgumentException("期间格式错误，应为YYYYMM: " + period);
+        }
+
+        int year = Integer.parseInt(period.substring(0, 4));
+        int month = Integer.parseInt(period.substring(4, 6));
+
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+        return new LocalDate[]{startDate, endDate};
+    }
+
+    private List<String> parseSubjectCodes(String subjectCodes) {
+        if (subjectCodes == null || subjectCodes.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return Arrays.stream(subjectCodes.split(","))
+                .map(String::trim)
+                .filter(code -> !code.isEmpty())
+                .collect(Collectors.toList());
+    }
+}

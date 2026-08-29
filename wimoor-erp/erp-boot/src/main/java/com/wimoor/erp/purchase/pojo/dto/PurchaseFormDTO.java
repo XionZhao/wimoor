@@ -75,5 +75,8 @@ public class PurchaseFormDTO extends BasePageQuery{
     
     String groupid;
     
+    @ApiModelProperty(value = "创建日期排序方式[asc:升序, desc:降序]")
+    String sortOrder;
+    
     
 }

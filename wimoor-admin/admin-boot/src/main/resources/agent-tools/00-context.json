@@ -1,0 +1,583 @@
+{
+  "module": "Agent上下文与关联关系",
+  "description": "定义系统中各实体之间的关联关系、常见查询流程、字段映射规则，帮助Agent理解业务上下文并正确串联多个接口完成复杂查询",
+
+  "entity_relations": [
+    {
+      "from": "店铺分组(AmazonGroup)",
+      "to": "站点/国家(Marketplace)",
+      "relation": "一个店铺分组下有多个站点",
+      "link_field": "groupid",
+      "query_tool": "amz_query_market_by_group",
+      "query_param": "groupid",
+      "description": "几乎所有Amazon接口都需要先获取groupid，再通过groupid获取marketplaceid"
+    },
+    {
+      "from": "站点(Marketplace)",
+      "to": "国家(Country)",
+      "relation": "每个站点对应一个国家，含country代码和currency币种",
+      "link_field": "marketplaceid",
+      "query_tool": "amz_query_market_all",
+      "output_fields": ["id", "name", "country", "currency", "market"],
+      "description": "站点ID(marketplaceid)即国家站点ID，country为国家代码(如US/DE/JP)"
+    },
+    {
+      "from": "店铺分组(AmazonGroup)",
+      "to": "授权(AmazonAuthority)",
+      "relation": "一个店铺分组可能有多个区域授权(如NA/EU/FE)",
+      "link_field": "groupid",
+      "query_tool": "amz_query_auth_id_by_group",
+      "query_params": ["groupid", "marketplaceid"],
+      "output_fields": ["authId"],
+      "description": "部分接口需要amazonauthid而非groupid"
+    },
+    {
+      "from": "商品(Product)",
+      "to": "Listing",
+      "relation": "一个商品(SPU)对应多个站点的Listing，通过ASIN关联",
+      "link_field": "asin",
+      "description": "商品有pid和sku，Listing有asin和msku"
+    },
+    {
+      "from": "商品(Product)",
+      "to": "FBA库存(Inventory)",
+      "relation": "商品的FBA库存按SKU+站点维度存储",
+      "link_field": "sku",
+      "query_tool": "amz_query_fba_inventory",
+      "query_params": ["sku"],
+      "description": "FBA库存查询需要sku参数"
+    },
+    {
+      "from": "商品(Product)",
+      "to": "利润(Profit)",
+      "relation": "商品有独立的利润计算配置和利润详情",
+      "link_field": "pid",
+      "query_tool": "amz_query_profit_detail",
+      "query_param": "pid",
+      "description": "利润查询使用pid(商品ID)，不是sku"
+    },
+    {
+      "from": "商品(Product)",
+      "to": "广告(Advertisement)",
+      "relation": "广告活动按SKU/ASIN投放，广告报表关联商品",
+      "link_field": "sku/asin",
+      "description": "广告接口使用groupid+marketplaceid，广告报表中有sku/asin字段可关联商品"
+    },
+    {
+      "from": "仓库(Warehouse)",
+      "to": "ERP库存(Inventory)",
+      "relation": "ERP库存按仓库+SKU维度存储",
+      "link_field": "warehouseid",
+      "query_tool": "inv_list",
+      "query_param": "warehouseid",
+      "description": "查询某个仓库的库存需要warehouseid"
+    },
+    {
+      "from": "供应商(Supplier)",
+      "to": "采购单(Purchase)",
+      "relation": "采购单关联供应商",
+      "link_field": "supplierid",
+      "query_tool": "purchase_list",
+      "description": "采购单中有supplierid字段"
+    },
+    {
+      "from": "采购单(Purchase)",
+      "to": "入库单(Inbound)",
+      "relation": "采购单到货后生成入库单，影响ERP库存",
+      "link_field": "purchaseid",
+      "description": "采购单审核后可生成入库单，入库完成后库存增加"
+    },
+    {
+      "from": "发货计划(ShipmentPlan)",
+      "to": "入库Shipment(Inbound)",
+      "relation": "发货计划提交Amazon后生成入库Shipment",
+      "link_field": "shipmentid",
+      "description": "发货计划对应Amazon的Inbound Shipment，可通过amz_query_inbound_shipment跟踪"
+    },
+    {
+      "from": "发货计划(ShipmentPlan)",
+      "to": "物流公司(TransCompany)",
+      "relation": "发货计划关联物流公司和物流渠道",
+      "link_field": "companyid/channelid",
+      "query_tool": "shipment_plan_list",
+      "description": "发货计划中有companyid和channelid字段"
+    },
+    {
+      "from": "结算(Settlement)",
+      "to": "财务(Finance)",
+      "relation": "Amazon结算数据是财务记账的数据来源之一",
+      "link_field": "groupid+marketplaceid+时间范围",
+      "query_tool": "settlement_report",
+      "description": "结算数据按月汇总，含各类费用明细"
+    },
+    {
+      "from": "盘点(StockTaking)",
+      "to": "ERP库存(Inventory)",
+      "relation": "盘点完成后调整ERP库存数量",
+      "link_field": "warehouseid",
+      "description": "盘点单关联仓库，盘点差异会影响库存"
+    },
+    {
+      "from": "组装单(Assembly)",
+      "to": "ERP库存(Inventory)",
+      "relation": "组装单消耗子件库存，产出成品库存",
+      "link_field": "warehouseid",
+      "query_tool": "assembly_list",
+      "description": "组装单有仓库字段，执行后会影响子件和成品的库存"
+    },
+    {
+      "from": "物料(Material)",
+      "to": "采购单/库存/订单",
+      "relation": "物料是ERP的核心实体，关联采购、库存、订单等多个模块",
+      "link_field": "sku/materialid",
+      "query_tool": "material_list",
+      "description": "物料有sku编码，是贯穿ERP各模块的核心标识"
+    }
+  ],
+
+  "business_domains": {
+    "description": "系统分为两个独立业务域，唯一性规则和参数体系完全不同，不可混淆",
+    "amazon_domain": {
+      "name": "Amazon域",
+      "scope": "所有 amz_ 开头的工具、settlement/shipment/advert 等工具",
+      "uniqueness": "groupid + marketplaceid + sku 唯一",
+      "required_params": ["groupid", "marketplaceid"],
+      "param_dependency": "必须先获取groupid（amz_query_amazon_group），再获取marketplaceid（amz_query_market_by_group），才能查询业务数据",
+      "key_facts": [
+        "groupid = Amazon店铺分组ID，是Amazon域的核心参数",
+        "marketplaceid = Amazon站点/国家ID，由groupid派生",
+        "一个groupid下有多个marketplaceid（如US/DE/JP等站点）",
+        "数据唯一性：groupid + marketplaceid + sku 三者组合才能唯一定位一条Amazon数据",
+        "同一个SKU在不同店铺分组/站点下是不同的数据"
+      ]
+    },
+    "erp_domain": {
+      "name": "ERP域",
+      "scope": "所有 erp_ 开头的工具，以及 material_/inv_/warehouse_/purchase_/shipment_ 等工具",
+      "required_params": [],
+      "auto_injected_params": ["shopid"],
+      "param_dependency": "shopid 由系统自动注入（即客户登录上下文），用户无需手动传参",
+      "uniqueness_rules": {
+        "物料/商品": "shopid + sku 唯一。SKU在整个租户内唯一，贯穿ERP所有功能模块（库存、采购、发货、盘点、组装等）",
+        "所有表单": "shopid + number 唯一。采购单号、入库单号、发货单号、盘点单号等表单编号都在租户内唯一"
+      },
+      "key_facts": [
+        "shopid 是客户登录的租户上下文，由系统自动注入，用户无需关心",
+        "SKU 是ERP系统的核心标识，shopid + sku 唯一定位一个物料",
+        "SKU 贯穿ERP所有功能：库存(inv_list)、采购(purchase_list)、发货(shipment_plan_list)、盘点(stockTaking_list)、组装(assembly_list)等",
+        "所有表单使用 shopid + number（表单编号）唯一",
+        "查询物料只需传 search(SKU或名称)，shopid由系统自动注入",
+        "查询ERP库存/采购/发货等不需要groupid和marketplaceid",
+        "warehouseid 是ERP库存查询的仓库维度参数",
+        "supplierid 是供应商维度参数"
+      ]
+    },
+    "cross_domain": {
+      "name": "跨域关联",
+      "description": "Amazon商品与ERP物料通过SKU关联，Listing的msku对应ERP的SKU",
+      "typical_flow": "Amazon订单中的SKU → ERP物料查询(material_list) → ERP库存(inv_list) → 采购(purchase_list)"
+    }
+  },
+
+  "field_aliases": [
+    {
+      "description": "店铺分组ID在不同模块的字段名",
+      "aliases": ["groupid", "amazongroupid", "group_id"],
+      "canonical": "groupid",
+      "obtained_from": "amz_query_amazon_group → id字段"
+    },
+    {
+      "description": "站点ID在不同模块的字段名",
+      "aliases": ["marketplaceid", "market", "marketplace"],
+      "canonical": "marketplaceid",
+      "obtained_from": "amz_query_market_by_group → id字段"
+    },
+    {
+      "description": "国家代码",
+      "aliases": ["country", "countrycode"],
+      "canonical": "country",
+      "obtained_from": "amz_query_market_all → country字段"
+    },
+    {
+      "description": "币种",
+      "aliases": ["currency", "tocurrency"],
+      "canonical": "currency",
+      "obtained_from": "amz_query_market_all → currency字段"
+    },
+    {
+      "description": "店铺/租户ID（系统自动注入，无需手动传参）",
+      "aliases": ["shopid", "companyid"],
+      "canonical": "shopid",
+      "obtained_from": "系统自动注入，不可由用户指定"
+    },
+    {
+      "description": "授权ID",
+      "aliases": ["amazonauthid", "authid", "auth_id"],
+      "canonical": "amazonauthid",
+      "obtained_from": "amz_query_auth_id_by_group(groupid, marketplaceid) → authId"
+    }
+  ],
+
+  "common_flows": [
+    {
+      "name": "查询某店铺某站点的销售数据",
+      "description": "需要先获取店铺分组ID和站点ID，再查询销售图表",
+      "steps": [
+        {"step": 1, "tool": "amz_query_amazon_group", "purpose": "获取groupid列表"},
+        {"step": 2, "tool": "amz_query_market_by_group", "input_from_step": 1, "input_field": "groupid", "purpose": "获取该店铺下的站点列表(含marketplaceid)"},
+        {"step": 3, "tool": "amz_query_chart_sales", "input_from_step": [1, 2], "input_fields": ["groupid", "marketplaceid"], "purpose": "查询销售趋势数据"}
+      ]
+    },
+    {
+      "name": "查询某商品的库存和利润",
+      "description": "商品信息→FBA库存→利润详情",
+      "steps": [
+        {"step": 1, "tool": "amz_query_product_info_list", "purpose": "搜索商品，获取pid和sku"},
+        {"step": 2, "tool": "amz_query_fba_inventory", "input_from_step": 1, "input_field": "sku", "purpose": "查询FBA库存"},
+        {"step": 3, "tool": "amz_query_profit_detail", "input_from_step": 1, "input_field": "pid", "purpose": "查询利润详情"}
+      ]
+    },
+    {
+      "name": "查询发货物流状态",
+      "description": "发货计划→入库Shipment跟踪",
+      "steps": [
+        {"step": 1, "tool": "shipment_plan_list", "purpose": "查询发货计划列表"},
+        {"step": 2, "tool": "amz_query_inbound_shipment", "purpose": "跟踪Amazon入库状态"}
+      ]
+    },
+    {
+      "name": "查询财务结算数据",
+      "description": "获取可用分组站点→查询结算报表",
+      "steps": [
+        {"step": 1, "tool": "settlement_group_market", "purpose": "获取有结算数据的分组站点组合"},
+        {"step": 2, "tool": "settlement_report", "purpose": "查询月度结算汇总"},
+        {"step": 3, "tool": "settlement_sku_report", "purpose": "查询SKU维度结算明细"}
+      ]
+    },
+    {
+      "name": "查询采购到入库全流程",
+      "description": "采购单→入库→库存变化",
+      "steps": [
+        {"step": 1, "tool": "purchase_list", "purpose": "查询采购单列表"},
+        {"step": 2, "tool": "purchase_detail", "input_from_step": 1, "input_field": "id", "purpose": "查看采购单详情"},
+        {"step": 3, "tool": "inv_list", "purpose": "查询库存变化"}
+      ]
+    },
+    {
+      "name": "查询广告表现并关联商品",
+      "description": "广告活动→广告报表→关联商品信息",
+      "steps": [
+        {"step": 1, "tool": "amz_query_campaign_list", "purpose": "查询广告活动列表"},
+        {"step": 2, "tool": "amz_query_advert_report", "purpose": "查询广告报表(含sku/asin)"},
+        {"step": 3, "tool": "amz_query_product_info_list", "purpose": "根据sku查询商品详情"}
+      ]
+    },
+    {
+      "name": "查询ERP库存并分析库存周转",
+      "description": "仓库列表→库存查询→出入库记录",
+      "steps": [
+        {"step": 1, "tool": "warehouse_list", "purpose": "获取仓库列表和warehouseid"},
+        {"step": 2, "tool": "inv_list", "input_from_step": 1, "input_field": "warehouseid", "purpose": "查询该仓库的库存"},
+        {"step": 3, "tool": "inv_record_list", "purpose": "查询出入库记录"}
+      ]
+    },
+    {
+      "name": "查询商品从Listing到订单的全链路",
+      "description": "商品→Listing状态→订单数据→利润",
+      "steps": [
+        {"step": 1, "tool": "amz_query_product_info_list", "purpose": "搜索商品"},
+        {"step": 2, "tool": "amz_query_listing", "purpose": "查看Listing状态"},
+        {"step": 3, "tool": "amz_query_order_list", "purpose": "查看订单数据"},
+        {"step": 4, "tool": "amz_query_profit_detail", "purpose": "查看利润分析"}
+      ]
+    }
+  ],
+
+  "page_context_hints": [
+    {
+      "page": "Amazon订单管理",
+      "related_tools": ["amz_query_order_list", "amz_query_order_detail", "amz_query_ship_orders", "amz_query_returns"],
+      "typical_params": ["groupid", "marketplaceid", "startDate", "endDate"]
+    },
+    {
+      "page": "Amazon库存管理",
+      "related_tools": ["amz_query_fba_inventory", "amz_query_fba_inventory_planning", "amz_query_inv_warehouse", "amz_query_fba_inventory_day_detail"],
+      "typical_params": ["groupid", "marketplaceid", "sku"]
+    },
+    {
+      "page": "Amazon结算报表",
+      "related_tools": ["settlement_report", "settlement_sku_report", "settlement_month_summary", "month_finance"],
+      "typical_params": ["groupid", "marketplaceid", "fromDate", "endDate"]
+    },
+    {
+      "page": "Amazon广告管理",
+      "related_tools": ["amz_query_campaign_list", "amz_query_advert_report", "amz_query_keyword_list"],
+      "typical_params": ["groupid", "marketplaceid", "campaignType"]
+    },
+    {
+      "page": "ERP库存管理",
+      "related_tools": ["inv_list", "inv_record_list", "stockTaking_list"],
+      "typical_params": ["warehouseid", "sku"],
+      "note": "ERP接口不需要groupid，shopid由系统自动注入"
+    },
+    {
+      "page": "ERP采购管理",
+      "related_tools": ["purchase_list", "purchase_detail", "purchase_form_list"],
+      "typical_params": ["warehouseid", "supplierid", "status"],
+      "note": "ERP接口不需要groupid，shopid由系统自动注入"
+    },
+    {
+      "page": "ERP发货管理",
+      "related_tools": ["shipment_plan_list", "shipment_form_list", "amz_query_inbound_shipment"],
+      "typical_params": ["warehouseid"],
+      "note": "发货计划查询不需要groupid；跟踪Amazon入库状态需要groupid+marketplaceid"
+    },
+    {
+      "page": "财务管理",
+      "related_tools": ["fin_voucher_list", "fin_balance_list", "fin_general_ledger", "fin_subject_list"],
+      "typical_params": ["groupId", "periodId"]
+    }
+  ],
+
+  "page_navigation_guide": {
+    "description": "系统页面导航指南，指导用户进入具体功能页面并解释页面操作",
+    "modules": [
+      {
+        "name": "Amazon模块",
+        "icon": "Amazon",
+        "pages": [
+          {
+            "name": "订单管理",
+            "path": "/amazon/sale/order/list",
+            "menu_path": "Amazon > 订单管理 > 订单列表",
+            "description": "查看和管理Amazon订单",
+            "key_features": ["订单列表查询", "订单详情查看", "订单状态筛选", "导出订单数据"],
+            "common_operations": ["按店铺/站点筛选订单", "按日期范围查询", "查看订单详情", "处理退货订单"],
+            "keywords": ["订单", "order", "销售", "退货"]
+          },
+          {
+            "name": "FBA库存",
+            "path": "/amazon/fba/inventory",
+            "menu_path": "Amazon > 库存管理 > FBA库存",
+            "description": "查看Amazon FBA库存情况",
+            "key_features": ["FBA库存列表", "库存明细", "库存预警"],
+            "common_operations": ["查看各站点库存", "筛选低库存商品", "导出库存报表"],
+            "keywords": ["FBA库存", "亚马逊库存", "fba"]
+          },
+          {
+            "name": "广告管理",
+            "path": "/amazon/advertising/campaign",
+            "menu_path": "Amazon > 广告管理 > 广告活动",
+            "description": "管理Amazon广告投放",
+            "key_features": ["广告活动列表", "广告报表", "关键词管理"],
+            "common_operations": ["查看广告效果", "分析广告花费", "优化关键词"],
+            "keywords": ["广告", "advertising", "PPC", "关键词"]
+          },
+          {
+            "name": "结算报表",
+            "path": "/amazon/payment/record",
+            "menu_path": "Amazon > 平台账目 > 结算记录",
+            "description": "查看Amazon财务结算数据",
+            "key_features": ["结算记录列表", "结算明细", "费用分类"],
+            "common_operations": ["按月查看结算", "导出结算报表", "分析费用构成"],
+            "keywords": ["结算", "payment", "账单", "费用"]
+          },
+          {
+            "name": "商品管理",
+            "path": "/amazon/product/list",
+            "menu_path": "Amazon > 商品管理 > 商品列表",
+            "description": "管理Amazon商品和Listing",
+            "key_features": ["商品列表", "Listing状态", "价格管理"],
+            "common_operations": ["搜索商品", "查看Listing状态", "修改价格"],
+            "keywords": ["商品", "listing", "asin", "sku"]
+          }
+        ]
+      },
+      {
+        "name": "ERP模块",
+        "icon": "ERP",
+        "pages": [
+          {
+            "name": "库存管理",
+            "path": "/erp/inventory/list",
+            "menu_path": "ERP > 库存 > 库存列表",
+            "description": "查看和管理ERP库存",
+            "key_features": ["库存列表", "库存明细", "库存预警", "库存盘点"],
+            "common_operations": ["按仓库筛选库存", "搜索SKU库存", "查看库存变动记录", "导出库存报表"],
+            "keywords": ["库存", "inventory", "仓库", "盘点"]
+          },
+          {
+            "name": "采购管理",
+            "path": "/erp/purchase/list",
+            "menu_path": "ERP > 采购 > 采购单列表",
+            "description": "管理采购订单",
+            "key_features": ["采购单列表", "采购单详情", "采购入库"],
+            "common_operations": ["创建采购单", "查看采购进度", "采购入库操作"],
+            "keywords": ["采购", "purchase", "供应商", "入库"]
+          },
+          {
+            "name": "发货管理",
+            "path": "/erp/ship/plan/list",
+            "menu_path": "ERP > 发货 > 发货计划",
+            "description": "管理发货计划和物流",
+            "key_features": ["发货计划列表", "物流跟踪", "发货单管理"],
+            "common_operations": ["创建发货计划", "选择物流渠道", "跟踪发货状态"],
+            "keywords": ["发货", "shipment", "物流", "物流渠道"]
+          },
+          {
+            "name": "物料管理",
+            "path": "/erp/material/list",
+            "menu_path": "ERP > 物料 > 物料列表",
+            "description": "管理ERP物料信息",
+            "key_features": ["物料列表", "物料详情", "SKU管理"],
+            "common_operations": ["搜索物料", "查看物料详情", "编辑物料信息"],
+            "keywords": ["物料", "material", "SKU", "产品"]
+          },
+          {
+            "name": "仓库管理",
+            "path": "/erp/warehouse/base",
+            "menu_path": "ERP > 仓库 > 仓库列表",
+            "description": "管理仓库信息",
+            "key_features": ["仓库列表", "库位管理", "仓库设置"],
+            "common_operations": ["查看仓库列表", "管理库位", "设置仓库参数"],
+            "keywords": ["仓库", "warehouse", "库位"]
+          },
+          {
+            "name": "盘点管理",
+            "path": "/erp/inventory/stocktaking",
+            "menu_path": "ERP > 库存 > 盘点管理",
+            "description": "管理库存盘点",
+            "key_features": ["盘点单列表", "盘点差异", "盘点调整"],
+            "common_operations": ["创建盘点单", "录入盘点结果", "处理盘点差异"],
+            "keywords": ["盘点", "stocktaking", "库存盘点"]
+          },
+          {
+            "name": "组装管理",
+            "path": "/erp/assembly/list",
+            "menu_path": "ERP > 组装 > 组装单列表",
+            "description": "管理产品组装",
+            "key_features": ["组装单列表", "BOM管理", "组装执行"],
+            "common_operations": ["创建组装单", "执行组装", "查看组装记录"],
+            "keywords": ["组装", "assembly", "BOM", "加工"]
+          }
+        ]
+      },
+      {
+        "name": "财务模块",
+        "icon": "Finance",
+        "pages": [
+          {
+            "name": "凭证管理",
+            "path": "/finance/voucher/list",
+            "menu_path": "财务 > 凭证管理",
+            "description": "管理财务凭证",
+            "key_features": ["凭证列表", "凭证录入", "凭证审核"],
+            "common_operations": ["录入凭证", "审核凭证", "查询凭证"],
+            "keywords": ["凭证", "voucher", "记账"]
+          },
+          {
+            "name": "科目余额",
+            "path": "/finance/balance",
+            "menu_path": "财务 > 科目余额",
+            "description": "查看科目余额表",
+            "key_features": ["科目余额", "余额汇总", "明细查询"],
+            "common_operations": ["查看科目余额", "导出余额表", "分析财务数据"],
+            "keywords": ["余额", "balance", "科目"]
+          }
+        ]
+      },
+      {
+        "name": "设置模块",
+        "icon": "Config",
+        "pages": [
+          {
+            "name": "店铺授权",
+            "path": "/sys/amazon/auth",
+            "menu_path": "设置 > 授权管理 > Amazon授权",
+            "description": "管理Amazon店铺授权",
+            "key_features": ["授权列表", "添加授权", "授权状态"],
+            "common_operations": ["添加新店铺授权", "刷新授权状态", "查看授权详情"],
+            "keywords": ["授权", "auth", "店铺", "绑定"]
+          },
+          {
+            "name": "用户管理",
+            "path": "/sys/user",
+            "menu_path": "设置 > 用户管理",
+            "description": "管理系统用户",
+            "key_features": ["用户列表", "用户权限", "角色分配"],
+            "common_operations": ["添加用户", "修改用户权限", "分配角色"],
+            "keywords": ["用户", "user", "账号", "权限"]
+          },
+          {
+            "name": "角色管理",
+            "path": "/sys/role",
+            "menu_path": "设置 > 角色管理",
+            "description": "管理系统角色",
+            "key_features": ["角色列表", "角色权限", "菜单权限"],
+            "common_operations": ["创建角色", "配置角色权限", "分配菜单权限"],
+            "keywords": ["角色", "role", "权限"]
+          }
+        ]
+      }
+    ],
+    "operation_guides": {
+      "description": "常见操作指南，指导用户完成具体业务操作",
+      "guides": [
+        {
+          "name": "创建采购单",
+          "scenario": "用户需要采购商品",
+          "steps": [
+            "进入 ERP > 采购 > 采购单列表",
+            "点击「新建采购单」按钮",
+            "选择供应商",
+            "添加采购商品（输入SKU或名称搜索）",
+            "填写采购数量和单价",
+            "选择入库仓库",
+            "保存并提交审核"
+          ],
+          "tips": ["采购单需要审核后才能入库", "可以批量添加商品"]
+        },
+        {
+          "name": "库存盘点",
+          "scenario": "用户需要盘点库存",
+          "steps": [
+            "进入 ERP > 库存 > 盘点管理",
+            "点击「新建盘点单」",
+            "选择盘点仓库",
+            "选择盘点范围（全盘/部分）",
+            "开始盘点并录入实际数量",
+            "提交盘点结果",
+            "处理盘点差异"
+          ],
+          "tips": ["盘点期间建议暂停出入库操作", "差异会自动调整库存"]
+        },
+        {
+          "name": "发货到FBA",
+          "scenario": "用户需要发货到Amazon FBA仓库",
+          "steps": [
+            "进入 ERP > 发货 > 发货计划",
+            "点击「新建发货计划」",
+            "选择目标站点和FBA仓库",
+            "添加发货商品和数量",
+            "选择物流渠道和物流公司",
+            "生成箱唛并打包",
+            "提交发货计划"
+          ],
+          "tips": ["确保FBA库存容量充足", "按照Amazon要求打包"]
+        },
+        {
+          "name": "查看销售数据",
+          "scenario": "用户需要查看销售情况",
+          "steps": [
+            "进入 Amazon > 订单管理 > 订单列表",
+            "选择店铺和站点",
+            "设置日期范围",
+            "查看订单列表和统计数据",
+            "可以导出数据进行分析"
+          ],
+          "tips": ["可以按状态筛选订单", "支持导出Excel"]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.ledger.mapper.FinInventoryLedgerMapper">
+
+    <!-- 汇总账：按SKU+仓库维度查询数量、金额、移动平均单价 -->
+    <select id="selectSummary" resultType="java.util.Map">
+        SELECT
+            inv.materialid AS materialId,
+            m.sku AS sku,
+            m.name AS materialName,
+            inv.warehouseid AS warehouseId,
+            w.name AS warehouseName,
+            inv.status AS status,
+            COALESCE(SUM(inv.quantity), 0) AS quantity,
+            COALESCE(inv.current_amount, 0) AS currentAmount,
+            COALESCE(inv.unit_cost, 0) AS unitCost
+        FROM t_erp_inventory inv
+        INNER JOIN t_erp_material m ON m.id = inv.materialid AND m.shopid = inv.shopid AND m.isDelete = 0
+        LEFT JOIN t_erp_warehouse w ON w.id = inv.warehouseid
+        WHERE inv.shopid = #{shopid}
+          AND inv.status = 'fulfillable'
+        <if test="warehouseid != null and warehouseid != ''">
+            AND inv.warehouseid = #{warehouseid}
+        </if>
+        <if test="materialid != null and materialid != ''">
+            AND inv.materialid = #{materialid}
+        </if>
+        <if test="sku != null and sku != ''">
+            AND m.sku LIKE CONCAT('%', #{sku}, '%')
+        </if>
+        <if test="name != null and name != ''">
+            AND m.name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        GROUP BY inv.materialid, inv.warehouseid, inv.status
+        HAVING quantity &gt; 0
+        ORDER BY m.sku, w.name
+    </select>
+
+    <!-- 明细账：按SKU查询变动记录 -->
+    <select id="selectDetail" resultType="java.util.Map">
+        SELECT
+            rec.id AS recordId,
+            rec.materialid AS materialId,
+            m.sku AS sku,
+            m.name AS materialName,
+            rec.warehouseid AS warehouseId,
+            w.name AS warehouseName,
+            rec.formid AS formId,
+            rec.formtype AS formType,
+            ft.name AS formTypeName,
+            rec.operate AS operate,
+            rec.quantity AS quantity,
+            COALESCE(rec.amount_change, 0) AS amountChange,
+            COALESCE(rec.unit_cost, 0) AS unitCost,
+            rec.voucher_id AS voucherId,
+            rec.invqty AS invQtyAfter,
+            rec.number AS number,
+            rec.opttime AS operateTime
+        FROM t_erp_inventory_record rec
+        INNER JOIN t_erp_material m ON m.id = rec.materialid AND m.shopid = rec.shopid AND m.isDelete = 0
+        LEFT JOIN t_erp_warehouse w ON w.id = rec.warehouseid
+        LEFT JOIN t_erp_formtype ft ON ft.id = rec.formtype
+        WHERE rec.shopid = #{shopid}
+          AND rec.operate IN ('in', 'out')
+        <if test="warehouseid != null and warehouseid != ''">
+            AND rec.warehouseid = #{warehouseid}
+        </if>
+        <if test="materialid != null and materialid != ''">
+            AND rec.materialid = #{materialid}
+        </if>
+        <if test="formtype != null and formtype != ''">
+            AND rec.formtype = #{formtype}
+        </if>
+        <if test="startDate != null">
+            AND rec.opttime &gt;= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND rec.opttime &lt;= #{endDate}
+        </if>
+        ORDER BY rec.opttime ASC
+    </select>
+
+    <!-- 勾稽校验：验证库存金额与凭证金额是否一致 -->
+    <select id="selectCheckResult" resultType="java.util.Map">
+        SELECT
+            rec.materialid AS materialId,
+            m.sku AS sku,
+            m.name AS materialName,
+            rec.warehouseid AS warehouseId,
+            w.name AS warehouseName,
+            COALESCE(SUM(CASE WHEN rec.operate = 'in' THEN rec.amount_change ELSE 0 END), 0) AS totalInAmount,
+            COALESCE(SUM(CASE WHEN rec.operate = 'out' THEN rec.amount_change ELSE 0 END), 0) AS totalOutAmount,
+            COALESCE(SUM(CASE WHEN rec.operate = 'in' THEN rec.amount_change ELSE -rec.amount_change END), 0) AS netAmount,
+            COALESCE(SUM(CASE WHEN rec.voucher_id IS NOT NULL THEN rec.amount_change ELSE 0 END), 0) AS voucherAmount,
+            COUNT(CASE WHEN rec.voucher_id IS NULL THEN 1 END) AS unVoucherCount,
+            COUNT(CASE WHEN rec.voucher_id IS NOT NULL THEN 1 END) AS voucherCount
+        FROM t_erp_inventory_record rec
+        INNER JOIN t_erp_material m ON m.id = rec.materialid AND m.shopid = rec.shopid AND m.isDelete = 0
+        LEFT JOIN t_erp_warehouse w ON w.id = rec.warehouseid
+        WHERE rec.shopid = #{shopid}
+          AND rec.operate IN ('in', 'out')
+        <if test="warehouseid != null and warehouseid != ''">
+            AND rec.warehouseid = #{warehouseid}
+        </if>
+        <if test="startDate != null">
+            AND rec.opttime &gt;= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND rec.opttime &lt;= #{endDate}
+        </if>
+        GROUP BY rec.materialid, rec.warehouseid
+        ORDER BY m.sku
+    </select>
+
+    <!-- 库存趋势图数据：按日期聚合库存金额变化 -->
+    <select id="selectChartTrend" resultType="java.util.Map">
+        SELECT
+            DATE(rec.opttime) AS date,
+            COALESCE(SUM(CASE WHEN rec.operate = 'in' THEN rec.amount_change ELSE 0 END), 0) AS inAmount,
+            COALESCE(SUM(CASE WHEN rec.operate = 'out' THEN rec.amount_change ELSE 0 END), 0) AS outAmount,
+            COALESCE(SUM(CASE WHEN rec.operate = 'in' THEN rec.amount_change ELSE -rec.amount_change END), 0) AS netChange,
+            SUM(rec.quantity) AS totalQuantity
+        FROM t_erp_inventory_record rec
+        WHERE rec.shopid = #{shopid}
+          AND rec.operate IN ('in', 'out')
+        <if test="warehouseid != null and warehouseid != ''">
+            AND rec.warehouseid = #{warehouseid}
+        </if>
+        <if test="materialid != null and materialid != ''">
+            AND rec.materialid = #{materialid}
+        </if>
+        <if test="startDate != null">
+            AND rec.opttime &gt;= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND rec.opttime &lt;= #{endDate}
+        </if>
+        GROUP BY DATE(rec.opttime)
+        ORDER BY date ASC
+    </select>
+
+    <!-- 查询变动记录详情（用于生成凭证） -->
+    <select id="selectRecordsByIds" resultType="java.util.Map">
+        SELECT
+            rec.id AS recordId,
+            rec.materialid AS materialId,
+            m.sku AS sku,
+            m.name AS materialName,
+            rec.warehouseid AS warehouseId,
+            w.name AS warehouseName,
+            rec.formid AS formId,
+            rec.formtype AS formType,
+            ft.name AS formTypeName,
+            rec.operate AS operate,
+            rec.quantity AS quantity,
+            COALESCE(rec.amount_change, 0) AS amountChange,
+            COALESCE(rec.unit_cost, 0) AS unitCost,
+            rec.number AS number,
+            rec.opttime AS operateTime
+        FROM t_erp_inventory_record rec
+        INNER JOIN t_erp_material m ON m.id = rec.materialid AND m.shopid = rec.shopid AND m.isDelete = 0
+        LEFT JOIN t_erp_warehouse w ON w.id = rec.warehouseid
+        LEFT JOIN t_erp_formtype ft ON ft.id = rec.formtype
+        WHERE rec.shopid = #{shopid}
+          AND rec.id IN
+        <foreach collection="recordIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 更新库存余额表的金额和单位成本 -->
+    <update id="updateInventoryAmount">
+        UPDATE t_erp_inventory
+        SET current_amount = #{currentAmount},
+            unit_cost = #{unitCost}
+        WHERE shopid = #{shopid}
+          AND materialid = #{materialid}
+          AND warehouseid = #{warehouseid}
+          AND status = #{status}
+    </update>
+
+    <!-- 更新变动记录的金额、单价和凭证ID -->
+    <update id="updateRecordFinance">
+        UPDATE t_erp_inventory_record
+        SET amount_change = #{amountChange},
+            unit_cost = #{unitCost},
+            voucher_id = #{voucherId}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 查询需要计算成本的变动记录（按时间顺序） -->
+    <select id="selectRecordsForCostCalculation" resultType="java.util.Map">
+        SELECT
+            rec.id AS id,
+            rec.operate AS operate,
+            rec.quantity AS quantity,
+            rec.status AS status,
+            rec.opttime AS operateTime
+        FROM t_erp_inventory_record rec
+        WHERE rec.shopid = #{shopid}
+          AND rec.materialid = #{materialid}
+          AND rec.warehouseid = #{warehouseid}
+          AND rec.operate IN ('in', 'out')
+        <if test="startDate != null">
+            AND rec.opttime &gt;= #{startDate}
+        </if>
+        ORDER BY rec.opttime ASC, rec.id ASC
+    </select>
+
+    <!-- 获取当前库存余额信息 -->
+    <select id="selectInventoryBalance" resultType="java.util.Map">
+        SELECT
+            inv.quantity AS quantity,
+            COALESCE(inv.current_amount, 0) AS currentAmount,
+            COALESCE(inv.unit_cost, 0) AS unitCost
+        FROM t_erp_inventory inv
+        WHERE inv.shopid = #{shopid}
+          AND inv.materialid = #{materialid}
+          AND inv.warehouseid = #{warehouseid}
+          AND inv.status = #{status}
+    </select>
+
+    <!-- 查询导出数据 -->
+    <select id="selectExportData" resultType="java.util.Map">
+        SELECT
+            rec.id AS recordId,
+            m.sku AS sku,
+            m.name AS materialName,
+            w.name AS warehouseName,
+            ft.name AS formTypeName,
+            CASE rec.operate
+                WHEN 'in' THEN '入库'
+                WHEN 'out' THEN '出库'
+                ELSE rec.operate
+            END AS operateName,
+            rec.quantity AS quantity,
+            COALESCE(rec.unit_cost, 0) AS unitCost,
+            COALESCE(rec.amount_change, 0) AS amountChange,
+            rec.number AS number,
+            rec.opttime AS operateTime
+        FROM t_erp_inventory_record rec
+        INNER JOIN t_erp_material m ON m.id = rec.materialid AND m.shopid = rec.shopid AND m.isDelete = 0
+        LEFT JOIN t_erp_warehouse w ON w.id = rec.warehouseid
+        LEFT JOIN t_erp_formtype ft ON ft.id = rec.formtype
+        WHERE rec.shopid = #{shopid}
+          AND rec.operate IN ('in', 'out')
+        <if test="warehouseid != null and warehouseid != ''">
+            AND rec.warehouseid = #{warehouseid}
+        </if>
+        <if test="materialid != null and materialid != ''">
+            AND rec.materialid = #{materialid}
+        </if>
+        <if test="startDate != null">
+            AND rec.opttime &gt;= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND rec.opttime &lt;= #{endDate}
+        </if>
+        ORDER BY m.sku, rec.opttime ASC
+    </select>
+
+</mapper>

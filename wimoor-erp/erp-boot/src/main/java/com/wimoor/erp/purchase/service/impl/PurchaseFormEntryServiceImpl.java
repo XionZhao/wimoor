@@ -665,6 +665,19 @@ public class PurchaseFormEntryServiceImpl extends  ServiceImpl<PurchaseFormEntry
 	}
 
 	@Override
+	public List<Map<String, Object>> summaryProductBySupplier(String shopid, String supplier) {
+		List<Map<String, Object>> list = this.baseMapper.summaryProductBySupplier(shopid, supplier);
+		if (list != null) {
+			for (Map<String, Object> item : list) {
+				if (item.get("image") != null) {
+					item.put("image", fileUpload.getPictureImage(item.get("image").toString()));
+				}
+			}
+		}
+		return list;
+	}
+
+	@Override
 	public Object downloadPurchaseInfoData(Map<String, Object> map, UserInfo userinfo) {
 		String supplierid=map.get("supplierid").toString();
 		PurchaseForm from = purchaseFormMapper.selectById(map.get("formid").toString());

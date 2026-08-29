@@ -42,4 +42,6 @@ public interface PurchaseFormEntryMapper  extends BaseMapper<PurchaseFormEntry> 
 
 	IPage<Map<String, Object>> getPurchaseTimeList(Page<?> page, @Param("param")PurchaseTimeDTO dto);
 	List<Map<String, Object>> getPurchaseTimeList( @Param("param") PurchaseTimeDTO dto);
+
+	List<Map<String, Object>> summaryProductBySupplier(@Param("shopid") String shopid, @Param("supplier") String supplier);
 }

@@ -5,7 +5,7 @@
 		    <el-space >
 				<Group @change="getGroup"    ref="groupRef" />
 				<Datepicker ref="datepickersRef" :shortIndex="2"  @changedate="changedate" />
-		   <el-input  v-model="searchKeywords" clearable @input="handleQuery" placeholder="请输入" class="input-with-select" >
+		   <el-input  v-model="searchKeywords" clearable @clear="handleQuery" v-debounce-input="handleQuery" placeholder="请输入" class="input-with-select" >
 		      <template #prepend> 
 		        <el-select v-model="selectlabel"  placeholder="SKU" style="width: 110px">
 		          <el-option label="SKU" value="sku"></el-option>

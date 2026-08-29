@@ -5,7 +5,7 @@
 	  <Group ref="groups" @change="changeGroup" defaultValue="only"/>
 	  <Region ref="regionRef" @change="changeRegion" defaultValue="only"/>
 	  <Datepicker ref="datepickers" @changedate="changedate" />
-	   <el-input  v-model="searchKeywords" clearable @input="searchConfirm" placeholder="请输入" class="input-with-select" >
+	   <el-input  v-model="searchKeywords" clearable @clear="searchConfirm" v-debounce-input="searchConfirm" placeholder="请输入" class="input-with-select" >
 	      <template #prepend> 
 	        <el-select v-model="selectlabel" @change='searchTypeChange' placeholder="SKU" style="width: 110px">
 	          <el-option label="SKU" value="sku"></el-option>
@@ -65,6 +65,8 @@
 	import Group from '@/components/header/groupWithoutMarket.vue';
 	import Region from '@/components/header/region.vue';
 	import Datepicker from '@/components/header/datepicker.vue';
+
+
     const emit = defineEmits(['getdata',"download"]);
 	let dateValue= ref();
 	let storeList = ref()

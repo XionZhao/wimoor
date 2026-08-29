@@ -315,5 +315,10 @@ public class AdvertReportController {
 	public Result<List<Map<String, Object>>> findAdvert(@RequestBody Map<String,Object> param) {
 		return Result.success(amazonReportAdvSummaryService.findAdvert(param)) ;
 	}
-	
+
+	@PostMapping("/getCostGroupByMonth")
+	public Result<List<Map<String, Object>>> getCostGroupByMonth(@RequestBody Map<String,Object> param) {
+		return Result.success(amzAdvSumProductAdsService.getCostGroupByMonth(param));
+	}
+
 }

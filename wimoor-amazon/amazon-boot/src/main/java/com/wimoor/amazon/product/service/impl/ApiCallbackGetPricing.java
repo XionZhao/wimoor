@@ -7,16 +7,16 @@ import com.amazon.spapi.client.ApiCallback;
 import com.amazon.spapi.client.ApiException;
 import com.amazon.spapi.model.productpricing.GetPricingResponse;
 import com.wimoor.amazon.auth.pojo.entity.AmazonAuthority;
-import com.wimoor.amazon.product.pojo.entity.AmzProductRefresh;
+import com.wimoor.amazon.product.pojo.entity.AmzProductRefreshType;
 import com.wimoor.amazon.product.service.IProductProductPriceService;
 
 public class ApiCallbackGetPricing implements ApiCallback<GetPricingResponse> {
 	IProductProductPriceService iProductCaptureProductPriceService;
 	AmazonAuthority amazonAuthority;
-	AmzProductRefresh amzProductRefresh;
+	AmzProductRefreshType amzProductRefresh;
 	
 	public ApiCallbackGetPricing(IProductProductPriceService iProductCaptureProductPriceService,
-			AmazonAuthority amazonAuthority, AmzProductRefresh amzProductRefresh) {
+			AmazonAuthority amazonAuthority, AmzProductRefreshType amzProductRefresh) {
 		// TODO Auto-generated constructor stub
 		this.iProductCaptureProductPriceService=iProductCaptureProductPriceService;
 		this.amazonAuthority=amazonAuthority;

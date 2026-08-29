@@ -135,6 +135,13 @@ public class FaccountController {
 		faccountService.savePaymethodIndex(userinfo,indexlist);
 		return Result.success();
 	}
+
+	@PostMapping("/saveAccountIndex")
+	public Result<FinAccount> saveAccountIndexAction(@RequestBody List<Map<String,Object>> indexlist){
+		UserInfo userinfo = UserInfoContext.get();
+		faccountService.saveAccountIndex(userinfo,indexlist);
+		return Result.success();
+	}
 	
 	
 	@PostMapping("/updateAccountDefault")

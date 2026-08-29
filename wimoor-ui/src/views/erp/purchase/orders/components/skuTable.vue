@@ -30,7 +30,22 @@
 			  </el-space>
 	     </template>
 	   </el-table-column>
-		<el-table-column  label="状态"  prop="createdate"  sortable="custom">
+		<el-table-column  label="状态"  >
+			<template #header>	
+				状态 	<span style="margin-left:5px;">/</span>
+				<span style="margin-left:5px;">  	
+				<el-tooltip  :content="sortOrder==='asc'?'当前：创建日期升序，点击切换为降序':sortOrder==='desc'?'当前：创建日期降序，点击切换为升序':'点击按创建日期排序'">
+					<el-space  class="pointer"  @click="toggleSort">
+					<span class="font-extraSmall">创建日期</span>  
+					<el-icon style="padding:0px">
+						   <SortUp v-if="sortOrder==='asc'" style="color:var(--el-color-primary)" />
+						   <SortDown v-else-if="sortOrder==='desc'" style="color:var(--el-color-primary)" />
+						   <Sort v-else />
+					   </el-icon>
+					   </el-space>  
+				   </el-tooltip>
+				   </span>
+			</template>
 		   <template #default="scope">
 			   <el-space>
 			   <el-tag  v-if="scope.row.auditstatus==0" type="danger">已作废</el-tag>
@@ -42,7 +57,8 @@
 			   <el-tag  v-if="scope.row.auditstatus==2 && scope.row.paystatus!=3" type="success">执行中</el-tag>
 			   <el-tag  v-if="scope.row.auditstatus==3" type="info">已完成</el-tag>
 			   <el-tag  v-if="scope.row.paystatus==3" type="warning">请款中</el-tag>
-			    <el-tag type="danger" v-if="scope.row.changenumber" class="pointer" :title="'换货单编号:'+scope.row.changenumber" style="margin-left:10px;" size="small" @click="handleChangeForm(scope.row.changenumber)" effect="dark">换货中</el-tag>
+			   <el-tag type="danger" v-if="scope.row.changenumber" class="pointer" :title="'换货单编号:'+scope.row.changenumber" style="margin-left:10px;" size="small" @click="handleChangeForm(scope.row.changenumber)" effect="dark">换货中</el-tag>
+			   <span class="font-extraSmall purchase-title-element" data-title="创建日期">{{dateFormat(scope.row.createdate)}}</span> 
 			   <div v-if="scope.row['orderstatus']">
 							  <span v-if="orderStatus[scope.row.orderstatus]" class="tag-group"><span class="before">1688</span>
 							     <span :class="orderStatus[scope.row.orderstatus].color" style="padding-left:2px">   {{orderStatus[scope.row.orderstatus].simple}} </span> 
@@ -102,11 +118,16 @@
 			<p><span class="text-gray ">订单编码：</span>{{scope.row.number}} <span class="text-gray" v-if="scope.row.groupname"> [{{scope.row.groupname}}]</span></p>
 			<p class="font-base"><span class="text-gray">入库仓库：</span>{{scope.row.warehousename}}</p>
 			<p v-if="tableState=='4' || tableState=='5' || tableState=='6'"> <span class="text-gray">审核日期:</span>{{dateFormat(scope.row.audittime)}}</p>
-			<p v-else><span class="text-gray ">创建日期：</span>{{dateFormat(scope.row.createdate)}} <span class="text-gray"> ({{scope.row.creatorname}})</span></p>
+			<p v-else><span class="text-gray ">创建人：</span> <span class="text-gray"> {{scope.row.creatorname}}</span></p>
 		  </template>
 		</el-table-column>
 
-		<el-table-column  label="采购信息"  width="140" >
+		<el-table-column  label="采购信息" prop="orderprice"  sortable="custom"   width="160" >
+		   <template #header>
+			   <el-space>
+				   <span>采购信息</span>
+			   </el-space>
+		   </template>
 		   <template #default="scope">
 			   <div>
 			   <span class="word-break text-gray">单价：</span>
@@ -270,7 +291,7 @@
 
 <script setup> 
 	import {h,ref,reactive,toRefs,getCurrentInstance,inject,} from 'vue'
-	import {Download,Edit,DeleteFilled,ArrowDown,Warning,ArrowLeft,ArrowRight} from '@element-plus/icons-vue';
+	import {Download,Edit,DeleteFilled,ArrowDown,Warning,ArrowLeft,ArrowRight,SortUp,SortDown,Sort} from '@element-plus/icons-vue';
 	import {MoreOne,Copy} from '@icon-park/vue-next';
 	import CopyText from"@/utils/copy_text.js";
 	import {useRouter } from 'vue-router'
@@ -297,7 +318,8 @@
 	const PaymentRef = ref();
 	const ReceiptRef = ref();
 	const emitter = inject("emitter");
-	const emit = defineEmits(['selectrow','changepay',]);
+	const emit = defineEmits(['selectrow','changepay','sort-change',]);
+	const sortOrder = ref('');
 	let globalTable=ref();
 	 const   proxy  = getCurrentInstance();
 	const spacer = h(ElDivider, {
@@ -468,7 +490,21 @@
 			},
 		})
 	}
+	function toggleSort(){
+		if(sortOrder.value===''){
+			sortOrder.value='asc';
+		}else if(sortOrder.value==='asc'){
+			sortOrder.value='desc';
+		}else{
+			sortOrder.value='';
+		}
+		emit('sort-change',sortOrder.value);
+	}
 	function load(params){
+		//同步排序状态
+		if(params.sortOrder!==undefined){
+			sortOrder.value=params.sortOrder;
+		}
 		globalTable.value.loadTable(params);
 	}
 	defineExpose({
@@ -520,6 +556,21 @@
 }
 </style>
 <style>
+.purchase-title-element:hover::after {
+    content: attr(data-title);
+    position: absolute;
+    background: #201d1d;
+	color:#fff;
+    padding: 3px 6px;
+    border: 1px solid #181717;
+	border-radius: 4px;
+    z-index: 1000;
+}
+html.dark .purchase-title-element:hover::after {
+    background: #dce3f5;
+    border-color: #e5edf7;
+    color: #1a1f29;
+}
 	.height-currnet-row td{
 		background:#fbebe0!important;
 	}

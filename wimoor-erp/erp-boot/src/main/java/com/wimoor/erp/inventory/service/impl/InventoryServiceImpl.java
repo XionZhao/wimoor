@@ -688,6 +688,7 @@ public class InventoryServiceImpl  extends ServiceImpl<InventoryMapper,Inventory
 		titlelist.add("SKU");
 		titlelist.add("商品名称");
 		titlelist.add("本地仓库");
+		titlelist.add("默认供应商");
 		titlelist.add("待入库");
 		titlelist.add("可用");
 		titlelist.add("待出库");
@@ -695,6 +696,7 @@ public class InventoryServiceImpl  extends ServiceImpl<InventoryMapper,Inventory
 		titlechange.put("SKU", "sku");
 		titlechange.put("商品名称", "name");
 		titlechange.put("本地仓库", "warehouse");
+		titlechange.put("默认供应商", "supplier");
 		titlechange.put("待入库", "inbound");
 		titlechange.put("可用", "fulfillable");
 		titlechange.put("待出库", "outbound");

@@ -19,7 +19,7 @@
                             </el-dropdown-menu>
                         </template>
                     </el-dropdown> -->
-                    <el-input  v-model="searchKeywords" @input="loadData" placeholder="请输入品牌名称" clearable="true" class="input-with-select" >
+                    <el-input  v-model="searchKeywords" v-debounce-input="loadData" placeholder="请输入品牌名称" clearable="true" @clear="loadData" class="input-with-select" >
                         <!-- <template #prepend>
                             <el-select v-model="selectlabel" placeholder="品牌名称" style="width: 110px">
                                 <el-option label="品牌名称" value="1"></el-option>
@@ -126,6 +126,8 @@
 	import {ref,reactive,toRefs,onMounted}from"vue";
 	import brandApi from '@/api/erp/material/brandApi.js';
 	import Helper from '@/components/header/helper.vue';
+
+
 			// let uploadVisible =ref(false)
 			let globalTable=ref();
 			const dataFormRef = ref(ElForm);
@@ -182,17 +184,17 @@
 			}
 		 
 			function loadData(){
-				var data={};
-				var searchs=state.searchKeywords;
-				var search="";
-				if(searchs=="" || searchs==undefined || searchs==null){
-					search="";
-				}else{
-					search=searchs;
-				}
-				data.search=search;
-				globalTable.value.loadTable(data);
+			var data={};
+			var searchs=state.searchKeywords;
+			var search="";
+			if(searchs=="" || searchs==undefined || searchs==null){
+				search="";
+			}else{
+				search=searchs;
 			}
+			data.search=search;
+			globalTable.value.loadTable(data);
+		}
 			function loadTableData(data){
 				brandApi.list(data).then((res)=>{
 					state.tableData.records = res.data.records

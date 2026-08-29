@@ -12,8 +12,10 @@
 		<module>wimoor-erp</module>
 		<module>wimoor-amazon</module>
 		<module>wimoor-amazon-adv</module>
-		<module>wimoor-api</module>
-		<module>wimoor-modules</module>
+		<module>wimoor-data</module>
+		<module>wimoor-finance</module>
+		<module>wimoor-gen</module>
+		<module>wimoor-quote</module>
 	</modules>
 
 	<parent>
@@ -32,13 +34,14 @@
 		<mybatis-plus.version>3.4.3</mybatis-plus.version>
 		<lombok.version>1.18.18</lombok.version>
 		<okhttp3.version>4.10.0</okhttp3.version>
-		<javax-validator.version>1.1.0.Final</javax-validator.version>
+		<javax-validator.version>2.0.1.Final</javax-validator.version>
 		<hutool.version>5.8.5</hutool.version>
 		<spring-cloud-starter-seata.version>2021.0.5.0</spring-cloud-starter-seata.version>
 		<poi.version>4.1.2</poi.version>
 		<fastjson.version>2.0.57</fastjson.version>
 		<fastjson2.version>2.0.57</fastjson2.version>
 		<fasterjson.version>2.19.4</fasterjson.version>
+		<velocity.version>2.0</velocity.version>
 	</properties>
 
 	<dependencies>
@@ -144,6 +147,11 @@
 				<groupId>cn.hutool</groupId>
 				<artifactId>hutool-all</artifactId>
 				<version>${hutool.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.velocity</groupId>
+				<artifactId>velocity-engine-core</artifactId>
+				<version>${velocity.version}</version>
 			</dependency>
 		</dependencies>
 

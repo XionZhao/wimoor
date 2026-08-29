@@ -1,0 +1,224 @@
+{
+  "module": "系统管理",
+  "description": "系统管理模块，包括用户、角色、菜单、部门、标签、店铺、记事本、进度、查询字段等系统基础数据查询",
+  "tools": [
+    {
+      "name": "sys_user_list",
+      "description": "查询当前公司下所有启用状态的用户列表，返回用户ID和姓名",
+      "menu_id": 122,
+      "endpoint": "/admin/api/v1/users/getEnable",
+      "method": "GET",
+      "service": "wimoor-admin",
+      "params": {},
+      "required": [],
+      "response_fields": {
+        "id": "用户ID",
+        "name": "用户姓名"
+      }
+    },
+    {
+      "name": "sys_user_info",
+      "description": "获取当前登录用户的详细信息，包括个人信息、公司信息、权限限制等",
+      "menu_id": 122,
+      "endpoint": "/admin/api/v1/users/info",
+      "method": "GET",
+      "service": "wimoor-admin",
+      "params": {},
+      "required": [],
+      "response_fields": {
+        "id": "用户ID（来自t_userinfo）",
+        "name": "用户姓名",
+        "sex": "性别",
+        "tel": "电话",
+        "company": "公司名称（字符串）",
+        "email": "邮箱",
+        "remark": "备注",
+        "image": "头像图片URL",
+        "user": "用户账号信息对象（SysUser，含id、account、leaderId、createDate、losingeffect、disable等，密码已脱敏）",
+        "usertype": "用户类型",
+        "limit": "权限限制信息"
+      }
+    },
+    {
+      "name": "sys_role_list",
+      "description": "查询角色分页列表，返回当前公司下的角色数据",
+      "menu_id": 317,
+      "endpoint": "/admin/api/v1/roles/page",
+      "method": "GET",
+      "service": "wimoor-admin",
+      "params": {
+        "page": {"type": "integer", "description": "页码"},
+        "limit": {"type": "integer", "description": "每页数量"},
+        "name": {"type": "string", "description": "角色名称模糊搜索"}
+      },
+      "required": [],
+      "response_fields": {
+        "id": "角色ID",
+        "name": "角色名称",
+        "type": "角色类型(actor-普通角色)",
+        "issystem": "是否系统内置角色"
+      }
+    },
+    {
+      "name": "sys_menu_list",
+      "description": "获取菜单表格层级列表，返回树形结构的菜单数据（用于菜单管理页面）",
+      "menu_id": 72,
+      "endpoint": "/admin/api/v1/menus/table",
+      "method": "GET",
+      "service": "wimoor-admin",
+      "params": {
+        "name": {"type": "string", "description": "菜单名称模糊搜索"}
+      },
+      "required": [],
+      "response_fields": {
+        "id": "菜单ID",
+        "parentId": "上级菜单ID",
+        "name": "菜单名称",
+        "icon": "菜单图标",
+        "routeName": "路由名称",
+        "routePath": "路由路径",
+        "component": "组件路径",
+        "sort": "排序号",
+        "visible": "是否可见",
+        "redirect": "重定向路径",
+        "permissions": "权限标识列表",
+        "children": "子菜单列表"
+      }
+    },
+    {
+      "name": "sys_menu_tree",
+      "description": "获取菜单路由层级列表，返回当前用户有权限访问的路由树（用于前端路由渲染）",
+      "menu_id": 22,
+      "endpoint": "/admin/api/v1/menus/route",
+      "method": "GET",
+      "service": "wimoor-admin",
+      "params": {},
+      "required": [],
+      "response_fields": {
+        "path": "路由路径",
+        "component": "组件路径",
+        "redirect": "重定向路径",
+        "alwaysShow": "是否始终显示",
+        "name": "路由名称",
+        "hidden": "是否隐藏",
+        "meta": "元信息对象（含title-标题, icon-图标, permissions-权限列表）",
+        "sort": "排序号",
+        "children": "子路由列表"
+      }
+    },
+    {
+      "name": "sys_dept_list",
+      "description": "查询部门树形表格数据，返回完整的部门层级结构",
+      "menu_id": 6101,
+      "endpoint": "/admin/api/v1/depts/table",
+      "method": "GET",
+      "service": "wimoor-admin",
+      "params": {
+        "status": {"type": "integer", "description": "部门状态"},
+        "name": {"type": "string", "description": "部门名称模糊搜索"}
+      },
+      "required": [],
+      "response_fields": {
+        "id": "部门ID",
+        "name": "部门名称",
+        "parentId": "上级部门ID",
+        "treePath": "树路径",
+        "sort": "排序号",
+        "status": "状态",
+        "leader": "负责人",
+        "mobile": "联系电话",
+        "email": "邮箱",
+        "children": "子部门列表"
+      }
+    },
+    {
+      "name": "sys_tag_list",
+      "description": "查询标签分组分页列表，返回当前公司下的标签组数据",
+      "menu_id": 17,
+      "endpoint": "/admin/api/v1/sysTagsGroups/page",
+      "method": "GET",
+      "service": "wimoor-admin",
+      "params": {
+        "page": {"type": "integer", "description": "页码"},
+        "limit": {"type": "integer", "description": "每页数量"},
+        "name": {"type": "string", "description": "标签组名称模糊搜索"}
+      },
+      "required": [],
+      "response_fields": {
+        "id": "标签组ID",
+        "name": "标签组名称",
+        "description": "描述",
+        "creator": "创建人",
+        "status": "状态(1-启用)",
+        "remark": "备注",
+        "sort": "排序号",
+        "gmtCreate": "创建时间",
+        "gmtModified": "修改时间"
+      }
+    },
+    {
+      "name": "sys_notepad_list",
+      "description": "查询记事本/便签分页列表，支持按标题、内容或SKU搜索",
+      "menu_id": 1012173,
+      "endpoint": "/admin/api/v1/notepad/list",
+      "method": "POST",
+      "service": "wimoor-admin",
+      "body": {
+        "search": {"type": "string", "description": "搜索关键词"},
+        "searchtype": {"type": "string", "description": "搜索类型：title-按标题, content-按内容, sku-按SKU"},
+        "currentpage": {"type": "integer", "description": "页码，默认1"},
+        "pagesize": {"type": "integer", "description": "每页数量，默认10"}
+      },
+      "required": [],
+      "response_fields": {
+        "id": "记事ID",
+        "title": "标题",
+        "sku": "关联SKU",
+        "content": "内容",
+        "operator": "操作人ID",
+        "opttime": "操作时间"
+      }
+    },
+    {
+      "name": "sys_progress_list",
+      "description": "查询系统进度信息，返回指定key的进度百分比（0-100），达到100后自动清除",
+      "menu_id": 22,
+      "endpoint": "/admin/api/v1/sysprogress",
+      "method": "GET",
+      "service": "wimoor-admin",
+      "params": {
+        "key": {"type": "string", "description": "进度标识key"}
+      },
+      "required": ["key"],
+      "response_fields": {
+        "data": "进度百分比（Integer，0-100），100表示完成"
+      }
+    },
+    {
+      "name": "sys_field_list",
+      "description": "查询用户自定义列表字段配置，返回指定页面的列显示配置",
+      "menu_id": 1012203,
+      "endpoint": "/admin/api/v1/sysQueryField/loadfield",
+      "method": "GET",
+      "service": "wimoor-admin",
+      "params": {
+        "queryname": {"type": "string", "description": "查询页面名称标识"}
+      },
+      "required": ["queryname"],
+      "response_fields": {
+        "fquery": "查询页面标识",
+        "ffield": "字段名",
+        "title": "列标题",
+        "titleTooltip": "列提示信息",
+        "width": "列宽度",
+        "findex": "排序索引",
+        "formatter": "格式化器",
+        "footerFormatter": "页脚格式化器",
+        "sortable": "是否可排序",
+        "valign": "垂直对齐",
+        "align": "水平对齐",
+        "isShow": "是否显示（非数据库字段，运行时计算）"
+      }
+    }
+  ]
+}

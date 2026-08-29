@@ -63,6 +63,9 @@ public class AmzAuthApiTimelimit extends BaseEntity implements Serializable {
     @ApiModelProperty(value = "异常log")
     private String log;
 
+    @ApiModelProperty(value = "同步进度")
+    private String progress;
+
     
 	public boolean apiNotRateLimit() {
 		// TODO Auto-generated method stub

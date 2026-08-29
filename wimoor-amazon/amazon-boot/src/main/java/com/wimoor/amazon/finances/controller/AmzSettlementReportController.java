@@ -1241,6 +1241,106 @@ public class AmzSettlementReportController {
 		Object result = this.iAmzSettlementReportService.monthDetail(param);
 		return Result.success(result);
 	}
+
+	@PostMapping("/quantityByDay")
+	public Result<?> quantityByDayAction(@RequestBody Map<String,Object> param) {
+		UserInfo user = UserInfoContext.get();
+		String fromDate =GeneralUtil.formatDate(GeneralUtil.getDate(param.get("fromDate")));
+		if(fromDate==null){
+			throw new BizException("查询日期不能为空");
+		}
+		if (param.get("groupid")==null || StrUtil.isEmpty(param.get("groupid").toString()) ) {
+			param.put("groupid", null);
+		}
+		param.put("fromDate",fromDate);
+		param.put("shopid",user.getCompanyid());
+		String enddate =GeneralUtil.formatDate(GeneralUtil.getDate(param.get("endDate")));
+		param.put("endDate", enddate+" 23:59:59");
+		String groupid=param.get("groupid")!=null?param.get("groupid").toString():null;
+		String marketplaceid=param.get("marketplaceid")!=null?param.get("marketplaceid").toString():null;
+		param.put("marketplaceid",marketplaceid);
+		if(StrUtil.isNotBlank(groupid)&& StrUtil.isNotBlank(marketplaceid)){
+			AmazonAuthority auth = amazonAuthorityService.selectByGroupAndMarket(groupid, marketplaceid);
+			if (auth!=null){
+				param.put("amazonauthid", auth.getId());
+			}
+		}
+		if (param.get("marketplace_name")==null || StrUtil.isEmpty(param.get("marketplace_name").toString()) ) {
+			param.put("marketplace_name", null);
+		}
+		Map<String, Object> result = this.iAmzSettlementReportService.quantityByDay(param);
+		return Result.success(result);
+	}
+
+	@PostMapping("/dailyIncomeReport")
+	public Result<?> dailyIncomeReportAction(@RequestBody Map<String,Object> param) {
+		UserInfo user = UserInfoContext.get();
+		String fromDate =GeneralUtil.formatDate(GeneralUtil.getDate(param.get("fromDate")));
+		if(fromDate==null){
+			throw new BizException("查询日期不能为空");
+		}
+		if (param.get("groupid")==null || StrUtil.isEmpty(param.get("groupid").toString()) ) {
+			param.put("groupid", null);
+		}
+		param.put("fromDate",fromDate);
+		param.put("shopid",user.getCompanyid());
+		String enddate =GeneralUtil.formatDate(GeneralUtil.getDate(param.get("endDate")));
+		param.put("endDate", enddate+" 23:59:59");
+		String groupid=param.get("groupid")!=null?param.get("groupid").toString():null;
+		String marketplaceid=param.get("marketplaceid")!=null?param.get("marketplaceid").toString():null;
+		param.put("marketplaceid",marketplaceid);
+		if(StrUtil.isNotBlank(groupid)&& StrUtil.isNotBlank(marketplaceid)){
+			AmazonAuthority auth = amazonAuthorityService.selectByGroupAndMarket(groupid, marketplaceid);
+			if (auth!=null){
+				param.put("amazonauthid", auth.getId());
+			}
+		}
+		if (param.get("marketplace_name")==null || StrUtil.isEmpty(param.get("marketplace_name").toString()) ) {
+			param.put("marketplace_name", null);
+		}
+		Map<String, Object> result = this.iAmzSettlementReportService.dailyIncomeReport(param);
+		return Result.success(result);
+	}
+
+	@PostMapping("/dailyIncomeReportByTransaction")
+	public Result<?> dailyIncomeReportByTransactionAction(@RequestBody Map<String,Object> param) {
+		UserInfo user = UserInfoContext.get();
+		String fromDate = GeneralUtil.formatDate(GeneralUtil.getDate(param.get("fromDate")));
+		if (fromDate == null) {
+			throw new BizException("查询日期不能为空");
+		}
+		if (param.get("groupid") == null || StrUtil.isEmpty(param.get("groupid").toString())) {
+			param.put("groupid", null);
+		}
+		param.put("fromDate", fromDate);
+		param.put("shopid", user.getCompanyid());
+		String enddate = GeneralUtil.formatDate(GeneralUtil.getDate(param.get("endDate")));
+		param.put("endDate", enddate + " 23:59:59");
+		String groupid = param.get("groupid") != null ? param.get("groupid").toString() : null;
+		String marketplaceid = param.get("marketplaceid") != null ? param.get("marketplaceid").toString() : null;
+		String marketplace_name = param.get("marketplace_name") != null ? param.get("marketplace_name").toString() : null;
+		if (marketplaceid == null && param.get("country") != null) {
+			String country = param.get("country").toString();
+			Marketplace market = marketplaceService.findMarketplaceByCountry(country);
+			if (market != null) {
+				marketplaceid = market.getMarketplaceid();
+				marketplace_name = market.getPointName();
+			}
+		}
+		param.put("marketplaceid", marketplaceid);
+		if (param.get("marketplace_name") == null && marketplace_name != null) {
+			param.put("marketplace_name", marketplace_name);
+		}
+		if (StrUtil.isNotBlank(groupid) && StrUtil.isNotBlank(marketplaceid)) {
+			AmazonAuthority auth = amazonAuthorityService.selectByGroupAndMarket(groupid, marketplaceid);
+			if (auth != null) {
+				param.put("amazonauthid", auth.getId());
+			}
+		}
+		Map<String, Object> result = this.iAmzSettlementReportService.dailyIncomeReportByTransaction(param);
+		return Result.success(result);
+	}
+
 	@GetMapping("/getMonthReportField")
 	public Result<?> getMonthReportFieldAction() {
 		return Result.success(AmzSettlementReportServiceImpl.getTransactionTypes());

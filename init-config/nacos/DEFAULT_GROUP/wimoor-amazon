@@ -45,6 +45,7 @@ db:
     - db_amazon_adv.t_amz_adv_profile
     - db_amazon_adv.t_amz_advert_report_summary_month
     - db_erp.t_erp_material
+    - db_erp.t_erp_material_category
     - db_erp.t_erp_ship_transcompany
     - db_erp.t_erp_warehouse
     - db_erp.t_erp_inventory
@@ -59,5 +60,7 @@ db:
     - db_erp.t_erp_customer
     - db_erp.t_erp_assembly
     - db_erp.t_dimensions
+    - db_erp.t_erp_material_brand
     - db_admin.t_userinfo
     - db_admin.t_sys_holiday
+    - db_erp.t_erp_material_custom

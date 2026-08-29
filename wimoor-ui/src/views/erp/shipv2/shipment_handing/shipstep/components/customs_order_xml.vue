@@ -94,12 +94,15 @@
             <el-row :gutter="20">
               <el-col :span="6">
                 <el-form-item label="电商企业名称：">
-                  <el-input v-model="orderData.ebcName" placeholder="电商企业名称"   />
+                  <el-select v-if="companyOptions.length > 1" v-model="orderData.ebcName" placeholder="请选择电商企业" @change="handleCompanyChange" style="width: 100%">
+                    <el-option v-for="item in companyOptions" :key="item.value" :label="item.label" :value="item.value" />
+                  </el-select>
+                  <el-input v-else v-model="orderData.ebcName" placeholder="电商企业名称" />
                 </el-form-item>
               </el-col>
               <el-col :span="6">
                 <el-form-item label="电商企业代码：">
-                  <el-input v-model="orderData.ebcCode" placeholder="电商企业代码"   />
+                  <el-input v-model="orderData.ebcCode" placeholder="电商企业代码" />
                 </el-form-item>
               </el-col>
 
@@ -120,7 +123,7 @@
             <el-input
                 v-model="orderData.note"
                 type="textarea"
-                :rows="2"
+                :rows="3"
                 placeholder="其他备注"
                 class="remarks-textarea"
             />
@@ -282,6 +285,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Sort } from '@element-plus/icons-vue'
 import Sortable from 'sortablejs'
 import shipmentCustomsApi from '@/api/erp/shipv2/shipmentCustomsApi.js';
+import shipmentPlacementApi from '@/api/erp/shipv2/shipmentPlacementApi.js';
+import groupApi from '@/api/amazon/group/groupApi.js';
 import { formatFloat }  from '@/utils/index.js'
 import CustomsSelect from '@/views/erp/shipv2/shipment_handing/shipstep/components/customs_data.vue'
 
@@ -298,7 +303,11 @@ let state = reactive({
   shipmentid: null,
   currencyOptions:[],
   unitOptions: [],
+  companyOptions:[],
   selectRows:[],
+  selectedRows:[],
+  groupToCompanyMap:{},
+  skuToCompany:{},
   shiftKeyPressed: false,
   lastSelectedRow: null,
   xmlform: {
@@ -315,7 +324,7 @@ let state = reactive({
   tableData: []
 })
 
-let { xmlVisible, sortDialogVisible, xmlform,editShipmentIndex, xmlLoading, orderData, tableData, currencyOptions, unitOptions, optType } = toRefs(state)
+let { xmlVisible, sortDialogVisible, xmlform,editShipmentIndex, xmlLoading, orderData, tableData, currencyOptions, unitOptions, companyOptions, optType } = toRefs(state)
 
 // 计算属性
 const shipmentNumberList = computed(() => {
@@ -500,6 +509,8 @@ function handleMergeItems(){
   // 更新orderData中的orderItems
   //state.orderData.orderItems = state.tableData;
   initSortable();
+  // 合并后更新备注
+  updateNote();
 }
 function totalProductsAmount(){
   orderData.value.goodsValue= state.tableData.reduce((sum, item) => {
@@ -575,6 +586,9 @@ function downloadCustomsFile() {
   if(  state.xmlform.orderData){
        state.xmlform.orderData.orderItems=state.tableData;
   }
+  // 设置申报公司和所有公司
+  state.xmlform.applyCompany = state.orderData.ebcName || '';
+  state.xmlform.allCompany = state.companyOptions.map(item => item.value).join(',');
   // 验证商品项数据
   for (const item of state.orderData.orderItems) {
 
@@ -591,10 +605,57 @@ function downloadCustomsFile() {
   }
 
   shipmentCustomsApi.generateCustomsXml(state.xmlform).then((res) => {
-    ElMessage.success('生成海关XML成功')
-    state.guid = res.data;
-    loadXml()
+    if(res.code === 200){
+      ElMessage.success('生成海关XML成功')
+      state.guid = res.data;
+      loadXml()
+    } else {
+      ElMessageBox.confirm(res.msg || '已存在相同货件的报关记录，是否覆盖？', '提示', {
+        confirmButtonText: '覆盖',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }).then(() => {
+        state.xmlform.force = true;
+        shipmentCustomsApi.generateCustomsXml(state.xmlform).then((res2) => {
+          if(res2.code === 200){
+            ElMessage.success('生成海关XML成功')
+            state.guid = res2.data;
+            loadXml()
+          } else {
+            ElMessage.error(res2.msg || '生成失败')
+          }
+          state.xmlform.force = false;
+          state.xmlLoading = false
+        })
+      }).catch(() => {
+        state.xmlform.force = false;
+        state.xmlLoading = false
+      })
+      return
+    }
     state.xmlLoading = false
+  }).catch(e => {
+    ElMessageBox.confirm(e?.msg || '已存在相同货件的报关记录，是否覆盖？', '提示', {
+      confirmButtonText: '覆盖',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }).then(() => {
+      state.xmlform.force = true;
+      shipmentCustomsApi.generateCustomsXml(state.xmlform).then((res2) => {
+        if(res2.code === 200){
+          ElMessage.success('生成海关XML成功')
+          state.guid = res2.data;
+          loadXml()
+        } else {
+          ElMessage.error(res2.msg || '生成失败')
+        }
+        state.xmlform.force = false;
+        state.xmlLoading = false
+      })
+    }).catch(() => {
+      state.xmlform.force = false;
+      state.xmlLoading = false
+    })
   })
 }
 
@@ -666,6 +727,8 @@ function loadOrderData(){
       // 重置上次选中的行，避免数据变化后引用失效
       state.lastSelectedRow = null;
       initSortable();
+      // 自动生成分组备注（多店铺合并时）
+      generateNote();
     }
   })
 }
@@ -681,6 +744,9 @@ function loadXml(){
   shipmentCustomsApi.getCustomsXml({"guid":state.guid}).then(async (res)=>{
     if(res.data && res.data.number){
       state.xmlform=res.data;
+      if(state.xmlform.filePath && typeof state.xmlform.filePath === 'object' && state.xmlform.filePath.url){
+        state.xmlform.filePath = state.xmlform.filePath.url;
+      }
       state.shipmentid=state.xmlform.number;
       if(!res.data.fileName){
         await getFileName();
@@ -757,18 +823,69 @@ function handleQuery() {
   })
 }
 
-async function show(groupid, shipmentid,guid) {
+async function show(groupid, shipmentid,guid,groupids,selectedRows) {
   state.guid=guid;
   state.groupid = groupid
   state.shipmentid = shipmentid
+  state.selectedRows = selectedRows || [];
   state.xmlVisible = true;
   state.xmlform.number=shipmentid;
   state.xmlform.groupid=groupid;
   state.currencyOptions=await loadOptions("currency","code","encode");
   state.unitOptions=await loadOptions("unit","code","name");
+  // 获取店铺信息，构建公司选项列表
+  await loadCompanyOptions(groupids || [groupid]);
   loadXml();
+}
 
+async function loadCompanyOptions(groupids) {
+  try {
+    const res = await groupApi.getAmazongroupList();
+    if (res.data) {
+      //存储店铺ID到公司名称的映射
+      state.groupToCompanyMap = {};
+      res.data.forEach(group => {
+        state.groupToCompanyMap[group.id] = group.company || group.name;
+      });
+      // 过滤出选中的店铺
+      const filteredGroups = res.data.filter(group => groupids.includes(group.id));
+      // 构建公司选项列表（去重）
+      const companyMap = new Map();
+      filteredGroups.forEach(group => {
+        if (group.company && !companyMap.has(group.company)) {
+          companyMap.set(group.company, {
+            value: group.company,
+            label: group.company,
+            taxNumber: group.taxNumber || group.tax_number || '',
+            customNumber: group.customNumber || group.custom_number || '',
+            dxpid: group.dxpid || '',
+            groupId: group.id
+          });
+        }
+      });
+      state.companyOptions = Array.from(companyMap.values());
+      console.log('公司选项列表:', state.companyOptions);
+    }
+  } catch (e) {
+    console.error('获取店铺信息失败', e);
+  }
+}
 
+function handleCompanyChange(companyName) {
+  const selectedCompany = state.companyOptions.find(item => item.value === companyName);
+  if (selectedCompany) {
+    state.orderData.ebcCode = selectedCompany.customNumber || selectedCompany.taxNumber || '';
+    // copName与ebcName保持一致
+    state.orderData.copName = companyName;
+    state.orderData.copCode = selectedCompany.customNumber || selectedCompany.taxNumber || '';
+    // dxpId需要设置到orderData中，后端从此处读取
+    state.orderData.dxpId = selectedCompany.dxpid || '';
+    state.xmlform.dxpId = selectedCompany.dxpid || '';
+    // 更新groupid，使后端能获取到正确的公司信息生成文件名
+    state.xmlform.groupid = selectedCompany.groupId;
+    // 更新文件名
+    getFileName();
+  }
 }
 
 // 模拟异步加载数据
@@ -801,6 +918,142 @@ onUnmounted(() => {
   window.removeEventListener('keyup', handleKeyUp)
 })
 
+// 自动生成分组备注（多店铺合并时）
+async function generateNote() {
+  // 只有多店铺选中时才生成分组备注
+  if (!state.selectedRows || state.selectedRows.length <= 1) return;
+  if (!state.tableData || state.tableData.length === 0) return;
+  if (!state.groupToCompanyMap || Object.keys(state.groupToCompanyMap).length === 0) return;
+
+  // 按公司分组选中的货件
+  const companyShipments = {};
+  state.selectedRows.forEach(row => {
+    const company = state.groupToCompanyMap[row.groupid] || row.groupname;
+    if (!companyShipments[company]) {
+      companyShipments[company] = { shipmentIds: [] };
+    }
+    companyShipments[company].shipmentIds.push(row.shipmentid);
+  });
+
+  // 只有多个公司时才生成分组备注
+  const companies = Object.keys(companyShipments);
+  if (companies.length <= 1) return;
+
+  // 通过加载每个货件的商品列表，构建sellersku到公司的映射
+  if (Object.keys(state.skuToCompany).length === 0) {
+    const promises = state.selectedRows.map(row => {
+      return shipmentPlacementApi.getBaseInfo({shipmentid: row.shipmentid})
+        .then(res => {
+          if (res.data && res.data.itemlist) {
+            const company = state.groupToCompanyMap[row.groupid] || row.groupname;
+            res.data.itemlist.forEach(item => {
+              const sku = item.sellersku || item.sku || item.SellerSKU || item.msku;
+              if (sku && !state.skuToCompany[sku]) {
+                state.skuToCompany[sku] = company;
+              }
+            });
+          }
+        })
+        .catch(e => {
+          console.error('获取货件商品列表失败', row.shipmentid, e);
+        });
+    });
+    await Promise.all(promises);
+  }
+
+  // 将gnum映射到公司
+  const companyGnums = {};
+  const companyQty = {};
+  const companyAmount = {};
+  state.tableData.forEach(item => {
+    const company = state.skuToCompany[item.itemNo];
+    if (company) {
+      if (!companyGnums[company]) {
+        companyGnums[company] = [];
+        companyQty[company] = 0;
+        companyAmount[company] = 0;
+      }
+      companyGnums[company].push(item.gnum);
+      companyQty[company] += parseInt(item.qty) || 0;
+      companyAmount[company] += parseFloat(item.totalPrice) || 0;
+    }
+  });
+
+  // 生成备注
+  const noteLines = [];
+  companies.forEach(company => {
+    const info = companyShipments[company];
+    const gnums = companyGnums[company] || [];
+    const qty = companyQty[company] || 0;
+    const amount = companyAmount[company] || 0;
+    const fbaStr = info.shipmentIds.join(',');
+    const gnumStr = gnums.length > 0 ? ` 产品(${gnums.join(',')})` : '';
+    const qtyStr = ` 总个数：${qty}`;
+    const amountStr = amount > 0 ? ` ，金额：${formatFloat(amount)}` : '';
+    noteLines.push(`${company}-FBA批次：${fbaStr} -${gnumStr}${qtyStr}${amountStr}`);
+  });
+
+  if (noteLines.length > 0) {
+    state.orderData.note = noteLines.join('\n');
+  }
+}
+
+// 更新备注（合并行后调用，复用已有的skuToCompany映射）
+function updateNote() {
+  if (!state.selectedRows || state.selectedRows.length <= 1) return;
+  if (!state.tableData || state.tableData.length === 0) return;
+  if (Object.keys(state.skuToCompany).length === 0) return;
+
+  // 按公司分组选中的货件
+  const companyShipments = {};
+  state.selectedRows.forEach(row => {
+    const company = state.groupToCompanyMap[row.groupid] || row.groupname;
+    if (!companyShipments[company]) {
+      companyShipments[company] = { shipmentIds: [] };
+    }
+    companyShipments[company].shipmentIds.push(row.shipmentid);
+  });
+
+  const companies = Object.keys(companyShipments);
+  if (companies.length <= 1) return;
+
+  // 将gnum映射到公司
+  const companyGnums = {};
+  const companyQty = {};
+  const companyAmount = {};
+  state.tableData.forEach(item => {
+    const company = state.skuToCompany[item.itemNo];
+    if (company) {
+      if (!companyGnums[company]) {
+        companyGnums[company] = [];
+        companyQty[company] = 0;
+        companyAmount[company] = 0;
+      }
+      companyGnums[company].push(item.gnum);
+      companyQty[company] += parseInt(item.qty) || 0;
+      companyAmount[company] += parseFloat(item.totalPrice) || 0;
+    }
+  });
+
+  // 生成备注
+  const noteLines = [];
+  companies.forEach(company => {
+    const info = companyShipments[company];
+    const gnums = companyGnums[company] || [];
+    const qty = companyQty[company] || 0;
+    const amount = companyAmount[company] || 0;
+    const fbaStr = info.shipmentIds.join(',');
+    const gnumStr = gnums.length > 0 ? ` 产品(${gnums.join(',')})` : '';
+    const qtyStr = ` 总个数：${qty}`;
+    const amountStr = amount > 0 ? ` ，金额：${formatFloat(amount)}` : '';
+    noteLines.push(`${company}-FBA批次：${fbaStr} -${gnumStr}${qtyStr}${amountStr}`);
+  });
+
+  if (noteLines.length > 0) {
+    state.orderData.note = noteLines.join('\n');
+  }
+}
+
 defineExpose({ show })
 </script>
 
@@ -821,7 +1074,7 @@ defineExpose({ show })
 
 .form-title {
   margin: 0;
-  color: #303133;
+  color: var(--el-text-color-primary);
   font-size: 18px;
   font-weight: 600;
 }
@@ -842,7 +1095,7 @@ defineExpose({ show })
 
 .section-title {
   margin: 0;
-  color: #303133;
+  color: var(--el-text-color-primary);
   font-size: 15px;
   font-weight: 600;
 }
@@ -853,7 +1106,7 @@ defineExpose({ show })
 
 .sub-title {
   margin: 0 0 12px 0;
-  color: #606266;
+  color: var(--el-text-color-regular);
   font-size: 13px;
   font-weight: 500;
   padding-left: 6px;
@@ -862,7 +1115,7 @@ defineExpose({ show })
 
 .bold-input :deep(.el-input__inner) {
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 .product-table {
@@ -896,7 +1149,7 @@ defineExpose({ show })
 
 .summary-value {
   margin-left: 6px;
-  color: #303133;
+  color: var(--el-text-color-primary);
   font-size: 14px;
   font-weight: 600;
 }
@@ -982,7 +1235,7 @@ defineExpose({ show })
 
 .drag-handle {
   margin-right: 12px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-size: 16px;
 }
 

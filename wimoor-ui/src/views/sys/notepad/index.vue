@@ -129,9 +129,10 @@
  
 <script setup>
 	
-import {  onMounted,ref ,nextTick,reactive,toRefs,onUnmounted,watch} from 'vue';
+import {  onMounted,ref ,nextTick,reactive,toRefs,onUnmounted,watch,computed} from 'vue';
 import { Search, Plus, Edit, Refresh, Delete,MoreFilled,Link,Check } from '@element-plus/icons-vue';
 import 'highlight.js/styles/atom-one-dark.css' // 引入highlight.js的样式，这里选择atom-one-dark样式，你可以选择其他样式
+import { isDark } from '@/components/composables/dark.js'
 import notepadApi from '@/api/sys/tool/notepadApi';
 import { ElMessage, ElMessageBox } from 'element-plus';
 // 引入highlight.js
@@ -154,7 +155,7 @@ const { notepad,editorOption,tableData,queryParams,saveloading } = toRefs(state)
 
 
 
-const editorConfig = ref({
+const editorConfig = computed(() => ({
   height: 'calc(100vh - 160px)',
   language: 'zh_CN',
   language_url: '/tinymce/langs/zh_CN.js',
@@ -178,20 +179,23 @@ const editorConfig = ref({
   quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote ',
   quickbars_insert_toolbar: 'quickimage quicktable',
   table_toolbar: 'tableprops tabledelete | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol',
+  skin: isDark.value ? 'oxide-dark' : 'oxide',
+  skin_url: isDark.value ? '/tinymce/skins/ui/oxide-dark' : '/tinymce/skins/ui/oxide',
+  content_css: isDark.value ? '/tinymce/skins/content/dark/content.min.css' : '/tinymce/skins/content/default/content.min.css',
   content_style: `
     body {
       font-family: 'Georgia', 'Times New Roman', 'PingFang SC', 'Microsoft YaHei', serif;
       font-size: 16px;
       line-height: 1.8;
-      color: #303133;
+      color: ${isDark.value ? '#e0e0e0' : '#303133'};
       padding: 20px;
-      background: transparent;
+      background: ${isDark.value ? '#1a1a1a' : 'transparent'};
     }
     p {
       margin-bottom: 16px;
     }
     h1, h2, h3, h4, h5, h6 {
-      color: #1a1a1a;
+      color: ${isDark.value ? '#e0e0e0' : '#1a1a1a'};
       margin-top: 24px;
       margin-bottom: 16px;
     }
@@ -206,23 +210,27 @@ const editorConfig = ref({
       border-left: 4px solid #667eea;
       padding-left: 16px;
       margin-left: 0;
-      color: #606266;
+      color: ${isDark.value ? '#a0a0a0' : '#606266'};
       font-style: italic;
     }
     pre {
-      background: #f5f7fa;
+      background: ${isDark.value ? '#2a2a2a' : '#f5f7fa'};
       border-radius: 8px;
       padding: 16px;
       overflow-x: auto;
     }
     code {
-      background: #f5f7fa;
+      background: ${isDark.value ? '#2a2a2a' : '#f5f7fa'};
       padding: 2px 6px;
       border-radius: 4px;
       font-size: 14px;
+      color: ${isDark.value ? '#e0e0e0' : '#303133'};
+    }
+    table td, table th {
+      border-color: ${isDark.value ? '#3a3a3a' : '#ddd'};
     }
   `
-})
+}))
 
 const onEditorInit = (editor) => {
   console.log('编辑器初始化完成', editor)
@@ -382,6 +390,17 @@ watch(() => state.notepad.content, (newContent) => {
       }
     }
   });
+});
+
+// 监听暗黑模式变化，重新初始化编辑器
+watch(isDark, async (newVal) => {
+  console.log('暗黑模式变化，重新初始化编辑器');
+  await nextTick();
+  setTimeout(() => {
+    if (tinyMceEditorRef.value) {
+      tinyMceEditorRef.value.refreshEditor();
+    }
+  }, 300);
 });
 
 // 添加页面可见性变化监听
@@ -839,4 +858,172 @@ onUnmounted(() => {
   color: #667eea;
 }
 
+</style>
+
+<!-- 暗黑模式样式 - 非scoped确保生效 -->
+<style>
+/* 暗黑模式 - 纯黑主题 */
+html.dark .notepad-app {
+  background: #0d0d0d !important;
+}
+
+html.dark .notepad-app .notepad-sidebar {
+  background: #111111 !important;
+  border-right-color: #1a1a1a !important;
+}
+
+html.dark .notepad-app .sidebar-header {
+  background: #0d0d0d !important;
+  border-bottom-color: #1a1a1a !important;
+}
+
+html.dark .notepad-app .search-type-select .el-input__wrapper,
+html.dark .notepad-app .search-input .el-input__wrapper {
+  background: #161616 !important;
+  box-shadow: 0 0 0 1px #1a1a1a !important;
+}
+
+html.dark .notepad-app .search-type-select .el-input__inner,
+html.dark .notepad-app .search-input .el-input__inner {
+  color: #e0e0e0 !important;
+}
+
+html.dark .notepad-app .note-item {
+  background: #161616 !important;
+  border-color: transparent !important;
+}
+
+html.dark .notepad-app .note-item:hover {
+  background: #1f1f1f !important;
+  border-color: #2a2a2a !important;
+}
+
+html.dark .notepad-app .note-title {
+  color: #e0e0e0 !important;
+}
+
+html.dark .notepad-app .note-preview {
+  color: #808080 !important;
+}
+
+html.dark .notepad-app .empty-text {
+  color: #e0e0e0 !important;
+}
+
+html.dark .notepad-app .empty-subtitle {
+  color: #666666 !important;
+}
+
+html.dark .notepad-app .action-btn {
+  color: #808080 !important;
+}
+
+html.dark .notepad-app .sidebar-footer {
+  background: #0d0d0d !important;
+  border-top-color: #1a1a1a !important;
+}
+
+html.dark .notepad-app .notepad-main {
+  background: #0d0d0d !important;
+}
+
+html.dark .notepad-app .editor-header {
+  background: #111111 !important;
+  border-bottom-color: #1a1a1a !important;
+}
+
+html.dark .notepad-app .title-input .el-input__wrapper {
+  background: #161616 !important;
+  box-shadow: 0 0 0 1px #1a1a1a !important;
+}
+
+html.dark .notepad-app .title-input .el-input__inner {
+  color: #e0e0e0 !important;
+}
+
+html.dark .notepad-app .paper-effect {
+  background: #111111 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .notepad-app .paper-effect::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.02) 50%, transparent 100%) !important;
+}
+
+html.dark .notepad-app .paper-effect::after {
+  background: repeating-linear-gradient(
+    transparent,
+    transparent 31px,
+    rgba(255, 255, 255, 0.03) 31px,
+    rgba(255, 255, 255, 0.03) 32px
+  ) !important;
+}
+
+html.dark .notepad-app .editor-container .tox .tox-menubar,
+html.dark .notepad-app .editor-container .tox .tox-toolbar-overlord,
+html.dark .notepad-app .editor-container .tox .tox-statusbar {
+  background: #161616 !important;
+  border-color: #1a1a1a !important;
+}
+
+/* 编辑器内部元素暗黑模式 */
+html.dark .notepad-app .editor-container .tox .tox-tbtn {
+  color: #c0c0c0 !important;
+}
+
+html.dark .notepad-app .editor-container .tox .tox-tbtn:hover {
+  background: #2a2a2a !important;
+  color: #e0e0e0 !important;
+}
+
+html.dark .notepad-app .editor-container .tox .tox-tbtn--enabled {
+  background: #3a3a3a !important;
+  color: #ffffff !important;
+}
+
+html.dark .notepad-app .editor-container .tox .tox-mbtn {
+  color: #c0c0c0 !important;
+}
+
+html.dark .notepad-app .editor-container .tox .tox-mbtn:hover:not(:disabled) {
+  background: #2a2a2a !important;
+  color: #e0e0e0 !important;
+}
+
+html.dark .notepad-app .editor-container .tox .tox-statusbar {
+  color: #808080 !important;
+}
+
+html.dark .notepad-app .editor-container .tox .tox-edit-area__iframe {
+  background-color: #1a1a1a !important;
+}
+
+html.dark .notepad-app .editor-container .tox .tox-toolbar__group {
+  border-color: #2a2a2a !important;
+}
+
+html.dark .notepad-app .editor-container .tox .tox-tinymce {
+  border-color: #1a1a1a !important;
+}
+
+html.dark .notepad-app .notes-list .el-loading-mask {
+  background: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* 暗黑模式下滚动条样式 */
+html.dark .notepad-app .notes-list::-webkit-scrollbar-thumb {
+  background: #333333 !important;
+}
+
+html.dark .notepad-app .notes-list::-webkit-scrollbar-track {
+  background: #111111 !important;
+}
+
+/* 暗黑模式下分页器样式 */
+html.dark .notepad-app .sidebar-footer .el-pagination {
+  --el-pagination-bg-color: transparent;
+  --el-pagination-text-color: #808080;
+  --el-pagination-button-bg-color: #161616;
+  --el-pagination-hover-color: #667eea;
+}
 </style>

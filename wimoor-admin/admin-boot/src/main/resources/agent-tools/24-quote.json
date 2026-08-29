@@ -1,0 +1,413 @@
+﻿{
+    "module":  "报价模块",
+    "description":  "报价单管理，包括报价订单、发货单、供应商报价、采购报价、物流渠道等查询。所有接口需要token认证（买家/供应商令牌）",
+    "tools":  [
+                  {
+                      "name":  "quote_order_list",
+                      "description":  "查询报价订单列表，返回分页的订单数据，支持按状态、关键词、日期范围筛选",
+                      "menu_id":  1211,
+                      "endpoint":  "/quote/api/v1/quote/listOrder",
+                      "method":  "POST",
+                      "service":  "wimoor-quote",
+                      "body":  {
+                                   "token":  {
+                                                 "type":  "string",
+                                                 "description":  "买家令牌（必填）"
+                                             },
+                                   "status":  {
+                                                  "type":  "integer",
+                                                  "description":  "订单状态：1-等待确认, 2-等待拼团, 3-等待报价, 4-结束, 0或不传-全部"
+                                              },
+                                   "search":  {
+                                                  "type":  "string",
+                                                  "description":  "关键字搜索（订单号、备注、供应商名、货件名、目的地、国家、SKU等）"
+                                              },
+                                   "fromDate":  {
+                                                    "type":  "string",
+                                                    "description":  "开始日期，格式：yyyy-MM-dd"
+                                                },
+                                   "toDate":  {
+                                                  "type":  "string",
+                                                  "description":  "结束日期，格式：yyyy-MM-dd"
+                                              },
+                                   "currentpage":  {
+                                                       "type":  "integer",
+                                                       "description":  "页码，默认1"
+                                                   },
+                                   "pagesize":  {
+                                                    "type":  "integer",
+                                                    "description":  "每页数量，默认1000"
+                                                }
+                               },
+                      "required":  [
+                                       "token"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "订单ID",
+                                              "buyerid":  "买家ID",
+                                              "ftype":  "订单类型",
+                                              "isgroupbuy":  "是否拼团",
+                                              "isbidding":  "是否竞价",
+                                              "status":  "订单状态(1-等待确认,2-等待拼团,3-等待报价,4-结束,5-已关闭)",
+                                              "weight":  "订单重量",
+                                              "volume":  "订单体积",
+                                              "closetime":  "订单关闭时间",
+                                              "pricetime":  "报价接受时间",
+                                              "createtime":  "创建时间",
+                                              "remark":  "备注",
+                                              "number":  "订单编号",
+                                              "transchannel":  "物流渠道ID",
+                                              "days":  "到货时效",
+                                              "shipmentList":  "关联货件列表",
+                                              "addressList":  "地址列表",
+                                              "quotationPriceList":  "报价列表"
+                                          }
+                  },
+                  {
+                      "name":  "quote_shipment_list",
+                      "description":  "查询报价发货单列表，返回分页的货件数据，支持按状态、关键词、日期范围等条件筛选",
+                      "menu_id":  1211,
+                      "endpoint":  "/quote/api/v1/quote/listShipment",
+                      "method":  "POST",
+                      "service":  "wimoor-quote",
+                      "body":  {
+                                   "token":  {
+                                                 "type":  "string",
+                                                 "description":  "买家令牌（必填）"
+                                             },
+                                   "status":  {
+                                                  "type":  "integer",
+                                                  "description":  "货件状态：0-初始, 1-已报价, 5-已完成, 6-已关闭"
+                                              },
+                                   "search":  {
+                                                  "type":  "string",
+                                                  "description":  "关键字搜索（货件名、编号、目的地、国家、shipmentid、店铺、仓库、SKU等）"
+                                              },
+                                   "number":  {
+                                                  "type":  "string",
+                                                  "description":  "计划编码，多个以逗号分隔"
+                                              },
+                                   "shipmentid":  {
+                                                      "type":  "string",
+                                                      "description":  "FBA货件ID，多个以逗号分隔"
+                                                  },
+                                   "fromDate":  {
+                                                    "type":  "string",
+                                                    "description":  "开始日期，格式：yyyy-MM-dd"
+                                                },
+                                   "toDate":  {
+                                                  "type":  "string",
+                                                  "description":  "结束日期，格式：yyyy-MM-dd"
+                                              },
+                                   "groupname":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺名称模糊搜索"
+                                                 },
+                                   "country":  {
+                                                   "type":  "string",
+                                                   "description":  "国家模糊搜索"
+                                               },
+                                   "warehousename":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库名称模糊搜索"
+                                                     },
+                                   "remark":  {
+                                                  "type":  "string",
+                                                  "description":  "备注模糊搜索"
+                                              },
+                                   "currentpage":  {
+                                                       "type":  "integer",
+                                                       "description":  "页码，默认1"
+                                                   },
+                                   "pagesize":  {
+                                                    "type":  "integer",
+                                                    "description":  "每页数量，默认1000"
+                                                }
+                               },
+                      "required":  [
+                                       "token"
+                                   ],
+                      "response_fields":  {
+                                              "shipmentid":  "FBA货件ID",
+                                              "number":  "计划编码",
+                                              "name":  "货件名称",
+                                              "groupname":  "店铺名称",
+                                              "buyername":  "采购商名称",
+                                              "buyerothername":  "采购商别名",
+                                              "buyercompany":  "采购商公司名称",
+                                              "warehousename":  "仓库名称",
+                                              "destination":  "目的地（FBA仓库）",
+                                              "area":  "区域",
+                                              "isfar":  "是否偏远地区",
+                                              "country":  "国家",
+                                              "weight":  "重量",
+                                              "volume":  "体积",
+                                              "num":  "发货SKU数量",
+                                              "status":  "状态(0-初始,1-已报价,5-已完成,6-已关闭)",
+                                              "remark":  "备注",
+                                              "opttime":  "添加时间",
+                                              "boxList":  "箱子列表",
+                                              "itemList":  "商品明细列表",
+                                              "quotationPriceList":  "报价列表"
+                                          }
+                  },
+                  {
+                      "name":  "quote_supplier_order_list",
+                      "description":  "查询供应商视角的报价订单列表，供应商通过自己的token查看被分配的订单",
+                      "menu_id":  1211,
+                      "endpoint":  "/quote/api/v1/quote/supplier/listSupplierOrder",
+                      "method":  "POST",
+                      "service":  "wimoor-quote",
+                      "body":  {
+                                   "token":  {
+                                                 "type":  "string",
+                                                 "description":  "供应商令牌（必填）"
+                                             },
+                                   "status":  {
+                                                  "type":  "integer",
+                                                  "description":  "筛选状态：1-所有订单(不含已关闭), 2-待报价, 3-已有报价且订单结束(近31天), 4-已有报价且未结束(近31天), 5-已采纳(近91天)"
+                                              },
+                                   "displayType":  {
+                                                       "type":  "string",
+                                                       "description":  "展示类型"
+                                                   }
+                               },
+                      "required":  [
+                                       "token"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "订单ID",
+                                              "buyerid":  "买家ID",
+                                              "ftype":  "订单类型",
+                                              "isgroupbuy":  "是否拼团",
+                                              "isbidding":  "是否竞价",
+                                              "status":  "订单状态",
+                                              "weight":  "订单重量",
+                                              "volume":  "订单体积",
+                                              "closetime":  "订单关闭时间",
+                                              "pricetime":  "报价接受时间",
+                                              "createtime":  "创建时间",
+                                              "remark":  "备注",
+                                              "number":  "订单编号",
+                                              "transchannel":  "物流渠道ID",
+                                              "days":  "到货时效",
+                                              "shipmentList":  "关联货件列表",
+                                              "addressList":  "地址列表",
+                                              "quotationPriceList":  "报价列表"
+                                          }
+                  },
+                  {
+                      "name":  "quote_supplier_list",
+                      "description":  "查询买家下的供应商列表，返回该买家管理的所有未停用供应商",
+                      "menu_id":  1211,
+                      "endpoint":  "/quote/api/v1/quote/supplier/listSupplier",
+                      "method":  "POST",
+                      "service":  "wimoor-quote",
+                      "body":  {
+                                   "token":  {
+                                                 "type":  "string",
+                                                 "description":  "买家令牌（必填）"
+                                             }
+                               },
+                      "required":  [
+                                       "token"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "供应商ID",
+                                              "name":  "供应商名称",
+                                              "buyerid":  "所属买家ID",
+                                              "address":  "地址",
+                                              "contact":  "联系人",
+                                              "mobile":  "手机号",
+                                              "disabled":  "是否停用",
+                                              "createtime":  "创建时间"
+                                          }
+                  },
+                  {
+                      "name":  "quote_purchase_list",
+                      "description":  "查询采购报价订单列表，返回分页的采购订单数据",
+                      "menu_id":  1211,
+                      "endpoint":  "/quote/api/v1/quote/purchase/list",
+                      "method":  "POST",
+                      "service":  "wimoor-quote",
+                      "body":  {
+                                   "token":  {
+                                                 "type":  "string",
+                                                 "description":  "买家令牌（必填）"
+                                             },
+                                   "search":  {
+                                                  "type":  "string",
+                                                  "description":  "关键字搜索（供应商名称、采购商名称）"
+                                              },
+                                   "fromDate":  {
+                                                    "type":  "string",
+                                                    "description":  "开始日期，格式：yyyy-MM-dd"
+                                                },
+                                   "toDate":  {
+                                                  "type":  "string",
+                                                  "description":  "结束日期，格式：yyyy-MM-dd"
+                                              },
+                                   "currentpage":  {
+                                                       "type":  "integer",
+                                                       "description":  "页码，默认1"
+                                                   },
+                                   "pagesize":  {
+                                                    "type":  "integer",
+                                                    "description":  "每页数量，默认1000"
+                                                }
+                               },
+                      "required":  [
+                                       "token"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "订单ID",
+                                              "formid":  "表单ID",
+                                              "createtime":  "创建时间",
+                                              "sellerID":  "卖家ID",
+                                              "buyerID":  "买家ID",
+                                              "buyerothername":  "买家别名",
+                                              "price":  "总价",
+                                              "remark":  "备注",
+                                              "buyerphone":  "买家电话",
+                                              "buyername":  "买家名称",
+                                              "buyermobile":  "买家手机",
+                                              "buyercompany":  "买家公司",
+                                              "suppliername":  "供应商名称",
+                                              "supplierphone":  "供应商电话",
+                                              "suppliermobile":  "供应商手机",
+                                              "suppliercompany":  "供应商公司",
+                                              "supplieremail":  "供应商邮箱",
+                                              "audittime":  "审核时间"
+                                          }
+                  },
+                  {
+                      "name":  "quote_purchase_item",
+                      "description":  "查询采购报价订单的明细商品列表",
+                      "menu_id":  1211,
+                      "endpoint":  "/quote/api/v1/quote/purchase/getItem",
+                      "method":  "GET",
+                      "service":  "wimoor-quote",
+                      "params":  {
+                                     "orderid":  {
+                                                     "type":  "string",
+                                                     "description":  "采购订单ID"
+                                                 }
+                                 },
+                      "required":  [
+                                       "orderid"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "明细ID",
+                                              "orderid":  "订单ID",
+                                              "skuid":  "SKU ID",
+                                              "productid":  "商品ID",
+                                              "name":  "商品名称",
+                                              "productcargonumber":  "商品货号",
+                                              "image":  "商品图片",
+                                              "quantity":  "数量",
+                                              "status":  "状态",
+                                              "statusstr":  "状态描述",
+                                              "price":  "单价",
+                                              "amount":  "金额"
+                                          }
+                  },
+                  {
+                      "name":  "quote_trans_channel_list",
+                      "description":  "查询买家的所有物流渠道列表，返回未禁用的渠道",
+                      "menu_id":  1211,
+                      "endpoint":  "/quote/api/v1/transchannel/listall/{token}",
+                      "method":  "POST",
+                      "service":  "wimoor-quote",
+                      "params":  {
+
+                                 },
+                      "required":  [
+                                       "token"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "渠道ID",
+                                              "name":  "渠道名称",
+                                              "buyerid":  "买家ID",
+                                              "disable":  "是否禁用",
+                                              "opttime":  "操作时间"
+                                          }
+                  },
+                  {
+                      "name":  "quote_show_detail",
+                      "description":  "查询订单的报价详情，展示供应商对该订单各货件的报价明细（含运费、税、总价等）",
+                      "menu_id":  1211,
+                      "endpoint":  "/quote/api/v1/quote/showDetail",
+                      "method":  "GET",
+                      "service":  "wimoor-quote",
+                      "params":  {
+                                     "orderid":  {
+                                                     "type":  "string",
+                                                     "description":  "订单ID"
+                                                 },
+                                     "supplierid":  {
+                                                        "type":  "string",
+                                                        "description":  "供应商ID"
+                                                    }
+                                 },
+                      "required":  [
+                                       "orderid",
+                                       "supplierid"
+                                   ],
+                      "response_fields":  {
+                                              "createtime":  "货件创建日期",
+                                              "number":  "计划编码",
+                                              "shipmentid":  "FBA货件ID",
+                                              "destination":  "目的地（FBA仓库）",
+                                              "weight":  "实际重量",
+                                              "reaweight":  "计费重量（取实际重量和材积重量较大值）",
+                                              "volume":  "体积",
+                                              "orderid":  "订单ID",
+                                              "onumber":  "报价单编码",
+                                              "supplierid":  "供应商ID",
+                                              "supplier":  "供应商名称（含已中标/已放弃标记）",
+                                              "price":  "单位报价",
+                                              "totalprice":  "总价",
+                                              "tax":  "税",
+                                              "remark":  "货件备注",
+                                              "orderremark":  "订单备注",
+                                              "priceremark":  "报价备注",
+                                              "shipdate":  "发货日期",
+                                              "outstatus":  "发货状态",
+                                              "cbm":  "立方米",
+                                              "pricechannel":  "报价渠道",
+                                              "orderchannel":  "订单渠道",
+                                              "sftype":  "类型(isnormal-货件报价,issummary-汇总报价)",
+                                              "disabled":  "是否已放弃",
+                                              "shipnums":  "发货件数",
+                                              "shipqty":  "发货数量"
+                                          }
+                  },
+                  {
+                      "name":  "quote_get_buyer",
+                      "description":  "根据买家令牌获取买家信息",
+                      "menu_id":  1211,
+                      "endpoint":  "/quote/api/v1/quote/getBuyer",
+                      "method":  "GET",
+                      "service":  "wimoor-quote",
+                      "params":  {
+                                     "token":  {
+                                                   "type":  "string",
+                                                   "description":  "买家令牌"
+                                               }
+                                 },
+                      "required":  [
+                                       "token"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "买家ID",
+                                              "name":  "买家名称",
+                                              "company":  "公司ID",
+                                              "address":  "地址",
+                                              "contact":  "联系人",
+                                              "mobile":  "手机号",
+                                              "tokentime":  "授权时间",
+                                              "createtime":  "创建时间"
+                                          }
+                  }
+              ]
+}

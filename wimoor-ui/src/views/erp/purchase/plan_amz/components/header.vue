@@ -5,7 +5,7 @@
 			 <PlanSelect  @change="handlePlanChange" ></PlanSelect>
 		</el-space>
 			
-		<el-button @click="clearPlan">清空计划</el-button>
+		<el-button style="margin-right: 70px;" @click="clearPlan">清空计划</el-button>
 	</div>
 	<div class="con-header" style="padding:16px 16px 0px 16px;">
 		<el-row class="no-flex-warp flex-between">
@@ -18,7 +18,7 @@
 						 <Tags   ref="tagsRef" @change="getTags"/>
 						 <el-checkbox-button v-model="queryParams.notag" @change="handleQuery" label="排除" size="large" />
 				   </div>
-				   <el-input  v-model="queryParams.search" clearable @input="handleQuery"  @clear="handleQuery" placeholder="请输入" class="input-with-select" >
+				   <el-input  v-model="queryParams.search" clearable v-debounce-input="handleQuery"  @clear="handleQuery" placeholder="请输入" class="input-with-select" >
 				   <template #prepend>
 				     <el-select v-model="queryParams.searchtype" placeholder="SKU" style="width: 110px">
 				       <el-option label="SKU" value="sku"></el-option>

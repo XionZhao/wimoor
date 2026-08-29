@@ -1377,7 +1377,7 @@ public class PurchaseFormServiceImpl extends  ServiceImpl<PurchaseFormMapper,Pur
 					 //提前生成样式
 				 	CellStyle style=workbook.createCellStyle();
 					style.setAlignment(HorizontalAlignment.LEFT);
-					org.apache.poi.ss.usermodel.Font font = workbook.createFont();
+					Font font = workbook.createFont();
 					font.setFontHeightInPoints((short)10);
 					style.setFont(font);
 					style.setWrapText(true);
@@ -1882,5 +1882,227 @@ public class PurchaseFormServiceImpl extends  ServiceImpl<PurchaseFormMapper,Pur
 			}
 		}
 	}
+
+    // ==================== 台账Feign接口实现 ====================
+    
+    @Override
+    public Map<String, Object> getLedgerList(Map<String, Object> params) {
+        // 采购订单列表（台账用）
+        Page<?> page = new Page<>(1, 20);
+        if (params.get("pageNum") != null) {
+            page.setCurrent(Long.parseLong(params.get("pageNum").toString()));
+        }
+        if (params.get("pageSize") != null) {
+            page.setSize(Long.parseLong(params.get("pageSize").toString()));
+        }
+        IPage<Map<String, Object>> result = this.baseMapper.getPayRecSumReport(page, params);
+        Map<String, Object> map = new HashMap<>();
+        map.put("list", result.getRecords());
+        map.put("total", result.getTotal());
+        map.put("pageNum", result.getCurrent());
+        map.put("pageSize", result.getSize());
+        return map;
+    }
+
+    @Override
+    public Map<String, Object> getLedgerStatistics(Map<String, Object> params) {
+        // 采购订单统计，默认按明细维度统计
+        if (params.get("method") == null) {
+            params.put("method", "2");
+        }
+        Map<String, Object> result = this.baseMapper.selectPurchaseNumAllStatus(params);
+        if (result == null) {
+            result = new HashMap<>();
+        }
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> getSupplierLedgerSummary(Map<String, Object> params) {
+        // 供应商台账汇总
+        return this.baseMapper.getSupplierLedgerSummary(params);
+    }
+
+    @Override
+    public Map<String, Object> getSupplierLedgerStatistics(Map<String, Object> params) {
+        // 供应商台账统计
+        return this.baseMapper.getSupplierLedgerStatistics(params);
+    }
+
+    @Override
+    public Map<String, Object> getSupplierLedgerSummaryTotal(Map<String, Object> params) {
+        // 供应商台账汇总合计行
+        return this.baseMapper.getSupplierLedgerSummaryTotal(params);
+    }
+
+    @Override
+    public List<Map<String, Object>> getSupplierOrders(Map<String, Object> params) {
+        // 计算分页偏移量
+        if (params.get("pageNum") != null && params.get("pageSize") != null) {
+            int pageNum = Integer.parseInt(params.get("pageNum").toString());
+            int pageSize = Integer.parseInt(params.get("pageSize").toString());
+            params.put("offset", (pageNum - 1) * pageSize);
+        }
+        // 供应商订单明细
+        return this.baseMapper.getSupplierOrders(params);
+    }
+
+    @Override
+    public List<Map<String, Object>> getSupplierPayments(Map<String, Object> params) {
+        // 计算分页偏移量
+        if (params.get("pageNum") != null && params.get("pageSize") != null) {
+            int pageNum = Integer.parseInt(params.get("pageNum").toString());
+            int pageSize = Integer.parseInt(params.get("pageSize").toString());
+            params.put("offset", (pageNum - 1) * pageSize);
+        }
+        // 供应商付款明细
+        return this.baseMapper.getSupplierPayments(params);
+    }
+
+    @Override
+    public int getSupplierOrdersCount(Map<String, Object> params) {
+        return this.baseMapper.getSupplierOrdersCount(params);
+    }
+
+    @Override
+    public int getSupplierPaymentsCount(Map<String, Object> params) {
+        return this.baseMapper.getSupplierPaymentsCount(params);
+    }
+
+    @Override
+    public List<Map<String, Object>> getSupplierList(String shopid) {
+        // 获取供应商列表
+        return this.baseMapper.selectSupplierList(shopid);
+    }
+
+    @Override
+    public void payPurchaseOrder(Map<String, Object> params) {
+        // 付款操作 - 委托给付款服务处理
+        // 此方法供台账Feign接口调用
+        String entryId = (String) params.get("entryId");
+        String acct = (String) params.get("acct");
+        String projectid = (String) params.get("projectid");
+        BigDecimal payprice = (BigDecimal) params.get("payprice");
+        String remark = (String) params.get("remark");
+        String operator = (String) params.get("operator");
+        
+        // 调用现有的付款逻辑
+        // 实际实现需要根据业务逻辑调整
+        throw new UnsupportedOperationException("付款操作需要通过ERP原有的付款流程处理");
+    }
+
+    @Override
+    public List<Map<String, Object>> getCompletedOrdersForVoucher(String groupid, String changedDate) {
+        // 查询基于 payment.createdate 的付款记录（已包含订单、分录、付款信息）
+        Map<String, Object> param = new HashMap<>();
+        param.put("groupid", groupid);
+        param.put("changedDate", changedDate);
+        List<Map<String, Object>> rows = this.baseMapper.getCompletedOrdersForVoucher(param);
+        if (rows == null || rows.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 按formid分组，构建订单结构
+        Map<String, Map<String, Object>> orderMap = new LinkedHashMap<>();
+        for (Map<String, Object> row : rows) {
+            String formid = row.get("formid").toString();
+            Map<String, Object> order = orderMap.get(formid);
+            if (order == null) {
+                order = new LinkedHashMap<>();
+                order.put("formid", formid);
+                order.put("number", row.get("number"));
+                order.put("warehouseid", row.get("warehouseid"));
+                order.put("warehouseName", row.get("warehouseName"));
+                order.put("shopid", row.get("shopid"));
+                order.put("groupid", row.get("groupid"));
+                order.put("entries", new ArrayList<Map<String, Object>>());
+                orderMap.put(formid, order);
+            }
+
+            // 构建分录信息（包含付款明细）
+            Map<String, Object> entryDetail = new LinkedHashMap<>();
+            entryDetail.put("entryid", row.get("entryid"));
+            entryDetail.put("materialid", row.get("materialid"));
+            entryDetail.put("sku", row.get("sku"));
+            entryDetail.put("materialName", row.get("materialName"));
+            entryDetail.put("supplier", row.get("supplier"));
+            entryDetail.put("supplierName", row.get("supplierName"));
+            entryDetail.put("amount", row.get("amount"));
+            entryDetail.put("itemprice", row.get("itemprice"));
+            entryDetail.put("orderprice", row.get("orderprice"));
+            entryDetail.put("totalpay", row.get("totalpay"));
+            entryDetail.put("closepaydate", row.get("closepaydate"));
+            entryDetail.put("paystatus", row.get("paystatus"));
+
+            // 付款明细（直接从SQL结果中获取）
+            List<Map<String, Object>> payments = new ArrayList<>();
+            Map<String, Object> payment = new LinkedHashMap<>();
+            payment.put("id", row.get("paymentId"));
+            payment.put("payprice", row.get("payprice"));
+            payment.put("createdate", row.get("paymentCreatedate"));
+            payment.put("projectid", row.get("projectid"));
+            payment.put("acct", row.get("acct"));
+            payment.put("auditstatus", row.get("auditstatus"));
+            payment.put("remark", row.get("paymentRemark"));
+            payments.add(payment);
+            entryDetail.put("payments", payments);
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> entryList = (List<Map<String, Object>>) order.get("entries");
+            entryList.add(entryDetail);
+        }
+
+        return new ArrayList<>(orderMap.values());
+    }
+
+    @Override
+    public List<Map<String, Object>> getCompletedOrdersForInventory(String groupid, String changedDate) {
+        Map<String, Object> param = new HashMap<>();
+        param.put("groupid", groupid);
+        param.put("changedDate", changedDate);
+        List<Map<String, Object>> entries = this.baseMapper.getCompletedOrdersForInventory(param);
+        if (entries == null || entries.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 按formid分组，构建订单结构
+        Map<String, Map<String, Object>> orderMap = new LinkedHashMap<>();
+        for (Map<String, Object> entry : entries) {
+            String formid = entry.get("formid").toString();
+            Map<String, Object> order = orderMap.get(formid);
+            if (order == null) {
+                order = new LinkedHashMap<>();
+                order.put("formid", formid);
+                order.put("number", entry.get("number"));
+                order.put("warehouseid", entry.get("warehouseid"));
+                order.put("warehouseName", entry.get("warehouseName"));
+                order.put("shopid", entry.get("shopid"));
+                order.put("groupid", entry.get("groupid"));
+                order.put("entries", new ArrayList<Map<String, Object>>());
+                orderMap.put(formid, order);
+            }
+
+            Map<String, Object> entryDetail = new LinkedHashMap<>();
+            entryDetail.put("entryid", entry.get("entryid"));
+            entryDetail.put("materialid", entry.get("materialid"));
+            entryDetail.put("sku", entry.get("sku"));
+            entryDetail.put("materialName", entry.get("materialName"));
+            entryDetail.put("supplier", entry.get("supplier"));
+            entryDetail.put("supplierName", entry.get("supplierName"));
+            entryDetail.put("amount", entry.get("amount"));
+            entryDetail.put("itemprice", entry.get("itemprice"));
+            entryDetail.put("totalpay", entry.get("totalpay"));
+            entryDetail.put("totalin", entry.get("totalin"));
+            entryDetail.put("closepaydate", entry.get("closepaydate"));
+            entryDetail.put("closerecdate", entry.get("closerecdate"));
+            entryDetail.put("inwhstatus", entry.get("inwhstatus"));
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> entryList = (List<Map<String, Object>>) order.get("entries");
+            entryList.add(entryDetail);
+        }
+
+        return new ArrayList<>(orderMap.values());
+    }
 
 }

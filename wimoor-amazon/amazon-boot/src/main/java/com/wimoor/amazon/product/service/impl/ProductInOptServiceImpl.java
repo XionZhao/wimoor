@@ -1,17 +1,24 @@
 package com.wimoor.amazon.product.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import com.amazon.spapi.api.FeesApi;
+import lombok.extern.slf4j.Slf4j;
 import com.amazon.spapi.model.catalogitems.Dimension;
 import com.amazon.spapi.model.catalogitems.Dimensions;
+import com.amazon.spapi.model.productfees.*;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.googlecode.aviator.AviatorEvaluator;
 import com.wimoor.amazon.api.AdminClientOneFeignManager;
 import com.wimoor.amazon.api.ErpClientOneFeignManager;
+import com.wimoor.amazon.auth.pojo.entity.AmazonAuthority;
 import com.wimoor.amazon.auth.pojo.entity.Marketplace;
+import com.wimoor.amazon.auth.service.IAmazonAuthorityService;
 import com.wimoor.amazon.auth.service.IMarketplaceService;
+import com.wimoor.amazon.auth.service.impl.ApiBuildService;
 import com.wimoor.amazon.common.pojo.entity.DaysalesFormula;
 import com.wimoor.amazon.common.service.IDaysalesFormulaService;
 import com.wimoor.amazon.product.mapper.*;
@@ -56,6 +63,7 @@ import java.util.*;
  * @author wimoor team
  * @since 2022-05-27
  */
+@Slf4j
 @Service
 public class ProductInOptServiceImpl extends ServiceImpl<ProductInOptMapper, ProductInOpt> implements IProductInOptService {
 
@@ -81,10 +89,113 @@ public class ProductInOptServiceImpl extends ServiceImpl<ProductInOptMapper, Pro
 	ProductInfoMapper productInfoMapper;
 	@Resource
 	AmazonDeclareRateMapper amazonDeclareRateMapper;
+	@Autowired
+	ApiBuildService apiBuildService;
+	@Autowired
+	IAmazonAuthorityService amazonAuthorityService;
 	@Override
 	public void refreshAllProductAdv() {
 		// TODO Auto-generated method stub
 		this.baseMapper.updateAllOpt();
+	}
+
+	@Override
+	public void refreshAllProductFees() {
+		log.info("开始刷新预估费用");
+		int pageSize = 100;
+		int currentPage = 1;
+		LambdaQueryWrapper<ProductInfo> queryWrapper = new LambdaQueryWrapper<ProductInfo>()
+				.isNotNull(ProductInfo::getSku)
+				.isNotNull(ProductInfo::getAsin)
+				.isNotNull(ProductInfo::getAmazonAuthId)
+				.isNotNull(ProductInfo::getMarketplaceid);
+		IPage<ProductInfo> page = new Page<>(currentPage, pageSize);
+		IPage<ProductInfo> resultPage = productInfoMapper.selectPage(page, queryWrapper);
+		Map<String, FeesApi> feesApiCache = new HashMap<>();
+		Set<String> failedAuthIds = new HashSet<>();
+		while (resultPage.getRecords() != null && !resultPage.getRecords().isEmpty()) {
+			List<ProductInOpt> updateList = new ArrayList<>();
+			List<String> pidList = new ArrayList<>();
+			for (ProductInfo product : resultPage.getRecords()) {
+				pidList.add(product.getId());
+			}
+			List<ProductInOpt> optList = ((ProductInOptMapper)this.baseMapper).selectBatchIds(pidList);
+			Map<BigInteger, ProductInOpt> optMap = new HashMap<>();
+			for (ProductInOpt opt : optList) {
+				optMap.put(opt.getPid(), opt);
+			}
+			for (ProductInfo product : resultPage.getRecords()) {
+				try {
+					String authIdStr = product.getAmazonAuthId().toString();
+					if (failedAuthIds.contains(authIdStr)) {
+						continue;
+					}
+					if (!feesApiCache.containsKey(authIdStr)) {
+						AmazonAuthority auth = amazonAuthorityService.getById(product.getAmazonAuthId());
+						if (auth == null || auth.getRefreshToken() == null) {
+							log.warn("auth无效，跳过该auth下的所有商品, authId: {}", authIdStr);
+							failedAuthIds.add(authIdStr);
+							continue;
+						}
+						feesApiCache.put(authIdStr, apiBuildService.getFeesApi(auth));
+					}
+					FeesApi feesApi = feesApiCache.get(authIdStr);
+					Marketplace marketplace = iMarketplaceService.getById(product.getMarketplaceid());
+					String currency = (marketplace != null && marketplace.getCurrency() != null) ? marketplace.getCurrency() : "USD";
+					MoneyType listingPrice = new MoneyType();
+					listingPrice.setCurrencyCode(currency);
+					listingPrice.setAmount(product.getPrice() != null ? product.getPrice() : new BigDecimal("0"));
+					PriceToEstimateFees priceToEstimateFees = new PriceToEstimateFees();
+					priceToEstimateFees.setListingPrice(listingPrice);
+					FeesEstimateRequest feesEstimateRequest = new FeesEstimateRequest();
+					feesEstimateRequest.setMarketplaceId(product.getMarketplaceid());
+					feesEstimateRequest.setIsAmazonFulfilled(true);
+					feesEstimateRequest.setPriceToEstimateFees(priceToEstimateFees);
+					feesEstimateRequest.setIdentifier(product.getSku());
+					GetMyFeesEstimateRequest body = new GetMyFeesEstimateRequest();
+					body.setFeesEstimateRequest(feesEstimateRequest);
+					GetMyFeesEstimateResponse response = feesApi.getMyFeesEstimateForSKU(body, product.getSku());
+					if (response != null && response.getPayload() != null && response.getPayload().getFeesEstimateResult() != null) {
+						FeesEstimate estimate = response.getPayload().getFeesEstimateResult().getFeesEstimate();
+						if (estimate == null) {
+							continue;
+						}
+						BigDecimal estimatedFeeTotal = null;
+						BigDecimal referralFee = null;
+						BigDecimal fbaFees = null;
+						if (estimate.getTotalFeesEstimate() != null) {
+							estimatedFeeTotal = estimate.getTotalFeesEstimate().getAmount();
+						}
+						if (estimate.getFeeDetailList() != null) {
+							for (FeeDetail detail : estimate.getFeeDetailList()) {
+								if ("ReferralFee".equals(detail.getFeeType()) && detail.getFinalFee() != null) {
+									referralFee = detail.getFinalFee().getAmount();
+								} else if ("FBAFees".equals(detail.getFeeType()) && detail.getFinalFee() != null) {
+									fbaFees = detail.getFinalFee().getAmount();
+								}
+							}
+						}
+						ProductInOpt opt = optMap.get(product.getId());
+						if (opt != null) {
+							opt.setEstimatedFeeTotal(estimatedFeeTotal);
+							opt.setReferralFee(referralFee);
+							opt.setFbaFees(fbaFees);
+							opt.setLastupdate(new Date());
+							updateList.add(opt);
+						}
+					}
+				} catch (Exception e) {
+					log.error("刷新预估费用异常, sku: {}, 错误: {}", product.getSku(), e.getMessage());
+				}
+			}
+			if (!updateList.isEmpty()) {
+				this.updateBatchById(updateList);
+			}
+			currentPage++;
+			page = new Page<>(currentPage, pageSize);
+			resultPage = productInfoMapper.selectPage(page, queryWrapper);
+		}
+		log.info("刷新预估费用完成");
 	}
 	public  IPage<ProductPriceVo>  priceQueue(ProductPriceDTO dto){
 		if(StrUtil.isNotEmpty(dto.getSearch())) {

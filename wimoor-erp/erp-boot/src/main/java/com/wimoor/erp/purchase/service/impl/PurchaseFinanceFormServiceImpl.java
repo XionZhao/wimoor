@@ -23,12 +23,15 @@ import com.wimoor.common.service.ISerialNumService;
 import com.wimoor.common.user.UserInfo;
 import com.wimoor.erp.finance.mapper.FinanceProjectMapper;
 import com.wimoor.erp.finance.pojo.entity.FinAccount;
+import com.wimoor.erp.finance.pojo.entity.FinJournalAccount;
 import com.wimoor.erp.finance.pojo.entity.FinanceProject;
 import com.wimoor.erp.finance.service.IFaccountService;
+import com.wimoor.erp.finance.service.IFinJournalAccountService;
 import com.wimoor.erp.purchase.mapper.PurchaseFinanceFormMapper;
 import com.wimoor.erp.purchase.mapper.PurchaseFinanceFormPaymentMapper;
 import com.wimoor.erp.purchase.mapper.PurchaseFormEntryMapper;
 import com.wimoor.erp.purchase.pojo.dto.FinanceFormPayMethDTO;
+import com.wimoor.erp.purchase.pojo.dto.ManualPaymentSaveDTO;
 import com.wimoor.erp.purchase.pojo.dto.PaymentSaveDTO;
 import com.wimoor.erp.purchase.pojo.entity.PurchaseFinanceForm;
 import com.wimoor.erp.purchase.pojo.entity.PurchaseFinanceFormPayment;
@@ -52,6 +55,7 @@ public class PurchaseFinanceFormServiceImpl extends  ServiceImpl<PurchaseFinance
 	final PurchaseFormEntryMapper purchaseFormEntryMapper;
 	final IPurchaseFormService purchaseFormService;
 	final IPurchaseFormPaymentService iPurchaseFormPaymentService;
+	final IFinJournalAccountService finJournalAccountService;
 	@Override
 	@Transactional
 	public Map<String, Object> applyPayment(UserInfo user, PurchaseFormEntry entry, PaymentSaveDTO dto) {
@@ -199,7 +203,7 @@ public class PurchaseFinanceFormServiceImpl extends  ServiceImpl<PurchaseFinance
 				String formid = idsList.get(i);
 				PurchaseFinanceForm form = this.baseMapper.selectById(formid);
 				if(form.getAuditstatus()==0) {
-					form.setAuditstatus(1);
+					form.setAuditstatus(1); // 审核通过，待付款
 					form.setOpttime(new Date());
 					form.setAudittime(new Date());
 					form.setOperator(user.getId());
@@ -213,6 +217,50 @@ public class PurchaseFinanceFormServiceImpl extends  ServiceImpl<PurchaseFinance
 			return map;
 		}else {
 			return null;
+		}
+	}
+	
+	/**
+	 * 手动新增请款单审核通过后同步到采购记账
+	 */
+	private void syncToJournal(PurchaseFinanceForm form, UserInfo user) {
+		// 查询请款单的费用明细
+		QueryWrapper<PurchaseFinanceFormPayment> queryWrapper = new QueryWrapper<>();
+		queryWrapper.eq("formid", form.getId());
+		List<PurchaseFinanceFormPayment> paylist = purchaseFinanceFormPaymentMapper.selectList(queryWrapper);
+		if(paylist != null && paylist.size() > 0) {
+			for(PurchaseFinanceFormPayment payItem : paylist) {
+				FinJournalAccount journal = new FinJournalAccount();
+				journal.setShopid(user.getCompanyid());
+				journal.setGroupid(form.getGroupid());
+				journal.setFtype("out"); // 支出类型
+				journal.setProjectid(payItem.getProjectid());
+				journal.setAmount(payItem.getPayprice());
+				// 确保账户ID有效
+				String acct = payItem.getAcct();
+				if(StrUtil.isEmpty(acct)) {
+					// 如果没有账户，根据支付方式获取默认账户
+					FinAccount account = faccountService.getAccByMeth(user.getCompanyid(), form.getPaymentMethod().toString());
+					if(account != null) {
+						acct = account.getId();
+					}
+				}
+				if(StrUtil.isEmpty(acct)) {
+					throw new BizException("未找到有效的支付账户，请检查支付方式配置");
+				}
+				journal.setAcct(acct);
+				journal.setRemark("手动请款单-" + form.getNumber());
+				journal.setCreator(user.getId());
+				journal.setCreatetime(new Date());
+				journal.setOperator(user.getId());
+				journal.setOpttime(new Date());
+				try {
+					finJournalAccountService.saveRecord(journal, null, user);
+				} catch (Exception e) {
+					e.printStackTrace();
+					throw new BizException("同步记账失败：" + e.getMessage());
+				}
+			}
 		}
 	}
 
@@ -326,7 +374,12 @@ public class PurchaseFinanceFormServiceImpl extends  ServiceImpl<PurchaseFinance
 					finform.setOperator(user.getId());
 					int count = this.baseMapper.updateById(finform);
 					if(count>0) {
-						handleEntryPayment(finform,user);
+						// 手动新增的请款单（无关联采购单）付款后同步到记账
+						if(StrUtil.isEmpty(finform.getEntryid())) {
+							syncToJournal(finform, user);
+						} else {
+							handleEntryPayment(finform,user);
+						}
 						result++;
 					}
 				}
@@ -400,6 +453,78 @@ public class PurchaseFinanceFormServiceImpl extends  ServiceImpl<PurchaseFinance
 			return paymentlist;
 		}
 		return null;
+	}
+
+	@Override
+	@Transactional
+	public Map<String, Object> saveManual(ManualPaymentSaveDTO dto, UserInfo user) {
+		Map<String, Object> maps=new HashedMap<String, Object>();
+		String shopid=user.getCompanyid();
+		// 生成请款单号
+		String number=null;
+		try {
+			number = serialNumService.readSerialNumber(shopid, "PA");
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new BizException("系统编码出错！");
+		}
+		Integer paymethodValue=null;
+		if(StrUtil.isNotEmpty(dto.getPaymethod())) {
+			paymethodValue=Integer.parseInt(dto.getPaymethod());
+		}
+		// 创建请款单主表（无关联采购单）
+		PurchaseFinanceForm form=new PurchaseFinanceForm();
+		form.setOpttime(new Date());
+		form.setCreatetime(new Date());
+		form.setCreator(user.getId());
+		form.setOperator(user.getId());
+		form.setEntryid(null); // 手动新增，无关联采购单
+		form.setShopid(shopid);
+		form.setGroupid(dto.getGroupid());
+		form.setNumber(number);
+		form.setPaymentMethod(paymethodValue);
+		form.setRemark(dto.getRemark());
+		form.setAuditstatus(0); // 待审核
+		int isformok = this.baseMapper.insert(form);
+		if(isformok>0) {
+			// 处理费用明细
+			JSONArray feeArray = null;
+			if(StrUtil.isNotEmpty(dto.getFeelist()) && dto.getFeelist().contains("{")) {
+				feeArray=GeneralUtil.getJsonArray("["+dto.getFeelist()+"]");
+			}
+			// 确定支付账号
+			String payacc=dto.getPayacc();
+			if(StrUtil.isBlankOrUndefined(payacc)) {
+				FinAccount account =faccountService.getAccByMeth(shopid,dto.getPaymethod());
+				if(account!=null) {
+					payacc=account.getId();
+				}
+			}
+			// 保存费用明细
+			if(feeArray!=null && feeArray.size()>0) {
+				for(int i=0;i<feeArray.size();i++) {
+					JSONObject obj = feeArray.getJSONObject(i);
+					BigDecimal amount = obj.getBigDecimal("amount");
+					if(amount.compareTo(new BigDecimal("0"))==0) {
+						continue;
+					}
+					PurchaseFinanceFormPayment payment = new PurchaseFinanceFormPayment();
+					String objectid = obj.getString("objectid");
+					payment.setProjectid(objectid);
+					payment.setFormentryid(null); // 手动新增，无关联采购单entry
+					payment.setFormid(form.getId());
+					payment.setPayprice(amount);
+					payment.setOpttime(new Date());
+					payment.setOperator(user.getId());
+					payment.setRemark(null);
+					payment.setAcct(payacc);
+					payment.setCreatedate(new Date());
+					purchaseFinanceFormPaymentMapper.insert(payment);
+				}
+			}
+		}
+		maps.put("isok", "true");
+		return maps;
 	}
 
 	

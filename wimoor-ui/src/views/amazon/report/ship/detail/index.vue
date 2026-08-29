@@ -17,7 +17,7 @@
 				  <Datepicker longtime="ok" ref="datepickers" @changedate="changedate" />
 				 
 				   <Warehouse @changeware="getWarehouse" defaultValue="all"  />
-				 <el-input  v-model="queryParam.search" clearable @input="handleQuery" placeholder="请输入货件编码" class="input-with-select" >
+				 <el-input  v-model="queryParam.search" clearable @clear="handleQuery" v-debounce-input="handleQuery" placeholder="请输入货件编码" class="input-with-select" >
 					<template #append>
 					  <el-button @click="handleQuery">
 						 <el-icon style="font-size: 16px;align-itmes:center">
@@ -284,7 +284,6 @@
 		})
 		
 	}
-	 
 	function loadTableData(params){
 		reportApi.getShipmentReport(params).then((res)=>{
 			state.isload=false;

@@ -56,7 +56,7 @@
 				  <el-select v-model="queryParam.channelid" placeholder="选择物流渠道">
 							  <el-option v-for="item in channellist" :value="item.id" :key="item.id" :label="item.channame"></el-option>
 				  </el-select>
-				 <el-input   v-model="queryParam.search" clearable @input="handleQuery" placeholder="请输入SKU" class="input-with-select" >
+				 <el-input   v-model="queryParam.search" clearable @clear="handleQuery" v-debounce-input="handleQuery" placeholder="请输入SKU" class="input-with-select" >
 					<template #append>
 					  <el-button @click="handleQuery">
 						 <el-icon style="font-size: 16px;align-itmes:center">

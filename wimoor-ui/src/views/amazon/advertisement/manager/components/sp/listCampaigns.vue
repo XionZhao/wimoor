@@ -8,7 +8,7 @@
 				<el-option v-for="item in adTypeOptions" :label="item.name" :value="item.value"></el-option>
 			</el-select>
              <DateSelect @setDate="setDate" @dateTypeSwitch="handleQuery"/>
-				<el-input v-model="queryParams.search" clearable @input="handleQuery" placeholder="搜索广告活动名称">
+				<el-input v-model="queryParams.search" clearable @clear="handleQuery" v-debounce-input="handleQuery" placeholder="搜索广告活动名称">
 						 <template #suffix>
 						  <el-icon @click.stop="handleQuery"><Search /></el-icon>
 						 </template>
@@ -475,7 +475,6 @@
 		}
 	    
 	}
-	
 	function loadField(id){
 		globalTable.value.refreshField();
 	}
@@ -525,7 +524,7 @@
     .cell {
         &:empty::before {
             content: "-";
-            color: #333;
+            color: var(--el-text-color-primary);
         }
     }
 }

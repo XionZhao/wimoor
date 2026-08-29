@@ -302,9 +302,11 @@ public class CustomerController {
 	public Result<List<MaterialSupplierVO>> getsupplierListAction(String mid){
 		return Result.success(iMaterialSupplierService.selectSupplierByMainmid(mid));
 	}
-	
-	
 
-	
-	
+	@GetMapping("/summaryProduct")
+	public Result<List<Map<String, Object>>> summaryProductBySupplier(String supplierId){
+		UserInfo user = UserInfoContext.get();
+		String shopid = user.getCompanyid();
+		return Result.success(purchaseFormEntryService.summaryProductBySupplier(shopid, supplierId));
+	}
 }

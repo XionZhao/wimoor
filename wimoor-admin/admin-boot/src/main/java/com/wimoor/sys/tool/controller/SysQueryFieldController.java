@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -108,6 +109,31 @@ public class SysQueryFieldController {
 	@GetMapping(value = "/getVersionFieldById" )
 	public   Result<?>  getVersionFieldByIdAction(String id)  {
 		return Result.success(iSysQueryFieldService.getVersionFieldById(id));
+	}
+	
+	// ============ 管理员接口 ============
+	
+	@GetMapping(value = "/admin/getQueryNames" )
+	public   Result<?>  getQueryNamesAction()  {
+		return Result.success(iSysQueryFieldService.getDistinctQueryNames());
+	}
+	
+	@GetMapping(value = "/admin/getFields" )
+	public   Result<?>  getFieldsAction(String queryname)  {
+		List<SysQueryField> list = iSysQueryFieldService.findByQueryName(queryname);
+		return Result.success(list);
+	}
+	
+	@PostMapping(value = "/admin/saveField" )
+	public   Result<?>  saveFieldAction(@RequestBody SysQueryField field)  {
+		boolean result = iSysQueryFieldService.saveField(field);
+		return Result.success(result);
+	}
+	
+	@DeleteMapping(value = "/admin/deleteField" )
+	public   Result<?>  deleteFieldAction(String fquery, String ffield)  {
+		boolean result = iSysQueryFieldService.deleteField(fquery, ffield);
+		return Result.success(result);
 	}
 	
 }

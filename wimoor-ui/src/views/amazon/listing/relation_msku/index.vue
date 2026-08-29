@@ -6,7 +6,7 @@
 			<el-row>
 			<el-space>
 				 <Group  @change="groupChange" defaultValue="only"  ></Group>
-				  <el-input class='ic-btn' v-model="queryParams.search" @input="handleQuery" placeholder="搜索ASIN或平台SKU"></el-input>
+				  <el-input class='ic-btn' v-model="queryParams.search" v-debounce-input="handleQuery" placeholder="搜索ASIN或平台SKU"></el-input>
 		  </el-space>
 		  <div class='rt-btn-group'>
 			<el-button type="info" @click.stop="openUpload">导入</el-button>

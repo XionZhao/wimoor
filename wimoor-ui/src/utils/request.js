@@ -6,14 +6,47 @@ import { getToken } from '@/utils/auth'
 import errorCode from '@/utils/errorCode'
 import { tansParams, blobValidate } from '@/utils/wimoor'
 import { saveAs } from 'file-saver'
-import useUserStore from '@/hooks/store/useUserStore.js'
+
+// 懒加载 useUserStore，打破 request.js ↔ useUserStore.js 循环引用
+let _useUserStore = null;
+async function getUseUserStore() {
+	if (!_useUserStore) {
+		const mod = await import('@/hooks/store/useUserStore.js');
+		_useUserStore = mod.default;
+	}
+	return _useUserStore;
+}
 
 let downloadLoadingInstance
 const CancelToken = axios.CancelToken;
 let cancelMap = new Map();
+
+// 处理大数字精度问题（将超过安全整数范围的数字转为字符串）
+const jsonParseWithBigInt = (data) => {
+	if (typeof data !== 'string') {
+		return data;
+	}
+	// 空字符串直接返回空对象，避免 JSON.parse("") 抛出 SyntaxError
+	if (data.trim() === '') {
+		return {};
+	}
+	try {
+		return JSON.parse(data, (key, value) => {
+			if (typeof value === 'number' && value > Number.MAX_SAFE_INTEGER) {
+				return value.toString()
+			}
+			return value
+		})
+	} catch (e) {
+		// JSON 解析失败时返回原始数据
+		return data;
+	}
+}
+
 const request = axios.create({
 	timeout: 600000,
-	headers: { 'Content-Type': 'application/json;charset=utf-8' }
+	headers: { 'Content-Type': 'application/json;charset=utf-8' },
+	transformResponse: [jsonParseWithBigInt]
 })
 request.defaults.maxConcurrentRequests = 100;
 axios.defaults.timeout = 300000;
@@ -26,7 +59,6 @@ const whiteUrls = [
 	"/user/update",
 	"/user/deleteUser",
 	"/admin/api/v1/sms/checkSmsCode",
-	"/admin/api/v1/users/updatePassword",
 	"/amazon/api/v1/amzauthority/authSeller",
 	"/amazonadv/api/v1/advert/bindAdvAuthData",
 	"/admin/api/v1/users/getSmsCode",
@@ -142,6 +174,11 @@ const isWhiteMutiUrl = (url) => {
 // 比如统一加token，对请求参数统一加密 
 
 request.interceptors.request.use(async config => {
+	// 调试日志：查看发票查询请求的参数
+	if (config.url && config.url.includes('invoice/list')) {
+		console.log('发票查询请求URL:', config.url)
+		console.log('发票查询请求参数:', config.params)
+	}
 	// 取出sessionStorage里面缓存的用户信息
 	let jsessionid = localStorage.getItem("jsessionid");
 	if (!isWhiteUrl(config.url) ) {  // 校验请求白名单
@@ -176,6 +213,7 @@ request.interceptors.request.use(async config => {
 
 			// 检查用户套餐是否到期、订单使用量是否超过限制
 			// 同步快速检查：如果已确认超限，直接阻断请求
+			const useUserStore = await getUseUserStore();
 			if (!shouldSkipLimit && useUserStore.isPackageLimitExceeded()) {
 				throw new axios.Cancel('套餐额度已用完，请求被阻断');
 			}
@@ -189,8 +227,8 @@ request.interceptors.request.use(async config => {
 		}
 	}
 	if (cancelMap.has(config.url)) {
-		let isIgnoreReportUrl = config.url.indexOf("ignoreRepeat") > 0;
-		if (!isWhiteMutiUrl(config.url) && isIgnoreReportUrl === false) {
+		let isIgnoreReportUrl = config.url.indexOf("ignoreRepeat") >= 0 || (config.params && config.params.ignoreRepeat);
+		if (!isWhiteMutiUrl(config.url) && !isIgnoreReportUrl) {
 			cancelMap.get(config.url)();// 取消请求
 		}
 		cancelMap.delete(config.url); // 仓库里删除链接
@@ -254,47 +292,66 @@ request.interceptors.response.use(
 		if (error.config && cancelMap.has(error.config.url)) {
 			cancelMap.delete(error.config.url);
 		}
-		if (error.response && error.response.data) {
-			let code = error.response.data.code;
-			if (code === 401) {
+
+		// 有 HTTP 响应时，优先按状态码处理（不依赖 response.data 是否为空）
+		if (error.response) {
+			// 401/403：认证失败，清除 token 跳转登录
+			if (error.response.status === 401 || error.response.status === 403) {
 				localStorage.removeItem("jsessionid");
 				if (!sessionStorage.getItem("old_url_before_login")) {
 					sessionStorage.setItem("old_url_before_login", window.location.pathname + window.location.search);
 				}
 				router.push("/ssologin");
-			} else if (error.response && error.response.data.msg) {
-				if (error.response.data.msg.indexOf("Duplicate entry") >= 0) {
-					ElMessage.error("数据重复冲突，请勿频繁保存，如功能无法使用请联系管理员");
-				} else if (error.response.data.msg.indexOf("milliseconds ago") >= 0) {
-					ElMessage.error("查询数据超时，请缩小查询范围或稍后重试");
-				} else {
-					ElMessage({
-						dangerouslyUseHTMLString: true,
-						message: error.response.data.msg,
-						type: "error"
-					})
-					//ElMessage.error(error.response.data.msg);
+				return Promise.reject(error);
+			}
+
+			// 502/503/504：服务不可用
+			if (error.response.status === 502 || error.response.status === 503 || error.response.status === 504) {
+				ElMessage.error('服务不可用，请检查后端服务是否启动');
+				return Promise.reject(error);
+			}
+
+			// Blob 响应（如导出失败）
+			if (error.response.data instanceof Blob) {
+				var reader = new FileReader();
+				reader.readAsText(error.response.data, 'utf-8');
+				reader.onload = function (e) {
+					var result = JSON.parse(reader.result);
+					ElMessage.error('导出失败！');
 				}
 				return Promise.reject(error);
-			} else {
-				return Promise.reject(error);
 			}
-		} else {
-		if (error.response && error.name == "AxiosError" && error.response.data instanceof Blob) {
-			var reader = new FileReader();
-			reader.readAsText(error.response.data, 'utf-8');
-			reader.onload = function (e) {
-				var result = JSON.parse(reader.result);
-				ElMessage.error('导出失败！');
+
+			// 有响应数据时，处理业务错误消息
+			if (error.response.data) {
+				if (error.response.data.code === 401) {
+					localStorage.removeItem("jsessionid");
+					if (!sessionStorage.getItem("old_url_before_login")) {
+						sessionStorage.setItem("old_url_before_login", window.location.pathname + window.location.search);
+					}
+					router.push("/ssologin");
+				} else if (error.response.data.msg) {
+					if (error.response.data.msg.indexOf("Duplicate entry") >= 0) {
+						ElMessage.error("数据重复冲突，请勿频繁保存，如功能无法使用请联系管理员");
+					} else if (error.response.data.msg.indexOf("milliseconds ago") >= 0) {
+						ElMessage.error("查询数据超时，请缩小查询范围或稍后重试");
+					} else {
+						ElMessage({
+							dangerouslyUseHTMLString: true,
+							message: error.response.data.msg,
+							type: "error"
+						})
+					}
+				}
 			}
-		} else if (!error.response) {
-			// 请求被取消时不显示错误提示（axios.isCancel 检查）
-			if (!axios.isCancel(error)) {
-				ElMessage.error('网络请求失败，请检查网络连接或服务是否启动');
-			}
+			return Promise.reject(error);
+		}
+
+		// 没有响应（网络错误、超时、请求被取消等）
+		if (!axios.isCancel(error)) {
+			ElMessage.error('网络请求失败，请检查网络连接或服务是否启动');
 		}
 		return Promise.reject(error);
-	}
 	}
 )
 

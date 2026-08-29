@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.ledger.mapper.FinGeneralLedgerMapper">
+    
+    <resultMap type="com.wimoor.finance.ledger.domain.FinGeneralLedger" id="FinGeneralLedgerResult">
+        <result property="ledgerId"    column="ledger_id"    />
+        <result property="groupid"    column="groupid"    />
+        <result property="subjectId"    column="subject_id"    />
+        <result property="period"    column="period"    />
+        <result property="beginBalance"    column="begin_balance"    />
+        <result property="beginDirection"    column="begin_direction"    />
+        <result property="debitTotal"    column="debit_total"    />
+        <result property="creditTotal"    column="credit_total"    />
+        <result property="endBalance"    column="end_balance"    />
+        <result property="endDirection"    column="end_direction"    />
+        <result property="createdTime"    column="created_time"    />
+        <result property="updatedTime"    column="updated_time"    />
+    </resultMap>
+
+    <sql id="selectFinGeneralLedgerVo">
+        select ledger_id, groupid, subject_id, period, begin_balance, begin_direction, debit_total, credit_total, end_balance, end_direction, created_time, updated_time from fin_general_ledger
+    </sql>
+
+    <select id="selectFinGeneralLedgerList" parameterType="com.wimoor.finance.ledger.domain.FinGeneralLedger" resultMap="FinGeneralLedgerResult">
+        <include refid="selectFinGeneralLedgerVo"/>
+        <where>  
+             and groupid = #{groupid}
+            <if test="subjectId != null  and subjectId != ''"> and subject_id = #{subjectId}</if>
+            <if test="period != null  and period != ''"> and period = #{period}</if>
+            <if test="beginBalance != null "> and begin_balance = #{beginBalance}</if>
+            <if test="beginDirection != null "> and begin_direction = #{beginDirection}</if>
+            <if test="debitTotal != null "> and debit_total = #{debitTotal}</if>
+            <if test="creditTotal != null "> and credit_total = #{creditTotal}</if>
+            <if test="endBalance != null "> and end_balance = #{endBalance}</if>
+            <if test="endDirection != null "> and end_direction = #{endDirection}</if>
+            <if test="createdTime != null "> and created_time = #{createdTime}</if>
+            <if test="updatedTime != null "> and updated_time = #{updatedTime}</if>
+        </where>
+    </select>
+
+    <select id="selectList" parameterType="com.wimoor.finance.ledger.domain.dto.FinLedgerDTO" resultType="java.util.Map">
+        select fgl.ledger_id ledgerId,
+               fgl.groupid,
+               fgl.subject_id subjectId,
+               s.subject_name  subjectName,
+               fgl.period,
+               fgl.begin_balance beginBalance,
+               fgl.begin_direction beginDirection,
+               fgl.debit_total debitTotal, fgl.credit_total creditTotal,
+               fgl.end_balance endBalance, fgl.end_direction endDirection,
+               fgl.created_time createdTime,
+               fgl.updated_time
+        from fin_general_ledger fgl
+        left join fin_accounting_subjects s on s.subject_id=fgl.subject_id
+        <where>
+            and fgl.groupid = #{groupid}
+            AND fgl.period &gt;= #{startPeriod} AND fgl.period &lt;= #{endPeriod}
+            <if test="subjectId != null  and subjectId != ''"> and fgl.subject_id = #{subjectId}</if>
+            <if test="period != null  and period != ''"> and fgl.period = #{period}</if>
+        </where>
+    </select>
+
+
+    <select id="selectFinGeneralLedgerByLedgerId" parameterType="Long" resultMap="FinGeneralLedgerResult">
+        <include refid="selectFinGeneralLedgerVo"/>
+        where ledger_id = #{ledgerId}
+    </select>
+
+    <select id="selectBySubjectAndPeriod" resultMap="FinGeneralLedgerResult">
+        <include refid="selectFinGeneralLedgerVo"/>
+        where subject_id = #{subjectId} and period = #{period} and groupid = #{groupid}
+    </select>
+
+    <select id="selectBySubjectCodeAndPeriod" resultMap="FinGeneralLedgerResult">
+        select d.ledger_id, d.groupid, d.subject_id, d.period, d.begin_balance, d.begin_direction,
+               d.debit_total, d.credit_total, d.end_balance, d.end_direction, d.created_time, d.updated_time
+        from fin_general_ledger d
+        left join fin_accounting_subjects s on d.subject_id = s.subject_id and d.groupid = s.groupid
+        where s.subject_code = #{subjectCode} and d.period = #{period} and d.groupid = #{groupid}
+    </select>
+
+    <select id="selectBalanceSummaryByType" resultType="java.util.Map">
+        select d.subject_id, d.period, d.begin_balance, d.begin_direction,
+               d.debit_total, d.credit_total, d.end_balance, d.end_direction
+        from fin_general_ledger d
+        where d.groupid = #{groupid} and d.period = #{period}
+    </select>
+    <select id="getAllSubjectBalance" resultType="java.util.Map">
+        select s.subject_code subjectCode,
+               s.subject_name subjectName,
+               s.subject_level subjectLevel,
+               s.subject_type subjectType,
+               d.period,
+               d.begin_balance beginBalance,
+               d.begin_direction beginDirection,
+               d.debit_total debitTotal,
+               d.credit_total creditTotal,
+               d.end_balance endBalance,
+               d.end_direction endDirection
+        from fin_accounting_subjects s
+        left join fin_general_ledger d on s.subject_id=d.subject_id and s.groupid=d.groupid and d.period = #{period}
+        where s.groupid = #{groupid}
+    </select>
+
+    <!-- 查询某科目在指定期间之前最近的记录（前推查找） -->
+    <select id="getLatestBalanceBeforePeriod" resultType="java.util.Map">
+        SELECT 
+            s.subject_code subjectCode,
+            s.subject_name subjectName,
+            d.period,
+            d.end_balance endBalance,
+            d.end_direction endDirection
+        FROM fin_accounting_subjects s
+        INNER JOIN fin_general_ledger d ON s.subject_id = d.subject_id AND s.groupid = d.groupid
+        WHERE s.groupid = #{groupid}
+          AND s.subject_code = #{subjectCode}
+          AND d.period &lt;= #{period}
+        ORDER BY d.period DESC
+        LIMIT 1
+    </select>
+
+    <!-- 查询所有科目在指定期间之前最近的记录 -->
+    <select id="getAllSubjectBalanceWithFallback" resultType="java.util.Map">
+        SELECT 
+            s.subject_code subjectCode,
+            s.subject_name subjectName,
+            s.subject_level subjectLevel,
+            s.subject_type subjectType,
+            COALESCE(d.period, latest.period) period,
+            COALESCE(d.end_balance, latest.end_balance, 0) endBalance,
+            COALESCE(d.end_direction, latest.end_direction, 0) endDirection
+        FROM fin_accounting_subjects s
+        LEFT JOIN fin_general_ledger d ON s.subject_id = d.subject_id AND s.groupid = d.groupid AND d.period = #{period}
+        LEFT JOIN (
+            SELECT 
+                d2.subject_id,
+                d2.period,
+                d2.end_balance,
+                d2.end_direction,
+                d2.groupid
+            FROM fin_general_ledger d2
+            INNER JOIN (
+                SELECT subject_id, MAX(period) as max_period, groupid
+                FROM fin_general_ledger
+                WHERE period &lt;= #{period}
+                GROUP BY subject_id, groupid
+            ) d3 ON d2.subject_id = d3.subject_id AND d2.period = d3.max_period AND d2.groupid = d3.groupid
+        ) latest ON s.subject_id = latest.subject_id AND s.groupid = latest.groupid
+        WHERE s.groupid = #{groupid}
+          AND (d.end_balance IS NOT NULL OR latest.end_balance IS NOT NULL)
+    </select>
+
+    <insert id="insertFinGeneralLedger" parameterType="com.wimoor.finance.ledger.domain.FinGeneralLedger" useGeneratedKeys="true" keyProperty="ledgerId">
+        insert into fin_general_ledger
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="groupid != null">groupid,</if>
+            <if test="subjectId != null">subject_id,</if>
+            <if test="period != null and period != ''">period,</if>
+            <if test="beginBalance != null">begin_balance,</if>
+            <if test="beginDirection != null">begin_direction,</if>
+            <if test="debitTotal != null">debit_total,</if>
+            <if test="creditTotal != null">credit_total,</if>
+            <if test="endBalance != null">end_balance,</if>
+            <if test="endDirection != null">end_direction,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="groupid != null">#{groupid},</if>
+            <if test="subjectId != null">#{subjectId},</if>
+            <if test="period != null and period != ''">#{period},</if>
+            <if test="beginBalance != null">#{beginBalance},</if>
+            <if test="beginDirection != null">#{beginDirection},</if>
+            <if test="debitTotal != null">#{debitTotal},</if>
+            <if test="creditTotal != null">#{creditTotal},</if>
+            <if test="endBalance != null">#{endBalance},</if>
+            <if test="endDirection != null">#{endDirection},</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFinGeneralLedger" parameterType="com.wimoor.finance.ledger.domain.FinGeneralLedger">
+        update fin_general_ledger
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="groupid != null">groupid = #{groupid},</if>
+            <if test="subjectId != null">subject_id = #{subjectId},</if>
+            <if test="period != null and period != ''">period = #{period},</if>
+            <if test="beginBalance != null">begin_balance = #{beginBalance},</if>
+            <if test="beginDirection != null">begin_direction = #{beginDirection},</if>
+            <if test="debitTotal != null">debit_total = #{debitTotal},</if>
+            <if test="creditTotal != null">credit_total = #{creditTotal},</if>
+            <if test="endBalance != null">end_balance = #{endBalance},</if>
+            <if test="endDirection != null">end_direction = #{endDirection},</if>
+            <if test="createdTime != null">created_time = #{createdTime},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime},</if>
+        </trim>
+        where ledger_id = #{ledgerId}
+    </update>
+
+    <delete id="deleteFinGeneralLedgerByLedgerId" parameterType="Long">
+        delete from fin_general_ledger where ledger_id = #{ledgerId}
+    </delete>
+
+    <delete id="deleteFinGeneralLedgerByLedgerIds" parameterType="String">
+        delete from fin_general_ledger where ledger_id in 
+        <foreach item="ledgerId" collection="array" open="(" separator="," close=")">
+            #{ledgerId}
+        </foreach>
+    </delete>
+    <delete id="deleteByPeriod">
+        delete from fin_general_ledger where groupid = #{groupid} and period = #{period}
+    </delete>
+
+    <select id="selectByPeriod" resultMap="FinGeneralLedgerResult">
+        <include refid="selectFinGeneralLedgerVo"/>
+        where groupid = #{groupid} and period = #{period}
+    </select>
+
+    <!-- 查询顶级科目总账汇总 -->
+    <select id="selectTopLevelSummary" parameterType="com.wimoor.finance.ledger.domain.dto.FinLedgerDTO" resultType="java.util.Map">
+        SELECT
+            top_subject.subject_id as subjectId,
+            top_subject.subject_code as subjectCode,
+            top_subject.subject_name as subjectName,
+            fgl.period as period,
+            IFNULL(SUM(fgl.begin_balance), 0) as beginBalance,
+            CASE 
+                WHEN SUM(fgl.begin_balance) > 0 THEN 1
+                WHEN SUM(fgl.begin_balance) &lt; 0 THEN 2
+                ELSE 0
+            END as beginDirection,
+            IFNULL(SUM(fgl.debit_total), 0) as debitTotal,
+            IFNULL(SUM(fgl.credit_total), 0) as creditTotal,
+            IFNULL(SUM(fgl.end_balance), 0) as endBalance,
+            CASE 
+                WHEN SUM(fgl.end_balance) > 0 THEN 1
+                WHEN SUM(fgl.end_balance) &lt; 0 THEN 2
+                ELSE 0
+            END as endDirection
+        FROM fin_accounting_subjects top_subject
+        INNER JOIN fin_accounting_subjects child_subject 
+            ON child_subject.groupid = top_subject.groupid 
+            AND child_subject.subject_code LIKE CONCAT(top_subject.subject_code, '%')
+        LEFT JOIN fin_general_ledger fgl 
+            ON fgl.subject_id = child_subject.subject_id 
+            AND fgl.groupid = top_subject.groupid
+            AND fgl.period &gt;= #{startPeriod} AND fgl.period &lt;= #{endPeriod}
+        WHERE top_subject.groupid = #{groupid}
+          AND (top_subject.parent_code IS NULL OR top_subject.parent_code = '' OR top_subject.subject_level = 1)
+          <if test="subjectCodes != null and subjectCodes != ''">
+            AND top_subject.subject_code IN
+            <foreach item="code" collection="subjectCodes.split(',')" open="(" separator="," close=")">
+              #{code}
+            </foreach>
+          </if>
+        GROUP BY top_subject.subject_id, top_subject.subject_code, top_subject.subject_name, fgl.period
+        HAVING SUM(fgl.debit_total) IS NOT NULL 
+           OR SUM(fgl.credit_total) IS NOT NULL 
+           OR SUM(fgl.end_balance) IS NOT NULL
+        ORDER BY top_subject.subject_code, fgl.period
+    </select>
+
+    <!-- 查询指定期间的顶级科目总账汇总 -->
+    <select id="selectTopLevelSummaryByPeriod" resultType="java.util.Map">
+        SELECT
+            top_subject.subject_id as subjectId,
+            top_subject.subject_code as subjectCode,
+            top_subject.subject_name as subjectName,
+            fgl.period as period,
+            IFNULL(SUM(fgl.begin_balance), 0) as beginBalance,
+            CASE 
+                WHEN SUM(fgl.begin_balance) > 0 THEN 1
+                WHEN SUM(fgl.begin_balance) &lt; 0 THEN 2
+                ELSE 0
+            END as beginDirection,
+            IFNULL(SUM(fgl.debit_total), 0) as debitTotal,
+            IFNULL(SUM(fgl.credit_total), 0) as creditTotal,
+            IFNULL(SUM(fgl.end_balance), 0) as endBalance,
+            CASE 
+                WHEN SUM(fgl.end_balance) > 0 THEN 1
+                WHEN SUM(fgl.end_balance) &lt; 0 THEN 2
+                ELSE 0
+            END as endDirection
+        FROM fin_accounting_subjects top_subject
+        INNER JOIN fin_accounting_subjects child_subject 
+            ON child_subject.groupid = top_subject.groupid 
+            AND child_subject.subject_code LIKE CONCAT(top_subject.subject_code, '%')
+        INNER JOIN fin_general_ledger fgl 
+            ON fgl.subject_id = child_subject.subject_id 
+            AND fgl.groupid = top_subject.groupid
+            AND fgl.period = #{period}
+        WHERE top_subject.groupid = #{groupid}
+          AND (top_subject.parent_code IS NULL OR top_subject.parent_code = '' OR top_subject.subject_level = 1)
+        GROUP BY top_subject.subject_id, top_subject.subject_code, top_subject.subject_name, fgl.period
+        HAVING SUM(fgl.end_balance) IS NOT NULL AND SUM(fgl.end_balance) != 0
+        ORDER BY top_subject.subject_code, fgl.period
+    </select>
+
+    <!-- 查询日期范围内有余额的顶级科目总账汇总（取最新一期的期末余额） -->
+    <select id="selectTopLevelSummaryByDateRange" resultType="java.util.Map">
+        SELECT 
+            t.subjectId,
+            t.subjectCode,
+            t.subjectName,
+            t.period,
+            t.endBalance,
+            t.endDirection
+        FROM (
+            SELECT
+                top_subject.subject_id as subjectId,
+                top_subject.subject_code as subjectCode,
+                top_subject.subject_name as subjectName,
+                fgl.period as period,
+                IFNULL(SUM(fgl.end_balance), 0) as endBalance,
+                CASE 
+                    WHEN SUM(fgl.end_balance) > 0 THEN 1
+                    WHEN SUM(fgl.end_balance) &lt; 0 THEN 2
+                    ELSE 0
+                END as endDirection,
+                ROW_NUMBER() OVER (PARTITION BY top_subject.subject_id ORDER BY fgl.period DESC) as rn
+            FROM fin_accounting_subjects top_subject
+            INNER JOIN fin_accounting_subjects child_subject 
+                ON child_subject.groupid = top_subject.groupid 
+                AND child_subject.subject_code LIKE CONCAT(top_subject.subject_code, '%')
+            INNER JOIN fin_general_ledger fgl 
+                ON fgl.subject_id = child_subject.subject_id 
+                AND fgl.groupid = top_subject.groupid
+                AND fgl.period &gt;= #{startPeriod} AND fgl.period &lt;= #{endPeriod}
+            WHERE top_subject.groupid = #{groupid}
+              AND (top_subject.parent_code IS NULL OR top_subject.parent_code = '' OR top_subject.subject_level = 1)
+            GROUP BY top_subject.subject_id, top_subject.subject_code, top_subject.subject_name, fgl.period
+            HAVING IFNULL(SUM(fgl.end_balance), 0) != 0
+        ) t
+        WHERE t.rn = 1
+        ORDER BY t.subjectCode
+    </select>
+
+    <!-- 查询日期范围内的累计借方和贷方发生额 -->
+    <select id="selectCumulativeDebitCredit" resultType="java.util.Map">
+        SELECT
+            top_subject.subject_id as subjectId,
+            top_subject.subject_code as subjectCode,
+            IFNULL(SUM(fgl.debit_total), 0) as cumulativeDebit,
+            IFNULL(SUM(fgl.credit_total), 0) as cumulativeCredit
+        FROM fin_accounting_subjects top_subject
+        INNER JOIN fin_accounting_subjects child_subject 
+            ON child_subject.groupid = top_subject.groupid 
+            AND child_subject.subject_code LIKE CONCAT(top_subject.subject_code, '%')
+        INNER JOIN fin_general_ledger fgl 
+            ON fgl.subject_id = child_subject.subject_id 
+            AND fgl.groupid = top_subject.groupid
+            AND fgl.period &gt;= #{startPeriod} AND fgl.period &lt;= #{endPeriod}
+        WHERE top_subject.groupid = #{groupid}
+          AND (top_subject.parent_code IS NULL OR top_subject.parent_code = '' OR top_subject.subject_level = 1)
+        GROUP BY top_subject.subject_id, top_subject.subject_code
+        ORDER BY top_subject.subject_code
+    </select>
+
+    <!-- 按租户删除所有总账记录 -->
+    <delete id="deleteAllByGroupid">
+        DELETE FROM fin_general_ledger WHERE groupid = #{groupid}
+    </delete>
+
+    <!-- 计算本年累计余额：优先使用end_balance（结账月份），降级使用借方贷方累加（未结账月份） -->
+    <select id="getAllSubjectYearToDateBalance" resultType="java.util.Map">
+        SELECT
+            s.subject_code subjectCode,
+            s.subject_name subjectName,
+            s.subject_level subjectLevel,
+            s.subject_type subjectType,
+            s.direction,
+            -- 当前期间的end_balance（已结账月份的本年累计余额）
+            COALESCE(d.end_balance, 0) endBalance,
+            COALESCE(d.end_direction, s.direction) endDirection,
+            -- 年初余额（1月的期初余额）
+            COALESCE(jan.begin_balance, 0) yearStartBalance,
+            -- 本年累计借方和贷方发生额（未结账月份的计算依据）
+            IFNULL(SUM(g.debit_total), 0) ytdDebitTotal,
+            IFNULL(SUM(g.credit_total), 0) ytdCreditTotal
+        FROM fin_accounting_subjects s
+        LEFT JOIN fin_general_ledger d ON s.subject_id = d.subject_id AND s.groupid = d.groupid
+            AND d.period = #{period}
+        LEFT JOIN fin_general_ledger g ON s.subject_id = g.subject_id AND s.groupid = g.groupid
+            AND g.period &gt;= CONCAT(LEFT(#{period}, 4), '01') AND g.period &lt;= #{period}
+        LEFT JOIN fin_general_ledger jan ON s.subject_id = jan.subject_id AND s.groupid = jan.groupid
+            AND jan.period = CONCAT(LEFT(#{period}, 4), '01')
+        WHERE s.groupid = #{groupid}
+          AND s.status = 1
+        GROUP BY s.subject_id, s.subject_code, s.subject_name, s.subject_level, s.subject_type, s.direction,
+                 d.end_balance, d.end_direction, jan.begin_balance
+        HAVING endBalance != 0 OR ytdDebitTotal != 0 OR ytdCreditTotal != 0 OR yearStartBalance != 0
+    </select>
+
+    <!-- 从凭证分录汇总各科目各期间的借贷发生额（重建总账用，包含所有凭证） -->
+    <select id="sumEntriesBySubjectAndPeriod" resultType="java.util.Map">
+        SELECT
+            e.subject_id AS subjectId,
+            DATE_FORMAT(v.voucher_date, '%Y%m') AS period,
+            IFNULL(SUM(e.debit_amount), 0) AS debitTotal,
+            IFNULL(SUM(e.credit_amount), 0) AS creditTotal
+        FROM fin_voucher_entries e
+        INNER JOIN fin_vouchers v ON e.voucher_id = v.voucher_id
+        WHERE e.groupid = #{groupid}
+        GROUP BY e.subject_id, DATE_FORMAT(v.voucher_date, '%Y%m')
+        ORDER BY e.subject_id, period
+    </select>
+
+    <!-- 本年累计：年初余额 + 从明细账汇总1月到目标期间的借贷发生额 -->
+    <select id="sumYearToDateEntriesBySubject" resultType="java.util.Map">
+        SELECT
+            s.subject_code subjectCode,
+            s.subject_name subjectName,
+            s.subject_level subjectLevel,
+            s.subject_type subjectType,
+            s.direction,
+            -- 年初余额（1月期初余额）
+            IFNULL(jan.end_balance, 0) AS yearStartBalance,
+            COALESCE(jan.end_direction, s.direction) AS yearStartDirection,
+            -- 本年累计借方和贷方发生额
+            IFNULL(y.debit_total, 0) AS ytdDebitTotal,
+            IFNULL(y.credit_total, 0) AS ytdCreditTotal
+        FROM fin_accounting_subjects s
+        LEFT JOIN fin_general_ledger jan ON s.subject_id = jan.subject_id AND s.groupid = jan.groupid
+            AND jan.period = CONCAT(LEFT(#{period}, 4), '01')
+        LEFT JOIN (
+            SELECT groupid, subject_id,
+                   SUM(debit_amount) AS debit_total,
+                   SUM(credit_amount) AS credit_total
+            FROM fin_detail_ledger
+            WHERE groupid = #{groupid}
+              AND voucher_date &gt;= CONCAT(LEFT(#{period}, 4), '-01-01')
+              AND voucher_date &lt;= LAST_DAY(CONCAT(LEFT(#{period}, 4), '-', RIGHT(#{period}, 2), '-01'))
+            GROUP BY groupid, subject_id
+        ) y ON s.subject_id = y.subject_id AND s.groupid = y.groupid
+        WHERE s.groupid = #{groupid}
+          AND s.status = 1
+        HAVING yearStartBalance != 0 OR ytdDebitTotal != 0 OR ytdCreditTotal != 0
+    </select>
+</mapper>

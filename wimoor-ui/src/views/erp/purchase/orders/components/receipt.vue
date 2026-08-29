@@ -337,9 +337,12 @@
 		text-align:center;
 	}
 	.mypaymentdailog .el-dialog__body{
-			 padding:1px 0px;
-			 background-color:#f5f5f5;
-	}
+		 padding:1px 0px;
+		 background-color:#f5f5f5;
+}
+.dark .mypaymentdailog .el-dialog__body{
+		 background-color: var(--el-bg-color);
+}
 </style>
 <style scoped="scoped">
 	.bg-full{

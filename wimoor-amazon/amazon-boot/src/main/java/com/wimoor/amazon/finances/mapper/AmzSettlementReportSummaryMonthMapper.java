@@ -22,4 +22,7 @@ public interface AmzSettlementReportSummaryMonthMapper  extends BaseMapper<AmzSe
 	  List<Map<String,Object>> monthReport(Map<String,Object> param);
 	  BigDecimal TransfersToBankAccount(Map<String,Object> param);
 	  BigDecimal FailedTransfersToBankAccount(Map<String,Object> param);
+	  List<Map<String,Object>> quantityByDay(Map<String,Object> param);
+  List<Map<String,Object>> dailyIncomeReport(Map<String,Object> param);
+  List<Map<String,Object>> orderQuantityByDay(Map<String,Object> param);
 }

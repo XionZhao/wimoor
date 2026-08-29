@@ -18,7 +18,7 @@
 		supplier:"",
 	});
 	const { supplierList,supplier} = toRefs(state);
-	let props = defineProps({ defaultValue:"" })
+	let props = defineProps({ defaultValue:"", initValue:"" })
 	const { defaultValue } = toRefs(props);
     function getData(){
 				customerApi.listAll().then((res)=>{
@@ -33,7 +33,9 @@
 					}
 					state.supplierList=res.data;
 					if(res.data&&res.data.length>0){
-	        			if(props.defaultValue=="only"){
+						if(props.initValue){
+							state.supplier = props.initValue;
+						}else if(props.defaultValue=="only"){
 	        			    state.supplier = res.data[0].id;
 						}else{
 							state.supplier = "";
@@ -50,8 +52,11 @@
 		state.supplier ="";
 		emit("change", null);
 	}
+	function setSupplier(val){
+		state.supplier = val;
+	}
 	defineExpose({
-	  getData,supplierChange,reset
+	  getData,supplierChange,reset,setSupplier
 	})	 
 	onMounted(()=>{
 		getData()

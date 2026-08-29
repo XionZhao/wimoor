@@ -26,6 +26,12 @@ public class FinanceProject  extends ErpBaseEntity{
 	@TableField(value="issys")
     private Boolean issys;
 
+	@TableField(value="isdefault")
+    private Boolean isdefault;
+
+	@TableField(value="feetype")
+    private Integer feetype;
+
 	@TableField(value="shopid")
     private String shopid;
 

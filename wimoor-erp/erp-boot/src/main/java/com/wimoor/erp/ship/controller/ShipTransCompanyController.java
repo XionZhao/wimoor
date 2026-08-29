@@ -26,6 +26,7 @@ import com.wimoor.erp.ship.service.IShipTransDetailService;
 import com.wimoor.erp.thirdparty.pojo.entity.ThirdPartyAPI;
 import com.wimoor.erp.thirdparty.service.IShipTransCompanyZMService;
 import com.wimoor.erp.thirdparty.service.IShipTransCompanyZhihuiService;
+import com.wimoor.erp.thirdparty.service.IShipTransCompanyWTOService;
 import com.wimoor.erp.thirdparty.service.IThirdPartyAPIService;
 import com.wimoor.erp.warehouse.service.IWarehouseService;
 import io.swagger.annotations.Api;
@@ -68,6 +69,7 @@ public class ShipTransCompanyController {
 	final IErpShipTransTypeService erpShipTransTypeService;
 	final IShipTransCompanyZhihuiService shipTransCompanyZhihuiService;
 	final IShipTransCompanyZMService shipTransCompanyZMService;
+	final IShipTransCompanyWTOService shipTransCompanyWTOService;
 	final IWarehouseService  iWarehouseService;
 	final IThirdPartyAPIService thirdPartyApiService;
 
@@ -648,6 +650,8 @@ public class ShipTransCompanyController {
 			return Result.success(shipTransCompanyZhihuiService.getApiJson(user,api,company,ordernum));
 		}else if(api.getSystem().equals("ZM")){
 			return Result.success(shipTransCompanyZMService.getApiJson(user,api,company,ordernum));
+		}else if(api.getSystem().equals("WTO")){
+			return Result.success(shipTransCompanyWTOService.getApiJson(user,api,company,ordernum));
 		}else{
 			return Result.success();
 		}

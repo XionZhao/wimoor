@@ -30,7 +30,7 @@
 							    clearable
 								size="small"
 							    @clear = "SearchShow=true"
-							    @input="handleQuery"
+							    v-debounce-input="handleQuery"
 							  />
 			  				  <el-button v-if="SearchShow" 
 							             size="small"  

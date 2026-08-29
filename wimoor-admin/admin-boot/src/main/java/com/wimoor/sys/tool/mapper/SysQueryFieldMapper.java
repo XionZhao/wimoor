@@ -21,4 +21,7 @@ import com.wimoor.sys.tool.pojo.entity.SysQueryField;
 public interface SysQueryFieldMapper extends BaseMapper<SysQueryField> {
 	List<Map<String,Object>> findAllVersionByUser(@Param("userid")String userid, @Param("fquery")String queryname);
 	List<SysQueryField> findByUserUsed(@Param("userid")String userid, @Param("fquery")String queryname);
+	
+	// 获取所有去重的查询名称列表
+	List<String> getDistinctQueryNames();
 }

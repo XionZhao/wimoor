@@ -1,24 +1,21 @@
 package com.wimoor.common.service.util;
 
-import java.io.*;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Map;
-
+import cn.hutool.core.util.StrUtil;
 import com.aliyun.oss.OSSException;
 import com.wimoor.common.service.ObjectHandler;
 import io.minio.*;
+import io.minio.errors.*;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import cn.hutool.core.util.StrUtil;
-import io.minio.errors.ErrorResponseException;
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.InternalException;
-import io.minio.errors.InvalidResponseException;
-import io.minio.errors.ServerException;
-import io.minio.errors.XmlParserException;
-import lombok.Setter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 
 @Component
 @ConfigurationProperties(prefix = "minio")
@@ -85,12 +82,34 @@ public class MinIOApiUtil  {
 		                .stream(inputStream, length, -1)
 		                .build();
 		        client.putObject(putObjectArgs);
-		        return true;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return false;
 		}
-       return false;
+        // 上传后验证文件是否存在
+        return verifyObjectExists(bucketName, objectName);
+    }
+    
+    /**
+     * 验证MinIO对象是否存在
+     * @param bucketName
+     * @param objectName
+     * @return
+     */
+    public boolean verifyObjectExists(String bucketName, String objectName) {
+    	try {
+    		MinioClient client = getClient();
+    		StatObjectArgs statObjectArgs = StatObjectArgs.builder()
+    				.bucket(bucketName)
+    				.object(objectName)
+    				.build();
+    		client.statObject(statObjectArgs);
+    		return true;
+    	} catch (Exception e) {
+    		System.out.println("Verify object exists failed: " + e.getMessage());
+    		return false;
+    	}
     }
 
     public   void removeObject(String bucketName, String objectName) {

@@ -9,15 +9,15 @@ import com.amazon.spapi.model.productpricing.GetPricingResponse;
 import okhttp3.Call;
 import com.wimoor.amazon.auth.pojo.entity.AmazonAuthority;
 import com.wimoor.amazon.auth.service.IRunAmazonService;
-import com.wimoor.amazon.product.pojo.entity.AmzProductRefresh;
+import com.wimoor.amazon.product.pojo.entity.AmzProductRefreshType;
 
 public interface IProductProductPriceService extends IRunAmazonService{
 
 	public GetPricingResponse captureProductPrice(AmazonAuthority amazonAuthority, String sku, String  marketplaceid) ;
 
-	Call captureProductPriceSync(AmazonAuthority amazonAuthority, AmzProductRefresh amzProductRefresh, List<String> marketList);
+	Call captureProductPriceSync(AmazonAuthority amazonAuthority, AmzProductRefreshType amzProductRefresh, List<String> marketList);
 
-	void handlerFailure(AmazonAuthority amazonAuthority, AmzProductRefresh amzProductRefresh, ApiException e);
+	void handlerFailure(AmazonAuthority amazonAuthority, AmzProductRefreshType amzProductRefresh, ApiException e);
 
 	void runTask();
 

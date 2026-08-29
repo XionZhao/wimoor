@@ -19,7 +19,7 @@
 					      <el-radio-button label="parentasin" >父ASIN</el-radio-button>
 					    </el-radio-group>
 						</div>
-					<el-input v-model="searchKeywords" clearable @input="changeKeywords"  placeholder="请输入" class="input-with-select">
+					<el-input v-model="searchKeywords" clearable @clear="handleQuery" v-debounce-input="handleQuery"  placeholder="请输入" class="input-with-select">
 						<template #prepend>
 							<el-select v-model="searchtype" @change='searchTypeChange' placeholder="SKU"
 								style="width: 110px">
@@ -719,7 +719,12 @@
 			queryParam.owner=null;
 			submitSearch();
 		}
-			return {
+		function handleQuery(){
+			queryParam.search=searchKeywords.value;
+			refreshTable();
+		}
+		return {
+			handleQuery,
 				options,props,salerange,salerangecheck,visable,feeVisable,feeRate,
 				filterBtnColor,handleSearchSku,
 				radio2,modifyPrice,checkRows,selection,

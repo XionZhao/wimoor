@@ -15,7 +15,7 @@
 			  	     clearable
 			      />
 			<!-- <el-button @click.stop="uploadFile">导入</el-button> -->
-		<el-input  v-model="queryParams.search" @input="handleQuery" clearable placeholder="请输入SKU" style="width: 250px;" class="input-with-select" >
+		<el-input  v-model="queryParams.search" v-debounce-input="handleQuery" clearable @clear="handleQuery" placeholder="请输入SKU" style="width: 250px;" class="input-with-select" >
 		   <template #append>
 		     <el-button @click="handleQuery" >
 		        <el-icon class="ic-cen font-medium">
@@ -101,6 +101,14 @@
 					<div class="flex-center">
 						    <div v-if="scope.row.warehouse">{{scope.row.warehouse}}</div>
 							<div v-else class="font-extraSmall">暂无记录</div>
+					</div>
+					</template>
+				</el-table-column>
+				<el-table-column label="默认供应商" prop="supplier" width="150" sortable="custom" >
+					<template #default="scope">
+					<div class="flex-center">
+						    <div v-if="scope.row.supplier && scope.row.supplier !== '-'">{{scope.row.supplier}}</div>
+							<div v-else class="font-extraSmall">未设置</div>
 					</div>
 					</template>
 				</el-table-column>
@@ -328,9 +336,9 @@
 		 /* 合计行数据 */
 		 function getSummaries(){
 		 	var arr = ["合计"]
-		 	arr[2]=state.allinbound;
-		 	arr[3]=state.allfulfillable;
-		 	arr[4]=state.alloutbound;
+		 	arr[3]=state.allinbound;
+		 	arr[4]=state.allfulfillable;
+		 	arr[5]=state.alloutbound;
 		 	return  arr;
 		 }
 		 

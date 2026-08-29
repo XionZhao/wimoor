@@ -335,6 +335,23 @@ public class ExcelUtil<T>
             {
                 Excel attr = (Excel) objects[1];
                 Integer column = cellMap.get(attr.name());
+                // 如果name未匹配到，尝试使用alias别名匹配
+                if (column == null && StringUtils.isNotEmpty(attr.alias()))
+                {
+                    String[] aliasArr = attr.alias().split(",");
+                    for (String alias : aliasArr)
+                    {
+                        String trimmedAlias = alias.trim();
+                        if (StringUtils.isNotEmpty(trimmedAlias))
+                        {
+                            column = cellMap.get(trimmedAlias);
+                            if (column != null)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
                 if (column != null)
                 {
                     fieldsMap.put(column, objects);

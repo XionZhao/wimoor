@@ -23,6 +23,9 @@ public class PurchaseFinanceForm extends BaseEntity{/**
 	@TableField(value="shopid")
 	private String shopid;
 	
+	@TableField(value="groupid")
+	private String groupid;
+	
 	@TableField(value="auditstatus")
 	private Integer auditstatus;
 	

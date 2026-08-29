@@ -16,9 +16,9 @@
   <select id="findAccountAll" resultType="com.wimoor.erp.finance.pojo.entity.FinAccount" parameterType="java.lang.String" >
   	select t.*,m.name paymethName from t_erp_fin_account t 
   	left join t_erp_purchase_form_payment_method m on m.id=t.paymeth
-    LEFT JOIN t_erp_purchase_form_payment_method_index i ON m.id=i.method_id AND i.shopid=#{shopid,jdbcType=CHAR}
+  	LEFT JOIN t_erp_purchase_form_payment_method_index i ON m.id=i.method_id AND i.shopid=#{shopid,jdbcType=CHAR}
   	where t.shopid=#{shopid,jdbcType=CHAR} and t.isdelete=0
-  	order by IFNULL(i.findex,t.paymeth) asc,t.isdefault desc
+  	order by IFNULL(i.findex,t.paymeth) asc, t.findex asc, t.isdefault desc
   </select>
   
     <select id="findAccountArchiveAll" resultType="com.wimoor.erp.finance.pojo.entity.FinAccount" parameterType="java.lang.String" >
@@ -27,63 +27,99 @@
   	where t.shopid=#{shopid,jdbcType=CHAR} and t.isdelete=1
   	order by t.paymeth asc,t.isdefault desc
   </select>
-<!--   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
-    select 
-    <include refid="Base_Column_List" />
-    from t_erp_fin_account
-    where id = #{id,jdbcType=CHAR}
-  </select> -->
-<!--   <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
-    delete from t_erp_fin_account
-    where id = #{id,jdbcType=CHAR}
-  </delete>
-  <insert id="insert" parameterType="com.wimoor.erp.pojo.entity.FinAccount" >
-    insert into t_erp_fin_account (id, shopid, createdate
-      )
-    values (#{id,jdbcType=CHAR}, #{shopid,jdbcType=CHAR}, #{createdate,jdbcType=TIMESTAMP}
-      )
-  </insert>
-  <insert id="insertSelective" parameterType="com.wimoor.erp.pojo.entity.FinAccount" >
-    insert into t_erp_fin_account
-    <trim prefix="(" suffix=")" suffixOverrides="," >
-      <if test="id != null" >
-        id,
-      </if>
-      <if test="shopid != null" >
-        shopid,
-      </if>
-      <if test="createdate != null" >
-        createdate,
-      </if>
-    </trim>
-    <trim prefix="values (" suffix=")" suffixOverrides="," >
-      <if test="id != null" >
-        #{id,jdbcType=CHAR},
-      </if>
-      <if test="shopid != null" >
-        #{shopid,jdbcType=CHAR},
-      </if>
-      <if test="createdate != null" >
-        #{createdate,jdbcType=TIMESTAMP},
-      </if>
-    </trim>
-  </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.wimoor.erp.pojo.entity.FinAccount" >
-    update t_erp_fin_account
-    <set >
-      <if test="shopid != null" >
-        shopid = #{shopid,jdbcType=CHAR},
-      </if>
-      <if test="createdate != null" >
-        createdate = #{createdate,jdbcType=TIMESTAMP},
-      </if>
-    </set>
-    where id = #{id,jdbcType=CHAR}
+
+  <update id="saveAccountIndex" parameterType="java.util.Map">
+     update t_erp_fin_account
+     set findex=#{findex,jdbcType=INTEGER}
+     where id=#{id,jdbcType=BIGINT}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.wimoor.erp.pojo.entity.FinAccount" >
-    update t_erp_fin_account
-    set shopid = #{shopid,jdbcType=CHAR},
-      createdate = #{createdate,jdbcType=TIMESTAMP}
-    where id = #{id,jdbcType=CHAR}
-  </update> -->
+
+  <!-- ==================== 台账Feign接口 ==================== -->
+  
+  <!-- 进销存台账汇总 -->
+  <select id="getInventoryLedgerSummary" resultType="java.util.Map">
+    SELECT 
+      inv.materialid AS materialId,
+      m.sku,
+      m.name AS materialName,
+      inv.warehouseid AS warehouseId,
+      w.name AS warehouseName,
+      IFNULL(m.price, 0) AS unitPrice,
+      IFNULL(m.price_wavg, 0) AS avgPrice,
+      IFNULL(SUM(inv.quantity), 0) AS totalQuantity,
+      IFNULL(SUM(CASE WHEN substring_index(inv.status,'_',1) = 'fulfillable' THEN inv.quantity ELSE 0 END), 0) AS fulfillableQuantity,
+      IFNULL(SUM(CASE WHEN substring_index(inv.status,'_',1) = 'inbound' THEN inv.quantity ELSE 0 END), 0) AS inboundQuantity,
+      ROUND(IFNULL(SUM(inv.quantity), 0) * IFNULL(m.price_wavg, 0), 2) AS totalAmount
+    FROM t_erp_inventory inv
+    INNER JOIN t_erp_material m ON m.id = inv.materialid
+    LEFT JOIN t_erp_warehouse w ON w.id = inv.warehouseid
+    WHERE inv.shopid = #{param.shopid}
+    <if test="param.materialId != null and param.materialId != ''">
+      AND inv.materialid = #{param.materialId}
+    </if>
+    <if test="param.warehouseId != null and param.warehouseId != ''">
+      AND inv.warehouseid = #{param.warehouseId}
+    </if>
+    <if test="param.sku != null and param.sku != ''">
+      AND m.sku LIKE CONCAT('%', #{param.sku}, '%')
+    </if>
+    GROUP BY inv.materialid, m.sku, m.name, inv.warehouseid, w.name, m.price, m.price_wavg
+    ORDER BY m.sku
+  </select>
+
+  <!-- 进销存台账明细查询条件片段 -->
+  <sql id="inventoryLedgerDetailWhere">
+    WHERE rec.shopid = #{param.shopid}
+    <if test="param.materialId != null and param.materialId != ''">
+      AND rec.materialid = #{param.materialId}
+    </if>
+    <if test="param.warehouseId != null and param.warehouseId != ''">
+      AND rec.warehouseid = #{param.warehouseId}
+    </if>
+    <if test="param.formType != null and param.formType != ''">
+      AND rec.formtype = #{param.formType}
+    </if>
+    <if test="param.fromDate != null">
+      AND rec.opttime &gt;= #{param.fromDate}
+    </if>
+    <if test="param.toDate != null">
+      AND rec.opttime &lt;= #{param.toDate}
+    </if>
+  </sql>
+
+  <!-- 进销存台账明细总数 -->
+  <select id="getInventoryLedgerDetailCount" resultType="long">
+    SELECT COUNT(*)
+    FROM t_erp_inventory_record rec
+    INNER JOIN t_erp_material m ON m.id = rec.materialid
+    <include refid="inventoryLedgerDetailWhere"/>
+  </select>
+
+  <!-- 进销存台账明细 -->
+  <select id="getInventoryLedgerDetail" resultType="java.util.Map">
+    SELECT 
+      rec.id,
+      rec.materialid AS materialId,
+      m.sku,
+      m.name AS materialName,
+      rec.warehouseid AS warehouseId,
+      w.name AS warehouseName,
+      rec.formtype AS formType,
+      rec.number AS formNumber,
+      rec.quantity AS quantityChange,
+      rec.status AS inventoryStatus,
+      rec.operate AS operateType,
+      rec.opttime AS operateTime,
+      u.name AS operator
+    FROM t_erp_inventory_record rec
+    INNER JOIN t_erp_material m ON m.id = rec.materialid
+    LEFT JOIN t_erp_warehouse w ON w.id = rec.warehouseid
+    LEFT JOIN t_userinfo u ON u.id = rec.operator
+    <include refid="inventoryLedgerDetailWhere"/>
+    ORDER BY rec.opttime DESC
+    <if test="param.pageSize != null">
+      LIMIT #{param.offset}, #{param.pageSize}
+    </if>
+  </select>
+
 </mapper>

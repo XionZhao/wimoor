@@ -1,16 +1,5 @@
 package com.wimoor.erp.purchase.service;
 
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import com.wimoor.erp.purchase.pojo.entity.PurchaseFormPrintIP;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -19,6 +8,15 @@ import com.wimoor.erp.common.pojo.entity.ERPBizException;
 import com.wimoor.erp.purchase.pojo.dto.PurchaseSaveDTO;
 import com.wimoor.erp.purchase.pojo.entity.PurchaseForm;
 import com.wimoor.erp.purchase.pojo.entity.PurchaseFormEntry;
+import com.wimoor.erp.purchase.pojo.entity.PurchaseFormPrintIP;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.List;
+import java.util.Map;
 
 public interface IPurchaseFormService extends IService<PurchaseForm> {
 
@@ -117,4 +115,76 @@ public interface IPurchaseFormService extends IService<PurchaseForm> {
 	PurchaseFormPrintIP getPrintIpByAddress(UserInfo userinfo, String addressid);
 
     Map<String, Object> reSubmit(UserInfo userinfo, String id);
+
+    // ==================== 台账Feign接口 ====================
+    
+    /**
+     * 采购订单列表（台账用）
+     */
+    Map<String, Object> getLedgerList(Map<String, Object> params);
+
+    /**
+     * 采购订单统计（台账用）
+     */
+    Map<String, Object> getLedgerStatistics(Map<String, Object> params);
+
+    /**
+     * 供应商台账汇总
+     */
+    List<Map<String, Object>> getSupplierLedgerSummary(Map<String, Object> params);
+
+    /**
+     * 供应商台账统计
+     */
+    Map<String, Object> getSupplierLedgerStatistics(Map<String, Object> params);
+
+    /**
+     * 供应商台账汇总合计行
+     */
+    Map<String, Object> getSupplierLedgerSummaryTotal(Map<String, Object> params);
+
+    /**
+     * 供应商订单明细
+     */
+    List<Map<String, Object>> getSupplierOrders(Map<String, Object> params);
+
+    /**
+     * 供应商付款明细
+     */
+    List<Map<String, Object>> getSupplierPayments(Map<String, Object> params);
+
+    /**
+     * 供应商订单总数
+     */
+    int getSupplierOrdersCount(Map<String, Object> params);
+
+    /**
+     * 供应商付款总数
+     */
+    int getSupplierPaymentsCount(Map<String, Object> params);
+
+    /**
+     * 获取供应商列表
+     */
+    List<Map<String, Object>> getSupplierList(String shopid);
+
+    /**
+     * 采购台账付款操作
+     */
+    void payPurchaseOrder(Map<String, Object> params);
+
+    /**
+     * 查询已完成的采购订单（用于财务模块凭证生成）
+     * 返回订单及其所有分录和付款明细的完整数据
+     * @param groupid 租户ID（账簿），对应 t_erp_purchase_form.groupid
+     * @param changedDate 变更日期（yyyy-MM-dd），查询closepaydate在当天变更的订单
+     */
+    List<Map<String, Object>> getCompletedOrdersForVoucher(String groupid, String changedDate);
+
+    /**
+     * 查询已入库的采购订单（用于库存凭证生成-入库验收）
+     * @param groupid 租户ID
+     * @param changedDate 变更日期（yyyy-MM-dd），查询closerecdate在当天变更的订单
+     */
+    List<Map<String, Object>> getCompletedOrdersForInventory(String groupid, String changedDate);
 }

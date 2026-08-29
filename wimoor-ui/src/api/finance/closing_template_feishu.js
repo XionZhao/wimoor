@@ -50,3 +50,12 @@ export function getFeishuConfigByTemplateId(templateid) {
     method: 'get'
   })
 }
+
+// 新增或修改结算飞书表格同步（存在则更新，不存在则插入）
+export function insertOrUpdateFeishuConfig(data) {
+  return request({
+    url: '/api/finance/closing_template/feishu/insertOrUpdate',
+    method: 'post',
+    data: data
+  })
+}

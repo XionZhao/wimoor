@@ -202,9 +202,14 @@ export default [
  	component:()=>import("@/views/erp/purchase/change/components/details.vue")  
  },
  {
- 	path:"s/p/d",
- 	name:'system_package_details',
- 	component:()=>import("@/views/sys/userCenter/components/buypackage.vue")  
- },
- 
+	path:"s/p/d",
+	name:'system_package_details',
+	component:()=>import("@/views/sys/userCenter/components/buypackage.vue")  
+},
+{
+	path:"e/b/s/d",
+	name:'supplier_details',
+	component:()=>import("@/views/erp/baseinfo/supplier/components/detail.vue")  
+},
+
 ]

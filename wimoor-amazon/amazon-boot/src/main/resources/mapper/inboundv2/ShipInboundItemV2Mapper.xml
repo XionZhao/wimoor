@@ -355,7 +355,7 @@
 	<select id="getshotTime" resultType="java.util.Map">
 		select v.psku sku,v.marketplaceId,tsale.presales,w.stocking_cycle,
 			v.openDate,v.salesweek, v.salesfifteen, v.salesmonth,v.sales,
-			ifnull(ir.afn_fulfillable_quantity,0)+ifnull(rr.reserved_fc_processing,0)+ifnull(rr.reserved_fc_transfers,0) quantity 
+			ifnull(ir.afn_fulfillable_quantity,0)+ifnull(rr.reserved_fc_processing,0)+ifnull(rr.reserved_fc_transfers,0) quantity
 		from (
 			select p.sku psku,case when m.region='EU' then 'EU' else m.marketplaceId end marketplaceId,
 			sum(s.avgsales) sales,sum(s.sales_seven) salesweek, sum(ifnull(s.sales_fifteen,0)) salesfifteen,

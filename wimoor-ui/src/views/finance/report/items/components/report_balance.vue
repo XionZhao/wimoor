@@ -13,6 +13,26 @@
             <el-option label="万元" value="10000"></el-option>
           </el-select>
           <el-button type="primary" @click="handleQuery" icon="Search">查询</el-button>
+          <!-- 平衡状态图标 - 平衡时显示 -->
+          <div class="balance-status" v-if="balanceStatus.checked && balanceStatus.balanced">
+            <el-tooltip content="资产负债表平衡" placement="top">
+              <div class="balance-icon-wrapper balanced">
+                <BalanceTwo theme="outline" size="20" fill="currentColor" class="balance-icon" />
+                <span class="balance-text">平衡</span>
+              </div>
+            </el-tooltip>
+          </div>
+          
+          <!-- 不平衡状态图标 - 不平衡时显示 -->
+          <div class="balance-status" v-if="balanceStatus.checked && !balanceStatus.balanced">
+            <el-tooltip content="资产负债表不平衡，点击查看详情" placement="top">
+              <div class="balance-icon-wrapper unbalanced" @click="showBalanceDetails">
+                <Imbalance theme="outline" size="20" fill="currentColor" class="balance-icon" />
+                <span class="balance-text">不平衡</span>
+                <span class="detail-link">查看详情</span>
+              </div>
+            </el-tooltip>
+          </div>
         </el-space>
       <el-space>
         <el-button type="warning" @click="handleValidate" icon="Check">检查</el-button>
@@ -89,6 +109,33 @@
       </el-table>
     </el-col>
   </el-row>
+
+  <!-- 平衡详情弹框 -->
+  <el-dialog v-model="showBalanceDetailDialog" title="资产负债表平衡详情" width="500px" destroy-on-close>
+    <div v-if="balanceCheck">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <el-tag :type="balanceCheck.balanced ? 'success' : 'danger'" size="large">
+          {{ balanceCheck.balanced ? '资产负债表平衡' : '资产负债表不平衡' }}
+        </el-tag>
+      </div>
+
+      <div :class="['check-content', balanceCheck.balanced ? 'success' : 'error']">
+        <p v-if="balanceCheck.balanced" class="success-text">
+          <el-icon><SuccessFilled /></el-icon>
+          资产负债表平衡，资产总计 = 负债和权益总计
+        </p>
+        <div v-else>
+          <p class="error-text">
+            <el-icon><WarningFilled /></el-icon>
+            资产负债表不平，请检查报表项目公式设置
+          </p>
+          <div class="balance-details">
+            <p>{{ balanceStatus.message }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </el-dialog>
 
   <!-- 检查结果展示区域 -->
   <!-- 报表检查结果弹框 -->
@@ -220,6 +267,7 @@ import * as echarts from 'echarts';
 import { ref, onMounted, reactive, computed, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { CircleCheck, CircleCloseFilled, InfoFilled, SuccessFilled, Warning, WarningFilled } from '@element-plus/icons-vue';
+import { BalanceTwo, Imbalance } from '@icon-park/vue-next';
 import { dateTimesFormat } from '@/utils/index.js';
 import { generateReport, validateReport } from '@/api/finance/report';
 import finStore from "@/hooks/store/useFinanceStore.js"
@@ -242,10 +290,19 @@ const balanceSheetData = ref([]);
 const charts = ref({});
 const validationResult = ref(null);
 const showValidationDialog = ref(false);
+const showBalanceDetailDialog = ref(false);
 const balanceCheck = ref(null);
 const profitLossCheck = ref(null);
 const unmappedSubjects = ref([]);
 const loading = ref(false);
+const balanceStatus = ref({
+  checked: false,
+  balanced: false,
+  assetTotal: 0,
+  liabilityEquityTotal: 0,
+  difference: 0,
+  message: ''
+});
 
 // 资产数据（根据itemType区分资产类项目）
 const assetData = computed(() => {
@@ -369,16 +426,99 @@ const handleQuery = async () => {
     balanceSheetData.value = response.data.items || [];
     //帮我对balanceSheetData.value 排序，lineNumber 从小到大
     initCharts();
-    // 显示验证警告
-    if (response.data.warnings && response.data.warnings.length > 0) {
-      response.data.warnings.forEach(w => ElMessage.warning(w));
-    }
+    
+    // 检查平衡状态
+    checkBalanceStatus();
+    
   } catch (error) {
     ElMessage.error('获取资产负债表数据失败');
     console.error(error);
   } finally {
     loading.value = false;
   }
+};
+
+// 解析格式化的金额字符串
+const parseFormattedAmount = (str) => {
+  if (!str) return 0;
+  return parseFloat(str.replace(/,/g, ''));
+};
+
+// 检查平衡状态
+const checkBalanceStatus = async () => {
+  if (!period.value) {
+    balanceStatus.value = {
+      checked: false,
+      balanced: false,
+      assetTotal: 0,
+      liabilityEquityTotal: 0,
+      difference: 0
+    };
+    return;
+  }
+
+  try {
+    const groupid = await finStore.getCurrentTenantId();
+    const response = await validateReport({
+      groupid,
+      templateCode: props.type,
+      period: period.value
+    });
+
+    const data = response.data;
+    let balanced = data.valid !== false;
+    let assetTotal = 0;
+    let liabilityEquityTotal = 0;
+    let difference = 0;
+    let message = '';
+
+    // 从错误信息中提取金额
+    if (data.errors && data.errors.length > 0) {
+      const balanceError = data.errors.find(e => e.type === 'BALANCE_MISMATCH');
+      if (balanceError) {
+        balanced = false;
+        message = balanceError.message;
+        const match = balanceError.message.match(/资产总计: ([\d,.]+), 负债和权益总计: ([\d,.]+), 差额: ([\d,.]+)/);
+        if (match) {
+          assetTotal = parseFormattedAmount(match[1]);
+          liabilityEquityTotal = parseFormattedAmount(match[2]);
+          difference = parseFormattedAmount(match[3]);
+        }
+      }
+    }
+
+    balanceStatus.value = {
+      checked: true,
+      balanced,
+      assetTotal,
+      liabilityEquityTotal,
+      difference,
+      message
+    };
+  } catch (error) {
+    console.error('检查平衡状态失败:', error);
+    balanceStatus.value = {
+      checked: true,
+      balanced: false,
+      assetTotal: 0,
+      liabilityEquityTotal: 0,
+      difference: 0
+    };
+  }
+};
+
+// 显示平衡详情
+const showBalanceDetails = () => {
+  // 设置平衡检查详情
+  balanceCheck.value = {
+    balanced: balanceStatus.value.balanced,
+    assetTotal: balanceStatus.value.assetTotal,
+    liabilityEquityTotal: balanceStatus.value.liabilityEquityTotal,
+    difference: balanceStatus.value.difference
+  };
+  
+  // 显示平衡详情弹框
+  showBalanceDetailDialog.value = true;
 };
 
 const handleExport = () => {
@@ -456,12 +596,6 @@ const handleValidate = async () => {
   } finally {
     loading.value = false;
   }
-};
-
-// 解析格式化的金额字符串
-const parseFormattedAmount = (str) => {
-  if (!str) return 0;
-  return parseFloat(str.replace(/,/g, ''));
 };
 
 // 处理自动结转折益
@@ -829,5 +963,71 @@ const initCharts = () => {
   font-size: 13px;
   color: var(--el-text-color-secondary);
   white-space: pre-line;
+}
+
+// 平衡状态样式
+.balance-status {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 12px;
+}
+
+.balance-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  
+  &.balanced {
+    color: var(--el-color-success);
+    
+    .balance-icon {
+      color: var(--el-color-success);
+    }
+  }
+  
+  &.unbalanced {
+    color: var(--el-color-warning);
+    cursor: pointer;
+    
+    .balance-icon {
+      color: var(--el-color-warning);
+    }
+  }
+}
+
+.balance-icon {
+  flex-shrink: 0;
+}
+
+.balance-text {
+  white-space: nowrap;
+}
+
+.detail-link {
+  color: var(--el-color-success);
+  font-size: 12px;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+</style>
+
+<style>
+/* 暗黑模式适配 */
+.dark .balance-sheet-table .el-table__header th {
+  background-color: var(--el-fill-color-light) !important;
+  color: var(--el-text-color-regular) !important;
+}
+
+.dark .balance-sheet-table .report-header-row {
+  background-color: var(--el-fill-color-light) !important;
+}
+
+.dark .balance-sheet-table .report-header-row td {
+  background-color: var(--el-fill-color-light) !important;
 }
 </style>

@@ -207,6 +207,7 @@ public abstract class ReportServiceImpl  implements IReportService {
 					  record.setReportProcessingStatus("treat");
 					  record.setIsrun(true);
 					  iReportRequestRecordService.updateById(record);
+					  beforeTreatResponse(record);
 					  mmlog=treatResponse(amazonAuthority, reader);
 				  }catch(Exception e) {
 					  if(StrUtil.isNotBlank(mmlog)) {
@@ -229,7 +230,7 @@ public abstract class ReportServiceImpl  implements IReportService {
 					  if(record!=null&&record.getTreatnumber()!=null) {
 						  record.setTreatnumber(record.getTreatnumber()+1);
 					  }
-					  if(mmlog==null||StrUtil.isEmpty(mmlog)||(record.getReporttype().equals(ReportType.SettlementReport)&&!mmlog.contains("error"))) {
+					  if(mmlog==null||StrUtil.isEmpty(mmlog)||(!mmlog.contains("error") && !mmlog.contains("校验失败"))) {
 						  record.setReportProcessingStatus("success");
 						  record.setIsrun(false);
 						  record.setIsnewest(false);
@@ -237,11 +238,11 @@ public abstract class ReportServiceImpl  implements IReportService {
 						  record.setLastupdate(new Date());
 						  iReportRequestRecordService.updateById(record);
 					  }else {
-						  record.setReportProcessingStatus("DONE");
-						  record.setIsrun(false);
-						  record.setLog(mmlog);
-						  record.setLastupdate(new Date());
-						  iReportRequestRecordService.updateById(record);
+							  record.setReportProcessingStatus("DONE");
+							  record.setIsrun(false);
+							  record.setLog(mmlog);
+							  record.setLastupdate(new Date());
+							  iReportRequestRecordService.updateById(record);
 					  }
 				  }
 			  });
@@ -252,8 +253,14 @@ public abstract class ReportServiceImpl  implements IReportService {
 	    }
 	    return mlog;
 	  }
- 
-	  
+
+	/**
+	 * 钩子方法：在treatResponse之前调用，子类可覆盖以设置上下文
+	 */
+	protected void beforeTreatResponse(ReportRequestRecord record) {
+		// 默认空实现，子类可覆盖
+	}
+
 	public  void downloadReport(AmazonAuthority amazonAuthority, ReportRequestRecord record,ReportDocument doc) {
 			String url =doc.getUrl();
 		    String compressionAlgorithm = doc.getCompressionAlgorithm()!=null?doc.getCompressionAlgorithm().getValue():null;

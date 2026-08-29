@@ -12,7 +12,7 @@
 			<el-button @click.stop="download">导出</el-button>
 			<Warehouse @changeware="getWarehouse" />
 			<Datepicker ref="datepickers" @changedate="changedate" />
-		<el-input  v-model="searchKeywords" placeholder="请输入出库编码或SKU" @input="handleQuery" class="input-with-select" >
+		<el-input  v-model="searchKeywords" placeholder="请输入出库编码或SKU" v-debounce-input="handleQuery" class="input-with-select" >
 		   <template #append>
 		     <el-button @click="handleQuery">
 		        <el-icon style="font-size: 16px;align-itmes:center">
@@ -206,6 +206,6 @@
 <style scoped="scoped">
  .font-large{
 	 font-size:32px;
-	 color:#999;
+	 color: var(--el-text-color-secondary);
  }
 </style>

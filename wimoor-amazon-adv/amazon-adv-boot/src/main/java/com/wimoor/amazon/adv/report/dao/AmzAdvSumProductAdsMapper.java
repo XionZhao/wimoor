@@ -27,4 +27,5 @@ public interface AmzAdvSumProductAdsMapper extends BaseMapper<AmzAdvSumProductAd
 	List<Map<String, Object>> getDaysSumProduct(Map<String,Object> param);
 	List<Map<String, Object>> getMonthSumProduct(Map<String, Object> param);
 	Map<String, Object> getAllSumProduct(Map<String, Object> map);
+	List<Map<String, Object>> getCostGroupByMonth(Map<String, Object> map);
 }

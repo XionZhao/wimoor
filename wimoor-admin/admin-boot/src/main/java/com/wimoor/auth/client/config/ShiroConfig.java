@@ -1,13 +1,10 @@
 package com.wimoor.auth.client.config;
- 
 
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import javax.servlet.Filter;
-
+import com.wimoor.auth.client.shiro.CasUserRealm;
+import com.wimoor.auth.client.shiro.GetCodeFilter;
+import com.wimoor.auth.client.shiro.MyCasFilter;
+import com.wimoor.auth.client.shiro.SystemLogoutFilter;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.cas.CasSubjectFactory;
@@ -25,6 +22,7 @@ import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreato
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -33,10 +31,10 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.filter.DelegatingFilterProxy;
 
-import com.wimoor.auth.client.shiro.CasUserRealm;
-import com.wimoor.auth.client.shiro.GetCodeFilter;
-import com.wimoor.auth.client.shiro.MyCasFilter;
-import com.wimoor.auth.client.shiro.SystemLogoutFilter;
+import javax.servlet.Filter;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
  
 /**
  * shiro配置类
@@ -226,16 +224,18 @@ public class ShiroConfig {
 	     * @return
 	     */
 	    @SuppressWarnings({ "rawtypes", "unchecked" })
-		@Bean
-	    public FilterRegistrationBean delegatingFilterProxy() {
-	        FilterRegistrationBean filterRegistration = new FilterRegistrationBean();
-	        filterRegistration.setFilter(new DelegatingFilterProxy("shiroFilter"));
-	        //  该值缺省为false,表示生命周期由SpringApplicationContext管理,设置为true则表示由ServletContainer管理
-	        filterRegistration.addInitParameter("targetFilterLifecycle", "true");
-	        filterRegistration.setEnabled(true);
-	        filterRegistration.addUrlPatterns("/*");
-	        return filterRegistration;
-	    }
+	@Bean
+    public FilterRegistrationBean delegatingFilterProxy() {
+        FilterRegistrationBean filterRegistration = new FilterRegistrationBean();
+        filterRegistration.setFilter(new DelegatingFilterProxy("shiroFilter"));
+        //  该值缺省为false,表示生命周期由SpringApplicationContext管理,设置为true则表示由ServletContainer管理
+        filterRegistration.addInitParameter("targetFilterLifecycle", "true");
+        filterRegistration.setEnabled(true);
+        filterRegistration.addUrlPatterns("/*");
+        // 添加ASYNC dispatcher类型支持，确保异步请求（如SSE）也能正确绑定Shiro上下文
+        filterRegistration.setDispatcherTypes(javax.servlet.DispatcherType.REQUEST, javax.servlet.DispatcherType.FORWARD, javax.servlet.DispatcherType.INCLUDE, javax.servlet.DispatcherType.ERROR, javax.servlet.DispatcherType.ASYNC);
+        return filterRegistration;
+    }
 	 
 	    /**
 	     * CAS过滤器

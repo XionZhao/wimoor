@@ -13,7 +13,7 @@
 			 defaultValue="only" 
 			:isform="true" />
 			<Datepicker ref="datepickers"   @changedate="changedate" />
-			<el-input  v-model="searchKeywords" placeholder="输入订单编码,SKU或名称" @input="handleQuery" clearable class="input-with-select" >
+			<el-input  v-model="searchKeywords" placeholder="输入订单编码,SKU或名称" v-debounce-input="handleQuery" @clear="handleQuery" clearable class="input-with-select" >
 			   <template #append>
 			     <el-button @click="handleQuery">
 			        <el-icon style="font-size: 16px;align-itmes:center">
@@ -170,11 +170,11 @@
 		state.queryParam.platformid=value;
 		emit('getdata',state.queryParam);
 	}
-	function handleQuery(){
-		state.queryParam.sku=state.searchKeywords;
-		state.selectRows=[];
-		emit('getdata',state.queryParam);
-	}
+	function handleQuery(value){
+	state.queryParam.sku = typeof value === 'string' ? value : state.searchKeywords;
+	state.selectRows=[];
+	emit('getdata',state.queryParam);
+}
 	function selectChange(rows){
 		state.selectRows=rows;
 	}
@@ -242,6 +242,6 @@
 	}
 	.font-48{
 		font-size: 48px;
-		    color: #999;
+		    color: var(--el-text-color-secondary);
 	}
 </style>

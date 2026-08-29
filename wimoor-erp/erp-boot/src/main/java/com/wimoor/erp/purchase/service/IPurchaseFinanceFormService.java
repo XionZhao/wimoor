@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.wimoor.common.user.UserInfo;
 import com.wimoor.erp.purchase.pojo.dto.FinanceFormPayMethDTO;
+import com.wimoor.erp.purchase.pojo.dto.ManualPaymentSaveDTO;
 import com.wimoor.erp.purchase.pojo.dto.PaymentSaveDTO;
 import com.wimoor.erp.purchase.pojo.entity.PurchaseFinanceForm;
 import com.wimoor.erp.purchase.pojo.entity.PurchaseFormEntry;
@@ -31,5 +32,7 @@ public interface IPurchaseFinanceFormService extends IService<PurchaseFinanceFor
 	List<Map<String, Object>> getDetailData(List<String> ids, String shopid);
 
 	Map<String, Object> paymentForm(List<String> ids, UserInfo user);
+
+	Map<String, Object> saveManual(ManualPaymentSaveDTO dto, UserInfo user);
 
 }

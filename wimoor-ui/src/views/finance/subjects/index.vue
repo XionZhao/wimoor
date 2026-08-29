@@ -18,12 +18,17 @@
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button
-          type="info"
-          plain
-          icon="Download"
-          @click="handleImport"
-        >导入</el-button>
+        <el-dropdown @command="handleImportCommand">
+          <el-button type="warning" plain icon="Download">
+            导入<el-icon class="el-icon--right"><arrow-down /></el-icon>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="increment">增量导入</el-dropdown-item>
+              <el-dropdown-item command="override">覆盖导入</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -32,6 +37,14 @@
           icon="Upload"
           @click="handleExport"
         >导出</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="danger"
+          plain
+          icon="RefreshRight"
+          @click="handleInit"
+        >初始化</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -336,14 +349,14 @@
 </template>
 
 <script setup name="Subjects">
-import { listSubjects, getSubjects, delSubjects, addSubjects, updateSubjects, uploadSubjectsFile, exportSubjects, listSubjectTypesByCategoryType } from "@/api/finance/subjects"
+import { listSubjects, getSubjects, delSubjects, addSubjects, updateSubjects, uploadSubjectsFile, exportSubjects, listSubjectTypesByCategoryType, initFinAccountingSubjects } from "@/api/finance/subjects"
 import { listCurrency } from "@/api/finance/currency.js"
 import { listTypes } from "@/api/finance/auxiliar_types.js"
 import finStore from "@/hooks/store/useFinanceStore.js"
 import { useRoute,useRouter } from 'vue-router'
 import { ElMessage, genFileId } from 'element-plus'
 import { watch } from 'vue'
-import { UploadFilled } from '@element-plus/icons-vue'
+import { UploadFilled, ArrowDown } from '@element-plus/icons-vue'
 import filtericon from "@/components/icon/filtericon.vue";
 
 const { proxy } = getCurrentInstance()
@@ -365,6 +378,7 @@ const uploadTitle = ref("导入科目")
 const uploadRef = ref()
 const myfile = ref(null)
 const headers = ref({})
+const importType = ref('increment')
 const subjectCategories = ref([])
 const data = reactive({
   form: {
@@ -427,6 +441,17 @@ function handleAddCurrency(){
     query:{
       title:"财务币别",
       path:'/fin/currency',
+    }
+  })
+}
+
+function handleCustomAuxiliaryAccount(){
+  open.value = false;
+  router.push({
+    path:'/fin/auxiliary/item',
+    query:{
+      title:"辅助核算",
+      path:'/fin/auxiliary/item',
     }
   })
 }
@@ -644,6 +669,17 @@ async function getAuxiliaryTypes() {
   })
 }
 
+/** 初始化按钮操作 */
+async function handleInit() {
+  let groupid = await finStore.getCurrentTenantId();
+  proxy.$modal.confirm('是否确认初始化会计科目？此操作将重置所有科目数据！').then(function() {
+    return initFinAccountingSubjects(groupid)
+  }).then(() => {
+    getList()
+    proxy.$modal.msgSuccess("初始化成功")
+  }).catch(() => {})
+}
+
 // 监听科目类型变化，自动获取科目类别
 watch(() => form.value.subjectType, (newVal) => {
   if (newVal) {
@@ -719,11 +755,12 @@ function autoSetParentCode() {
   }
 }
 
-/** 导入按钮操作 */
-function handleImport() {
+/** 导入下拉命令操作 */
+function handleImportCommand(command) {
+  importType.value = command;
   uploadVisible.value = true;
   uploadloading.value = false;
-  uploadTitle.value = "导入科目";
+  uploadTitle.value = command === 'increment' ? '增量导入科目' : '覆盖导入科目';
 }
 
 /** 导出按钮操作 */
@@ -775,7 +812,7 @@ function uploadExcel() {
   let FormDatas = new FormData();
   uploadloading.value = true;
   FormDatas.append('file', myfile.value);
-  uploadSubjectsFile(FormDatas, queryParams.value.groupid).then(function(res) {
+  uploadSubjectsFile(FormDatas, queryParams.value.groupid, importType.value).then(function(res) {
     ElMessage.success('上传成功');
     uploadloading.value = false;
     uploadVisible.value = false;

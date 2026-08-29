@@ -1113,27 +1113,45 @@ function getBoxDetial(data){
 			}
 			  
 			  function loadZmApiDetail(data){
-			  		if(data&&data.message&&data.message=="请求成功"){
-			  			//zmData.value=data;
-			  		} 
-			     }
-			//拉取箱子追踪信息
-			function refreshBoxInfo(){
-				if(boxinfolist.list && boxinfolist.list.length>0){
-					var shipmentid=shipInfoAll.shipment.shipmentConfirmationId;
-					transportationApi.shipTransDetial({"companyid": form.company,"shipmentid":shipmentid,"ordernum":form.ordernumber}).then(res=>{
-						if(res && res.data.ftype=="ZH"){
-							loadZhApiDetail(res.data,form.company,shipmentid);
+		  		if(data&&data.message&&data.message=="请求成功"){
+		  			//zmData.value=data;
+		  		} 
+		     }
+		function loadWtoApiDetail(data){
+			if(data && data.trackNumber && data.trackNumber.data && data.trackNumber.data.boxs){
+				//渲染trackID - 通过boxNo匹配箱号
+				boxinfolist.list.forEach(item=>{
+					data.trackNumber.data.boxs.forEach(box=>{
+						if(box.boxNo == item.id && box.trackNo){
+							item.tracking_id = box.trackNo;
 						}
-						if(res && res.data.ftype=="ZM"){
-							loadZmApiDetail(res.data);
-						}
-					})
-				}else{
-					ElMessage.error('请维护物流追踪信息');
-				}
-				
+					});
+				});
+				ElMessage.success('WTO追踪编号拉取成功！');
+			}else{
+				ElMessage.warning('未获取到WTO追踪信息');
 			}
+		}
+		//拉取箱子追踪信息
+		function refreshBoxInfo(){
+			if(boxinfolist.list && boxinfolist.list.length>0){
+				var shipmentid=shipInfoAll.shipment.shipmentConfirmationId;
+				transportationApi.shipTransDetial({"companyid": form.company,"shipmentid":shipmentid,"ordernum":form.ordernumber}).then(res=>{
+					if(res && res.data.ftype=="ZH"){
+						loadZhApiDetail(res.data,form.company,shipmentid);
+					}
+					if(res && res.data.ftype=="ZM"){
+						loadZmApiDetail(res.data);
+					}
+					if(res && res.data.ftype=="WTO"){
+						loadWtoApiDetail(res.data);
+					}
+				})
+			}else{
+				ElMessage.error('请维护物流追踪信息');
+			}
+			
+		}
 				
 		   defineExpose({loadOptData})
 </script>

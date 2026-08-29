@@ -1013,6 +1013,7 @@ public class SummaryOrderReportServiceImpl implements ISummaryOrderReportService
 		 if(materialMap.get("height")!=null) {
 			    dim_local.setHeight(new BigDecimal(materialMap.get("height").toString()));
 				if(materialMap.get("height_unit")!=null)dim_local.setHeightUnits(materialMap.get("height_unit").toString());
+				if(materialMap.get("weight")==null){return;}
 				dim_local.setWeight(new BigDecimal(materialMap.get("weight").toString()));
 				if(materialMap.get("weight_unit")!=null)dim_local.setWeightUnits(materialMap.get("weight_unit").toString());
 				dim_local.setLength(new BigDecimal(materialMap.get("length").toString()));

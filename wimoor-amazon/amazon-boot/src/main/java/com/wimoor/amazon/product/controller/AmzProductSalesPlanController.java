@@ -1,19 +1,7 @@
 package com.wimoor.amazon.product.controller;
 
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.wimoor.amazon.finances.service.IAmzFinEmailService;
 import com.wimoor.amazon.product.pojo.dto.PlanDTO;
@@ -25,13 +13,14 @@ import com.wimoor.common.result.Result;
 import com.wimoor.common.user.UserInfo;
 import com.wimoor.common.user.UserInfoContext;
 import com.wimoor.common.user.UserLimitDataType;
-
-import cn.hutool.core.util.StrUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.*;
 
 
 /**
@@ -123,6 +112,7 @@ public class AmzProductSalesPlanController {
 						   dto.getMarketplaceids().add("A33AVAJ2PDY3EV");
 						   dto.getMarketplaceids().add("APJ6JRA9NG5V4");
 						   dto.getMarketplaceids().add("ARBP9OOSHTCHU");
+						   dto.getMarketplaceids().add("A2VIGQ35RCS4UG");
 						   break;
 					   }
 				 }
@@ -269,6 +259,7 @@ public class AmzProductSalesPlanController {
 		    		countrydto.setMskus(skus);
 		    		countrydto.setShopid(user.getCompanyid());
 		    		countrydto.setMsku(null);
+		    		countrydto.setSkipPrelist(dto.getSkipPrelist());
 		    		 Map<String, List<Map<String, Object>>> expendDatas = iAmzProductSalesPlanService.ExpandCountrysDataByGroup(countrydto);
 						for(Map<String, Object> item:page.getRecords()) {
 				    		String msku=item.get("msku").toString();

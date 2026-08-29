@@ -20,12 +20,14 @@ import com.wimoor.amazon.inboundV2.mapper.ShipInboundShipmentBoxMapper;
 import com.wimoor.amazon.inboundV2.pojo.entity.*;
 import com.wimoor.amazon.inboundV2.service.*;
 import com.wimoor.amazon.inboundV2.util.XmlHelper;
+import com.wimoor.common.mvc.BizException;
 import com.wimoor.common.user.UserInfo;
 import com.wimoor.common.user.UserInfoContext;
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
@@ -364,6 +366,71 @@ public class ShipCrossborderXmlServiceImpl implements IShipCrossborderXmlSevice 
             shipInboundCustomsXmlItemService.saveBatch(items);
         }
     }
+    /**
+     * 查找冲突记录（只读操作）
+     */
+    private List<ShipInboundCustomsXml> findConflictRecords(ShipInboundCustomsXml xmlInfo) {
+        if (StrUtil.isBlank(xmlInfo.getNumber()) || StrUtil.isBlank(xmlInfo.getXmlType())) {
+            return Collections.emptyList();
+        }
+        String[] ids = xmlInfo.getNumber().split(",");
+        LambdaQueryWrapper<ShipInboundCustomsXml> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ShipInboundCustomsXml::getXmlType, xmlInfo.getXmlType())
+               .eq(ShipInboundCustomsXml::getGroupid, xmlInfo.getGroupid())
+               .eq(ShipInboundCustomsXml::getDisabled, false)
+               .and(w -> {
+                   for (int i = 0; i < ids.length; i++) {
+                       if (i == 0) {
+                           w.like(ShipInboundCustomsXml::getNumber, "%" + ids[i].trim() + "%");
+                       } else {
+                           w.or().like(ShipInboundCustomsXml::getNumber, "%" + ids[i].trim() + "%");
+                       }
+                   }
+               });
+        List<ShipInboundCustomsXml> existingList = shipInboundCustomsXmlService.list(wrapper);
+        // 过滤掉自身
+        existingList.removeIf(existing -> StrUtil.isBlank(existing.getNumber()) || existing.getGuid().equals(xmlInfo.getGuid()));
+        return existingList;
+    }
+
+    /**
+     * 检查冲突（只读操作，不开启事务）
+     * 当存在冲突且force=false时抛出BizException
+     */
+    @Override
+    public void checkConflict(ShipInboundCustomsXml xmlInfo) {
+        List<ShipInboundCustomsXml> existingList = findConflictRecords(xmlInfo);
+        if (existingList.isEmpty()) {
+            return;
+        }
+        String[] ids = xmlInfo.getNumber().split(",");
+        for (ShipInboundCustomsXml existing : existingList) {
+            Set<String> existingIds = new HashSet<>(Arrays.asList(existing.getNumber().split(",")));
+            for (String id : ids) {
+                if (existingIds.contains(id.trim())) {
+                    throw new BizException("已存在相同货件的报关记录（" + existing.getNumber() + "），是否覆盖？");
+                }
+            }
+        }
+    }
+
+    /**
+     * 处理冲突覆盖（写操作，在事务内执行）
+     * 当force=true时，禁用旧记录
+     */
+    private void handleConflictOverride(ShipInboundCustomsXml xmlInfo) {
+        if (!Boolean.TRUE.equals(xmlInfo.getForce())) {
+            return;
+        }
+        List<ShipInboundCustomsXml> existingList = findConflictRecords(xmlInfo);
+        for (ShipInboundCustomsXml existing : existingList) {
+            existing.setDisabled(true);
+            markShipment(existing);
+            shipInboundCustomsXmlItemService.lambdaUpdate().eq(ShipInboundCustomsXmlItem::getGuid, existing.getGuid()).remove();
+            shipInboundCustomsXmlService.removeById(existing.getGuid());
+        }
+    }
+
     public void markShipment(ShipInboundCustomsXml xmlInfo){
         if(xmlInfo.getDisabled()==null||!xmlInfo.getDisabled()){
             calcShipmentCustomsXmlItem( xmlInfo);
@@ -401,6 +468,7 @@ public class ShipCrossborderXmlServiceImpl implements IShipCrossborderXmlSevice 
      * 示例2：生成电子订单
      */
     public String generateOrder(UserInfo userinfo, ShipInboundCustomsXml xmlInfo,OrderData orderData) throws Exception {
+        handleConflictOverride(xmlInfo);
         // 创建订单数据
         String[] shipmentIds=xmlInfo.getNumber().split(",");
         ShipInboundShipment shipment = shipInboundShipmentService.lambdaQuery().eq(ShipInboundShipment::getShipmentConfirmationId,shipmentIds[0]).one();
@@ -427,9 +495,9 @@ public class ShipCrossborderXmlServiceImpl implements IShipCrossborderXmlSevice 
                 String fileName = XmlHelper.generateFileNameExpid(CrossBorderXmlMessageType.ORDER.getValue(), group.getDxpid(), sequenceNumber);
                 xmlInfo.setFileName(fileName);
             }
-
-            String path=saveXmlToFile(xmlInfo.getFileName(), xmlDoc,xmlInfo);
-            if(StrUtil.isNotBlank(oldPath)){
+            saveXmlToFile(xmlInfo.getFileName(), xmlDoc,xmlInfo);
+            String path=xmlInfo.getFilePath();
+            if(StrUtil.isNotBlank(oldPath)&&!oldPath.equals(path)){
                 adminClientOneFeignManager.deleteFile("customs",oldPath);
             }
             return xmlInfo.getGuid();
@@ -444,6 +512,7 @@ public class ShipCrossborderXmlServiceImpl implements IShipCrossborderXmlSevice 
             if(xmlInfo.getOrderData()!=null){
                 return generateOrder(userinfo,xmlInfo,xmlInfo.getOrderData());
             }
+            handleConflictOverride(xmlInfo);
             String[] shipmentIds=xmlInfo.getNumber().split(",");
             ShipInboundShipment shipment = shipInboundShipmentService.lambdaQuery().eq(ShipInboundShipment::getShipmentConfirmationId,shipmentIds[0]).one();
             ShipInboundPlan inboundPlan = shipInboundPlanService.getById(shipment.getFormid());
@@ -1101,6 +1170,7 @@ public ShipInboundCustomsXml createDeclaration(UserInfo userinfo, ShipInboundCus
 
         //下载文件
         @Override
+        @Transactional(rollbackFor = Exception.class)
         public String downloadShipXmlFile(UserInfo userinfo, ShipInboundCustomsXml xml) throws Exception {
             if(CrossBorderXmlMessageType.ORDER.getValue().equals(xml.getXmlType())){
                 return generateOrder(userinfo,xml);

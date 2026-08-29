@@ -51,4 +51,34 @@ public class SysChartCompletionRequestDTO implements Serializable {
     private Boolean logprobs;
 
     private Object topLogprobs;
+
+    /**
+     * 是否启用Agent模式（自动调用系统接口获取数据）
+     */
+    private Boolean agentMode;
+
+    /**
+     * 当前页面路径（用于AI感知用户所在页面，提供针对性指导）
+     */
+    private String currentPage;
+
+    /**
+     * 当前页面标题（用于查询帮助文档）
+     */
+    private String pageTitle;
+
+    /**
+     * 帮助文档URL（从字典表查询）
+     */
+    private String helpDocUrl;
+
+    /**
+     * 整个帮助文档库（JSON数组，包含所有页面的帮助文档信息）
+     */
+    private String helpDocLibrary;
+
+    /**
+     * 当前页面的帮助文档内容（JSON对象，包含docKey、title、content、category）
+     */
+    private String currentHelpDoc;
 }

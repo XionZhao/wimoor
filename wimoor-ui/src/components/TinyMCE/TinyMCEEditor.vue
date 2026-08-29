@@ -6,7 +6,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch,nextTick,toRefs } from 'vue'
+import { ref, onMounted, onUnmounted, watch,nextTick,toRefs,computed } from 'vue'
+import { isDark } from '@/components/composables/dark.js'
 import hljs from 'highlight.js'
 import largeFileApi from '@/api/sys/tool/largeFileApi.js';
 import { useRoute,useRouter } from 'vue-router';
@@ -40,7 +41,7 @@ const editorStatus = ref('未初始化')
 const contentLength = ref(0)
 let route = useRoute();
 let router = useRouter();
-const defaultConfig = {
+const defaultConfig = computed(() => ({
   height: 400,
   menubar: false,
   selector: `#${props.editorKey}`,
@@ -62,7 +63,9 @@ const defaultConfig = {
   base_url: '/tinymce',
   suffix: '.min',
   branding: false,
-  skin: 'oxide',
+  skin: isDark.value ? 'oxide-dark' : 'oxide',
+  skin_url: isDark.value ? '/tinymce/skins/ui/oxide-dark' : '/tinymce/skins/ui/oxide',
+  content_css: isDark.value ? '/tinymce/skins/content/dark/content.min.css' : '/tinymce/skins/content/default/content.min.css',
   codesample_languages: [
 	  { text: 'HTML/XML', value: 'markup' },
 	  { text: 'JavaScript', value: 'javascript' },
@@ -83,22 +86,26 @@ const defaultConfig = {
     body { 
       font-family: Arial, sans-serif; 
       font-size: 14px; 
-      color: #000000 !important; 
-      background-color: #ffffff !important; 
+      color: ${isDark.value ? '#e0e0e0' : '#000000'} !important; 
+      background-color: ${isDark.value ? '#1a1a1a' : '#ffffff'} !important; 
       line-height: 1.5;
     }
     /* 确保编辑区域内容可见 */
     .mce-content-body {
-      color: #000000 !important;
-      background-color: #ffffff !important;
+      color: ${isDark.value ? '#e0e0e0' : '#000000'} !important;
+      background-color: ${isDark.value ? '#1a1a1a' : '#ffffff'} !important;
       min-height: 200px;
     }
     /* 确保工具栏和状态栏可见 */
     .tox-toolbar, .tox-statusbar {
-      background-color: #ffffff !important;
+      background-color: ${isDark.value ? '#1e1e1e' : '#ffffff'} !important;
     }
     table { border-collapse: collapse; width: 100%; }
-    table td, table th { border: 1px solid #ddd; padding: 8px; }
+    table td, table th { border: 1px solid ${isDark.value ? '#3a3a3a' : '#ddd'}; padding: 8px; }
+    a { color: #667eea; }
+    blockquote { border-left-color: #667eea; color: ${isDark.value ? '#a0a0a0' : '#606266'}; }
+    pre { background: ${isDark.value ? '#2a2a2a' : '#f5f7fa'}; }
+    code { background: ${isDark.value ? '#2a2a2a' : '#f5f7fa'}; color: ${isDark.value ? '#e0e0e0' : '#303133'}; }
 	 /* highlight.js 样式 */
 	    pre code.hljs {
 	      display: block;
@@ -113,8 +120,8 @@ const defaultConfig = {
 	    }
 	    
 	    .hljs {
-	      background: #f8f9fa;
-	      color: #24292e;
+	      background: ${isDark.value ? '#1e1e1e' : '#f8f9fa'};
+	      color: ${isDark.value ? '#e0e0e0' : '#24292e'};
 	    }
 	    
 	    .hljs-doctag,
@@ -124,14 +131,14 @@ const defaultConfig = {
 	    .hljs-template-variable,
 	    .hljs-type,
 	    .hljs-variable.language_ {
-	      color: #d73a49;
+	      color: ${isDark.value ? '#ff7b72' : '#d73a49'};
 	    }
 	    
 	    .hljs-title,
 	    .hljs-title.class_,
 	    .hljs-title.class_.inherited__,
 	    .hljs-title.function_ {
-	      color: #6f42c1;
+	      color: ${isDark.value ? '#d2a8ff' : '#6f42c1'};
 	    }
 	    
 	    .hljs-attr,
@@ -144,65 +151,65 @@ const defaultConfig = {
 	    .hljs-selector-attr,
 	    .hljs-selector-class,
 	    .hljs-selector-id {
-	      color: #005cc5;
+	      color: ${isDark.value ? '#79c0ff' : '#005cc5'};
 	    }
 	    
 	    .hljs-string,
 	    .hljs-meta .hljs-string,
 	    .hljs-regexp,
 	    .hljs-template-tag {
-	      color: #032f62;
+	      color: ${isDark.value ? '#a5d6ff' : '#032f62'};
 	    }
 	    
 	    .hljs-built_in,
 	    .hljs-symbol {
-	      color: #e36209;
+	      color: ${isDark.value ? '#ffa657' : '#e36209'};
 	    }
 	    
 	    .hljs-comment,
 	    .hljs-code,
 	    .hljs-formula {
-	      color: #6a737d;
+	      color: ${isDark.value ? '#8b949e' : '#6a737d'};
 	    }
 	    
 	    .hljs-name,
 	    .hljs-quote,
 	    .hljs-selector-tag,
 	    .hljs-selector-pseudo {
-	      color: #22863a;
+	      color: ${isDark.value ? '#7ee787' : '#22863a'};
 	    }
 	    
 	    .hljs-subst {
-	      color: #24292e;
+	      color: ${isDark.value ? '#e0e0e0' : '#24292e'};
 	    }
 	    
 	    .hljs-section {
-	      color: #005cc5;
+	      color: ${isDark.value ? '#79c0ff' : '#005cc5'};
 	      font-weight: bold;
 	    }
 	    
 	    .hljs-bullet {
-	      color: #735c0f;
+	      color: ${isDark.value ? '#e3b341' : '#735c0f'};
 	    }
 	    
 	    .hljs-emphasis {
-	      color: #24292e;
+	      color: ${isDark.value ? '#e0e0e0' : '#24292e'};
 	      font-style: italic;
 	    }
 	    
 	    .hljs-strong {
-	      color: #24292e;
+	      color: ${isDark.value ? '#e0e0e0' : '#24292e'};
 	      font-weight: bold;
 	    }
 	    
 	    .hljs-addition {
-	      color: #22863a;
-	      background-color: #f0fff4;
+	      color: ${isDark.value ? '#aff5b4' : '#22863a'};
+	      background-color: ${isDark.value ? '#033a16' : '#f0fff4'};
 	    }
 	    
 	    .hljs-deletion {
-	      color: #b31d28;
-	      background-color: #ffeef0;
+	      color: ${isDark.value ? '#ffdcd7' : '#b31d28'};
+	      background-color: ${isDark.value ? '#67060c' : '#ffeef0'};
 	    }
   `,
    init_instance_callback: (editor) => {
@@ -257,7 +264,7 @@ const defaultConfig = {
 		{ title: '阴影', value: 'image-shadow' },
 		{ title: '边框', value: 'image-border' }
 	  ],
-}
+}))
 // 高亮代码块函数 - 改进版，支持iframe中的内容
 const highlightCodeBlocks = () => {
   // 确保editorElement.value存在
@@ -330,7 +337,7 @@ const initEditor = async () => {
       }
       
       const config = {
-        ...defaultConfig,
+        ...defaultConfig.value,
         ...props.config,
         target: editorElement.value,
         setup: (editor) => {
@@ -637,6 +644,30 @@ watch(() => props.modelValue, (newValue) => {
   }
 });
 
+// 监听暗黑模式变化，重新初始化编辑器
+watch(isDark, async (newVal) => {
+  // 销毁当前编辑器
+  if (editorInstance.value) {
+    destroyEditor();
+  }
+  // 等待DOM更新后重新初始化
+  await nextTick();
+  setTimeout(() => {
+    initEditor();
+  }, 200);
+});
+
+// 监听config变化（用于响应暗黑模式切换导致的配置变化）
+watch(() => props.config, async (newConfig) => {
+  if (editorInstance.value) {
+    destroyEditor();
+  }
+  await nextTick();
+  setTimeout(() => {
+    initEditor();
+  }, 200);
+}, { deep: true });
+
 // 监听组件可见性变化
 let visibilityObserver = null;
 let visibleState = ref(true);
@@ -827,5 +858,148 @@ defineExpose({
 
 :deep(.tox-edit-area__iframe) {
   background-color: #ffffff !important;
+}
+</style>
+
+<!-- 暗黑模式样式 -->
+<style>
+html.dark .tinymce-editor .editor-element {
+  background-color: #1a1a1a !important;
+}
+
+html.dark .tinymce-editor .tox-tinymce {
+  border-color: #2a2a2a !important;
+}
+
+html.dark .tinymce-editor .tox .tox-menubar,
+html.dark .tinymce-editor .tox .tox-toolbar-overlord,
+html.dark .tinymce-editor .tox .tox-toolbar__primary {
+  background: #1e1e1e !important;
+  border-color: #2a2a2a !important;
+}
+
+html.dark .tinymce-editor .tox .tox-toolbar__group {
+  border-color: #2a2a2a !important;
+}
+
+html.dark .tinymce-editor .tox .tox-tbtn {
+  color: #c0c0c0 !important;
+}
+
+html.dark .tinymce-editor .tox .tox-tbtn:hover {
+  background: #2a2a2a !important;
+  color: #e0e0e0 !important;
+}
+
+html.dark .tinymce-editor .tox .tox-tbtn--enabled,
+html.dark .tinymce-editor .tox .tox-tbtn--enabled:hover {
+  background: #3a3a3a !important;
+  color: #ffffff !important;
+}
+
+html.dark .tinymce-editor .tox .tox-statusbar {
+  background: #1a1a1a !important;
+  border-color: #2a2a2a !important;
+  color: #808080 !important;
+}
+
+html.dark .tinymce-editor .tox .tox-statusbar__text-container {
+  color: #808080 !important;
+}
+
+html.dark .tinymce-editor .tox .tox-menubar+ .tox-toolbar-overlord {
+  border-top: 1px solid #2a2a2a !important;
+}
+
+html.dark .tinymce-editor .tox .tox-mbtn {
+  color: #c0c0c0 !important;
+}
+
+html.dark .tinymce-editor .tox .tox-mbtn:hover:not(:disabled):not(.tox-mbtn--active) {
+  background: #2a2a2a !important;
+  color: #e0e0e0 !important;
+}
+
+html.dark .tinymce-editor .tox .tox-toolbar__overflow {
+  background: #1e1e1e !important;
+}
+
+/* 编辑区域内iframe背景 */
+html.dark .tinymce-editor .tox .tox-edit-area__iframe {
+  background-color: #1a1a1a !important;
+}
+
+/* 下拉菜单暗黑模式 */
+html.dark .tinymce-editor .tox .tox-menu {
+  background: #1e1e1e !important;
+  border-color: #2a2a2a !important;
+}
+
+html.dark .tinymce-editor .tox .tox-collection__item {
+  color: #c0c0c0 !important;
+}
+
+html.dark .tinymce-editor .tox .tox-collection__item--active {
+  background: #2a2a2a !important;
+  color: #e0e0e0 !important;
+}
+
+html.dark .tinymce-editor .tox .tox-collection__item--enabled {
+  background: #3a3a3a !important;
+}
+
+/* 对话框暗黑模式 */
+html.dark .tinymce-editor .tox .tox-dialog {
+  background: #1e1e1e !important;
+  border-color: #2a2a2a !important;
+}
+
+html.dark .tinymce-editor .tox .tox-dialog__header {
+  background: #1a1a1a !important;
+  border-color: #2a2a2a !important;
+}
+
+html.dark .tinymce-editor .tox .tox-dialog__title {
+  color: #e0e0e0 !important;
+}
+
+html.dark .tinymce-editor .tox .tox-dialog__body {
+  color: #c0c0c0 !important;
+}
+
+html.dark .tinymce-editor .tox .tox-textfield,
+html.dark .tinymce-editor .tox .tox-selectfield,
+html.dark .tinymce-editor .tox .tox-textarea {
+  background: #2a2a2a !important;
+  border-color: #3a3a3a !important;
+  color: #e0e0e0 !important;
+}
+
+html.dark .tinymce-editor .tox .tox-label {
+  color: #c0c0c0 !important;
+}
+
+html.dark .tinymce-editor .tox .tox-btn {
+  background: #2a2a2a !important;
+  border-color: #3a3a3a !important;
+  color: #e0e0e0 !important;
+}
+
+html.dark .tinymce-editor .tox .tox-btn:hover {
+  background: #3a3a3a !important;
+}
+
+html.dark .tinymce-editor .tox .tox-btn--primary {
+  background: #4a90d9 !important;
+  border-color: #4a90d9 !important;
+}
+
+/* 滚动条暗黑模式 */
+html.dark .tinymce-editor .tox .tox-edit-area::-webkit-scrollbar-thumb {
+  background: #3a3a3a !important;
+}
+
+html.dark .tinymce-editor .tox .tox-edit-area::-webkit-scrollbar-track {
+  background: #1a1a1a !important;
 }
 </style>

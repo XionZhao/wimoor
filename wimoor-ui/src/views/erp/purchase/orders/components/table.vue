@@ -2,8 +2,25 @@
 	<div v-loading="loading" background="#ffff">
 	   <table class="sd-table m-b-16 " style="border-left:none"  border="0" cellpadding="0" cellspacing="0">
 			<thead  >
-							   <tr>
-								   <th width="40%">订单信息</th>
+						   <tr>
+							   <th width="40%">
+								   <el-space>
+									   <span>订单信息</span>
+									   	<span style="margin-left:5px;">/</span>
+											<span style="margin-left:5px;">  	
+											<el-tooltip  :content="sortOrder==='asc'?'当前：创建日期升序，点击切换为降序':sortOrder==='desc'?'当前：创建日期降序，点击切换为升序':'点击按创建日期排序'">
+												<el-space  class="pointer"  @click="toggleSort">
+												<span class="font-extraSmall">创建日期</span>  
+												<el-icon style="padding:0px">
+													<SortUp v-if="sortOrder==='asc'" style="color:var(--el-color-primary)" />
+													<SortDown v-else-if="sortOrder==='desc'" style="color:var(--el-color-primary)" />
+													<Sort v-else />
+												</el-icon>
+												</el-space>  
+											</el-tooltip>
+											</span>
+								   </el-space>
+							   </th>
 								   <th width="30%">产品信息</th>
 								   <th width="30%">供应商信息</th>
 								   <th width="15%">采购信息</th>
@@ -48,7 +65,7 @@
 							  <el-space class="font-small" :spacer="spacer">
 								  <div class="flex-center text-gray">
 								  <el-icon class="font-base "><Clock /></el-icon>
-								  <span class="m-t-r-2-4"> {{dateFormat(item.createdate)}}</span>
+								  <span class="m-t-r-2-4 purchase-title-element" data-title="创建日期"> {{dateFormat(item.createdate)}}</span>
 								 </div>
 								  <span>
 									<div class="flex-center text-gray">  
@@ -191,7 +208,7 @@
 							   </div>
 						   </div>
 						  <!-- <div v-if="sub.auditstatus==2 && sub.paystatus==3"><span class="font-extraSmall">付款方式:</span>
-						   <el-tag  type="warning" size="small" effect="plain" round>申请付款</el-tag>
+						   <el-tag  type="warning" size="small" effect="plain" round style="background-color: #fff;">申请付款</el-tag>
 						   </div> -->
 						 </td>
 					   <td>
@@ -417,7 +434,7 @@
 <script setup>
 	import '@/assets/css/packbox_table.css'
 	import {h,ref,reactive,toRefs,getCurrentInstance,inject	} from 'vue'
-	import {Download,Edit,DeleteFilled,EditPen,TakeawayBox,InfoFilled,Warning ,ArrowDown,Clock,User,ArrowLeft,ArrowRight,Unlock } from '@element-plus/icons-vue';
+	import {Download,Edit,DeleteFilled,EditPen,TakeawayBox,InfoFilled,Warning ,ArrowDown,Clock,User,ArrowLeft,ArrowRight,Unlock,SortUp,SortDown,Sort } from '@element-plus/icons-vue';
 	import {MoreOne,PayCodeOne,Receive,Install,Audit,Copy} from '@icon-park/vue-next';
 	import CopyText from"@/utils/copy_text.js";
 	import {ElDivider} from 'element-plus';
@@ -460,7 +477,8 @@
 	let globalTable=ref();
 	var isrefresh=router;
 	const emitter = inject("emitter");
-	const emit = defineEmits(['selectrow','changepay',]);
+	const emit = defineEmits(['selectrow','changepay','sort-change',]);
+	const sortOrder = ref('');
 	const props = defineProps({
 	             tableState:String,
 	        })
@@ -834,12 +852,26 @@
 	function downloadTemplateExcel(row){
     templateDialogRef.value.show("purchase",row);
   }
+	function toggleSort(){
+		if(sortOrder.value===''){
+			sortOrder.value='asc';
+		}else if(sortOrder.value==='asc'){
+			sortOrder.value='desc';
+		}else{
+			sortOrder.value='';
+		}
+		emit('sort-change',sortOrder.value);
+	}
 	function load(params){
 		state.queryParams=params;
 		state.queryParams.currentpage=1;
 		state.queryParams.pagesize=10;
 		// state.queryParams.fromDate="2022-01-01";
 		// state.queryParams.toDate="2023-02-20";
+		//同步排序状态
+		if(params.sortOrder!==undefined){
+			sortOrder.value=params.sortOrder;
+		}
 		//加载表格数据
 		handleQuery();
 	}
@@ -985,4 +1017,20 @@ tr:hover  .table-edit-flex .el-icon{
 	 line-clamp:3;
 	 -webkit-box-orient: vertical;
  }
+
+ .purchase-title-element:hover::after {
+    content: attr(data-title);
+    position: absolute;
+    background: #201d1d;
+	color:#fff;
+    padding: 3px 6px;
+    border: 1px solid #181717;
+	border-radius: 4px;
+    z-index: 1000;
+}
+html.dark .purchase-title-element:hover::after {
+    background: #dce3f5;
+    border-color: #e5edf7;
+    color: #1a1f29;
+}
 </style>

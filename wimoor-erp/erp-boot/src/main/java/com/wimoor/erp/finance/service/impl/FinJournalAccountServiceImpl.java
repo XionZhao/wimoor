@@ -112,7 +112,17 @@ public class FinJournalAccountServiceImpl  extends ServiceImpl<FinJournalAccount
 			this.baseMapper.updateById(faccount);
 		}
 
-		public void setExcelBook(SXSSFWorkbook workbook, Map<String, Object> param) {
+		@Override
+	public List<Map<String, Object>> findDetailList(Map<String, Object> param) {
+		return this.baseMapper.findByCondition(param);
+	}
+
+	@Override
+	public List<Map<String, Object>> findJournalForVoucher(String groupid, String optDate) {
+		return this.baseMapper.findJournalForVoucher(groupid, optDate);
+	}
+
+	public void setExcelBook(SXSSFWorkbook workbook, Map<String, Object> param) {
 			// 定义表头
 			LinkedHashMap<String, String> headers = new LinkedHashMap<>();
 			headers.put("name", "项目");

@@ -104,7 +104,7 @@
 								 							   </el-radio-group>
 								 							</div>
 															 <div style="float:left;margin-right: 10px;">
-							    <el-input v-model="searchKeywords" @input="loadItemList()"  placeholder="搜索SKU" clearable />
+							    <el-input v-model="searchKeywords" v-debounce-input="loadItemList"  placeholder="搜索SKU" clearable @clear="loadItemList" />
 								</div>
 						    </div>
 						 </div>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.voucher.mapper.FinVoucherTemplateEntriesAuxiliaryMapper">
+
+    <resultMap type="com.wimoor.finance.voucher.domain.FinVoucherTemplateEntriesAuxiliary" id="FinVoucherTemplateEntriesAuxiliaryResult">
+        <result property="id"    column="id"    />
+        <result property="entryId"    column="entry_id"    />
+        <result property="auxiliaryTypeId"    column="auxiliary_type_id"    />
+        <result property="auxiliaryItemId"    column="auxiliary_item_id"    />
+        <result property="groupid"    column="groupid"    />
+    </resultMap>
+
+    <resultMap type="com.wimoor.finance.voucher.domain.FinVoucherTemplateEntriesAuxiliary" id="FinVoucherTemplateEntriesAuxiliaryWithNameResult">
+        <result property="id"    column="id"    />
+        <result property="entryId"    column="entry_id"    />
+        <result property="auxiliaryTypeId"    column="auxiliary_type_id"    />
+        <result property="auxiliaryItemId"    column="auxiliary_item_id"    />
+        <result property="groupid"    column="groupid"    />
+        <result property="auxiliaryTypeName"    column="auxiliary_type_name"    />
+        <result property="auxiliaryItemName"    column="auxiliary_item_name"    />
+    </resultMap>
+
+    <sql id="selectFinVoucherTemplateEntriesAuxiliaryVo">
+        select id, entry_id, auxiliary_type_id, auxiliary_item_id, groupid from fin_vouchers_template_entries_auxiliary
+    </sql>
+
+    <select id="selectFinVoucherTemplateEntriesAuxiliaryById" parameterType="Long" resultMap="FinVoucherTemplateEntriesAuxiliaryResult">
+        <include refid="selectFinVoucherTemplateEntriesAuxiliaryVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectByEntryIds" resultMap="FinVoucherTemplateEntriesAuxiliaryWithNameResult">
+        select a.id, a.entry_id, a.auxiliary_type_id, a.auxiliary_item_id,
+               t.type_name as auxiliary_type_name, i.item_name as auxiliary_item_name, a.groupid
+        from fin_vouchers_template_entries_auxiliary a
+        left join fin_auxiliary_types t on a.auxiliary_type_id = t.type_id
+        left join fin_auxiliary_items i on a.auxiliary_item_id = i.item_id
+        where a.entry_id in
+        <foreach item="entryId" collection="list" open="(" separator="," close=")">
+            #{entryId}
+        </foreach>
+    </select>
+
+    <insert id="insertFinVoucherTemplateEntriesAuxiliary" parameterType="com.wimoor.finance.voucher.domain.FinVoucherTemplateEntriesAuxiliary" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_vouchers_template_entries_auxiliary
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="entryId != null">entry_id,</if>
+            <if test="auxiliaryTypeId != null">auxiliary_type_id,</if>
+            <if test="auxiliaryItemId != null">auxiliary_item_id,</if>
+            <if test="groupid != null">groupid,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="entryId != null">#{entryId},</if>
+            <if test="auxiliaryTypeId != null">#{auxiliaryTypeId},</if>
+            <if test="auxiliaryItemId != null">#{auxiliaryItemId},</if>
+            <if test="groupid != null">#{groupid},</if>
+        </trim>
+    </insert>
+
+    <update id="updateFinVoucherTemplateEntriesAuxiliary" parameterType="com.wimoor.finance.voucher.domain.FinVoucherTemplateEntriesAuxiliary">
+        update fin_vouchers_template_entries_auxiliary
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="entryId != null">entry_id = #{entryId},</if>
+            <if test="auxiliaryTypeId != null">auxiliary_type_id = #{auxiliaryTypeId},</if>
+            <if test="auxiliaryItemId != null">auxiliary_item_id = #{auxiliaryItemId},</if>
+            <if test="groupid != null">groupid = #{groupid},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinVoucherTemplateEntriesAuxiliaryById" parameterType="Long">
+        delete from fin_vouchers_template_entries_auxiliary where id = #{id}
+    </delete>
+
+    <delete id="deleteByEntryId" parameterType="Long">
+        delete from fin_vouchers_template_entries_auxiliary where entry_id = #{entryId}
+    </delete>
+
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into fin_vouchers_template_entries_auxiliary (entry_id, auxiliary_type_id, auxiliary_item_id, groupid) values
+        <foreach item="item" collection="list" separator=",">
+            (#{item.entryId}, #{item.auxiliaryTypeId}, #{item.auxiliaryItemId}, #{item.groupid})
+        </foreach>
+    </insert>
+</mapper>

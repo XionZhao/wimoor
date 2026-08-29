@@ -38,4 +38,11 @@ public class PaymentReportDTO extends BasePageQuery{
 		String supplierid;
 		
 		String settlementid;
+		
+		String groupid;
+
+		String acct;
+
+		@ApiModelProperty(value = "是否显示已结转记录", example = "false")
+		Boolean showSettled;
 }

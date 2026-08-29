@@ -29,6 +29,12 @@ public @interface Excel
     public String name() default "";
 
     /**
+     * 导入时的别名列表，支持多个列名匹配（如：发票类型,发票票种,票种）
+     * 多个别名用逗号分隔，优先匹配name，再匹配alias
+     */
+    public String alias() default "";
+
+    /**
      * 日期格式, 如: yyyy-MM-dd
      */
     public String dateFormat() default "";

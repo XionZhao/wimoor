@@ -680,11 +680,22 @@ public class UserController {
 	@PostMapping("/updatePassword")
 	@CacheEvict(value = { "userall","userinfo"}, allEntries = true)
 	public Result<UserInfo> updatePassword(@RequestBody UserRegisterInfoDTO dto)  {
-		SysUser user = iSysUserService.changePassword(dto);
-		user.setPassword("***");
-		user.setSalt("***");
-		UserInfo info=iSysUserService.convertToUserInfo(user);
-		return Result.success(info);
+		// 验证码校验，防止攻击者绕过验证码直接修改密码
+		if(StrUtil.isBlank(dto.getKey()) || StrUtil.isBlank(dto.getCode())) {
+			throw new BizException("请先获取并输入验证码");
+		}
+		String code = stringRedisTemplate.opsForValue().get(dto.getKey());
+		if(StrUtil.isNotBlank(code)&&code.equals(dto.getCode())) {
+			SysUser user = iSysUserService.changePassword(dto);
+			user.setPassword("***");
+			user.setSalt("***");
+			UserInfo info=iSysUserService.convertToUserInfo(user);
+			// 验证成功后删除验证码，防止重放攻击
+			stringRedisTemplate.delete(dto.getKey());
+			return Result.success(info);
+		}else {
+			throw new BizException("验证码失效或输入不正确");
+		}
 	}
 
 

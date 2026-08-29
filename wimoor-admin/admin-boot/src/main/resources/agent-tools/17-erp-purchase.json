@@ -1,0 +1,360 @@
+{
+    "module":  "ERP采购管理",
+    "description":  "ERP采购单查询、采购单详情、采购计划、发货准备、收货明细、采购变更、请款单管理",
+    "service":  "wimoor-erp",
+    "tools":  [
+                  {
+                      "name":  "purchase_list",
+                      "description":  "查询ERP采购单列表，支持按供应商、审核状态、日期范围、SKU等条件筛选",
+                      "menu_id":  306,
+                      "endpoint":  "/erp/api/v1/purchase_form/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持采购单号、SKU、运单号"
+                                                },
+                                     "supplierid":  {
+                                                        "type":  "string",
+                                                        "description":  "供应商ID"
+                                                    },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "入库仓库ID"
+                                                     },
+                                     "auditstatus":  {
+                                                    "type":  "string",
+                                                    "description":  "采购单审核状态"
+                                                },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "采购单明细ID",
+                                              "number":  "采购单编号",
+                                              "sku":  "产品SKU",
+                                              "mname":  "产品名称",
+                                              "image":  "产品图片URL",
+                                              "color":  "SKU颜色",
+                                              "supplier":  "供应商ID",
+                                              "suppliername":  "供应商名称",
+                                              "itemprice":  "单价",
+                                              "amount":  "采购数量",
+                                              "orderprice":  "订单金额",
+                                              "totalpay":  "已付款金额",
+                                              "totalin":  "已入库数量",
+                                              "auditstatus":  "审核状态（0待审/1驳回/2通过/3撤销）",
+                                              "audittime":  "审核时间",
+                                              "paystatus":  "付款状态（0未付/1已付/3部分付）",
+                                              "inwhstatus":  "入库状态（0未入库/1已入库）",
+                                              "warehouseid":  "入库仓库ID",
+                                              "warehousename":  "仓库名称",
+                                              "warehouseadress":  "仓库地址",
+                                              "creator":  "创建人ID",
+                                              "creatorname":  "创建人",
+                                              "createdate":  "创建时间",
+                                              "notice":  "备注",
+                                              "materialid":  "产品ID",
+                                              "groupid":  "分组ID",
+                                              "groupname":  "分组名称",
+                                              "purchaseUrl":  "采购链接",
+                                              "moq":  "最小起订量",
+                                              "delivery_cycle":  "交货周期（天）",
+                                              "deliverydate":  "预计交货日期",
+                                              "closepaydate":  "关闭付款日期",
+                                              "closerecdate":  "关闭入库日期",
+                                              "issfg":  "产品类型",
+                                              "ischange":  "是否有变更",
+                                              "fulfillable":  "可售库存",
+                                              "tags":  "标签ID列表（逗号分隔）",
+                                              "tagnamelist":  "标签名称列表",
+                                              "alibaba_auth":  "1688授权信息",
+                                              "alibaba_orderid":  "1688订单号",
+                                              "orderstatus":  "1688订单状态",
+                                              "remark":  "备注",
+                                              "withoutEdit":  "是否可编辑"
+                                          }
+                  },
+                  {
+                      "name":  "purchase_detail",
+                      "description":  "查询单个采购单的详细信息，包括采购商品明细、供应商信息、付款信息、收货信息等",
+                      "menu_id":  306,
+                      "endpoint":  "/erp/api/v1/purchase_form/getdetail",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "采购单ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "action":  "查询状态（false表示查询失败）",
+                                              "msg":  "错误消息（仅查询失败时返回）",
+                                              "recordList":  "历史采购记录列表，每条记录包含: formid(采购单ID), number(采购单号), createdate(创建时间), amount(数量), itemprice(单价), auditstatus(审核状态), totalin(已入库), totalpay(已付款), wname(仓库名称)"
+                                          }
+                  },
+                  {
+                      "name":  "purchase_plan_list",
+                      "description":  "查询采购计划列表，用于采购规划管理，展示需要采购的产品和建议采购量",
+                      "menu_id":  306,
+                      "endpoint":  "/erp/api/v1/purchase/plan/getPlan",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "采购计划ID",
+                                              "number":  "计划编号",
+                                              "creator":  "创建人ID",
+                                              "shopid":  "公司ID",
+                                              "createtime":  "创建时间",
+                                              "disable":  "是否禁用",
+                                              "operator":  "操作人ID",
+                                              "opttime":  "操作时间",
+                                              "warehouseList":  "关联仓库列表，每条记录包含: warehouseid(仓库ID), warehouseName(仓库名称)"
+                                          }
+                  },
+                  {
+                      "name":  "purchase_preprocess",
+                      "description":  "查询发货准备单（预处理单）列表，用于发货前的包装、组装等准备工作管理",
+                      "menu_id":  306,
+                      "endpoint":  "/erp/api/v1/purchase/preprocess/getFormList",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持单据编号或SKU"
+                                                },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "status":  {
+                                                    "type":  "string",
+                                                    "description":  "单据状态"
+                                                },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "准备单ID",
+                                              "shopid":  "公司ID",
+                                              "warehouseid":  "仓库ID",
+                                              "warehousename":  "仓库名称",
+                                              "number":  "准备单编号",
+                                              "ftype":  "类型（1:采购入库）",
+                                              "createtime":  "创建时间",
+                                              "creator":  "创建人ID",
+                                              "creatorname":  "创建人",
+                                              "isrun":  "是否正在执行",
+                                              "opttime":  "最后操作时间",
+                                              "operator":  "操作人ID",
+                                              "operatorname":  "操作人",
+                                              "remark":  "备注",
+                                              "isCheckInvTime":  "盘点时间",
+                                              "isOutConsumableTime":  "出耗材时间",
+                                              "isDispatchTime":  "调库时间",
+                                              "isDownTime":  "下载时间",
+                                              "isAssemblyTime":  "组装时间"
+                                          }
+                  },
+                  {
+                      "name":  "storage_detail_list",
+                      "description":  "查询采购单收货明细，展示各采购单的收货记录和入库情况",
+                      "menu_id":  306,
+                      "endpoint":  "/erp/api/v1/purchase_form/getRecdetail",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "采购单ID"
+                                            },
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "类型"
+                                               },
+                                     "actiontype":  {
+                                                        "type":  "string",
+                                                        "description":  "操作类型"
+                                                    }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "entry":  "采购单明细对象，包含: id/materialid/amount/itemprice/orderprice/totalin/totalpay/deliverydate/auditstatus/paystatus/inwhstatus/remark",
+                                              "weight":  "总重量（包装重量×数量）",
+                                              "delivery_cycle":  "交货周期（天）",
+                                              "delivery_cycledate":  "预计交货日期（当前日期+交货周期）",
+                                              "deliverydate":  "预计交货日期",
+                                              "boxn":  "整箱数",
+                                              "boxns":  "零头箱数",
+                                              "receivelist":  "收货记录列表，每条包含: id/amount/opttime/operator/ftype/shelfInvRecordList(货架记录)",
+                                              "paylist":  "付款记录列表，PurchaseFormPayment对象数组",
+                                              "logisticsid":  "物流ID",
+                                              "totalcost":  "货物总费用",
+                                              "totalship":  "总运费",
+                                              "payneed":  "待付金额",
+                                              "recrate":  "收货率（百分比）",
+                                              "recneed":  "待收数量",
+                                              "payrate":  "付款率（百分比）"
+                                          }
+                  },
+                  {
+                      "name":  "purchase_change_list",
+                      "description":  "查询采购变更单列表，记录采购单的变更历史，如换货、退货等",
+                      "menu_id":  306,
+                      "endpoint":  "/erp/api/v1/purchase/purchaseFormEntryChange/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持单据编号或SKU"
+                                                },
+                                     "auditstatus":  {
+                                                         "type":  "string",
+                                                         "description":  "审核状态"
+                                                     },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "变更单ID",
+                                              "number":  "变更单编号",
+                                              "creator":  "创建人",
+                                              "auditstatus":  "审核状态",
+                                              "remark":  "备注",
+                                              "opttime":  "最后更新时间",
+                                              "wname":  "仓库名称",
+                                              "createdate":  "创建时间",
+                                              "amount":  "变更数量",
+                                              "sku":  "产品SKU",
+                                              "pnumber":  "关联采购单编号"
+                                          }
+                  },
+                  {
+                      "name":  "purchase_finance_list",
+                      "description":  "查询采购请款单列表，管理采购付款申请和审批",
+                      "menu_id":  306,
+                      "endpoint":  "/erp/api/v1/purchase_finance_form/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持请款单号或采购单号"
+                                                },
+                                     "supplierid":  {
+                                                        "type":  "string",
+                                                        "description":  "供应商ID"
+                                                    },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型：order(请款单号)、purchase(关联采购单号)"
+                                                    },
+                                     "paymethod":  {
+                                                       "type":  "string",
+                                                       "description":  "支付方式"
+                                                   },
+                                     "status":  {
+                                                    "type":  "string",
+                                                    "description":  "请款单状态"
+                                                },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "请款单ID",
+                                              "number":  "请款单编号",
+                                              "remark":  "备注",
+                                              "auditstatus":  "审核状态",
+                                              "paymethod":  "支付方式",
+                                              "creatorname":  "创建人",
+                                              "operatorname":  "操作人",
+                                              "auditorname":  "审核人",
+                                              "purnumber":  "关联采购单号",
+                                              "supplierid":  "供应商ID",
+                                              "price":  "请款金额",
+                                              "createtime":  "创建时间",
+                                              "opttime":  "操作时间",
+                                              "audittime":  "审核时间",
+                                              "approveVisible":  "是否显示审批按钮",
+                                              "payVisible":  "是否显示付款按钮",
+                                              "returnVisible":  "是否显示退回按钮"
+                                          }
+                  }
+              ]
+}

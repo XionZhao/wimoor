@@ -277,3 +277,27 @@ const formatAmount = (value) => {
   gap: 8px;
 }
 </style>
+
+<style>
+/* 暗黑模式适配 */
+.dark .equity-table .el-table__header th {
+  background-color: var(--el-fill-color-light) !important;
+  color: var(--el-text-color-regular) !important;
+}
+
+.dark .equity-table .equity-header-row {
+  background-color: var(--el-fill-color-light) !important;
+}
+
+.dark .equity-table .equity-header-row td {
+  background-color: var(--el-fill-color-light) !important;
+}
+
+.dark .equity-table .equity-total-row {
+  background-color: var(--el-fill-color) !important;
+}
+
+.dark .equity-table .equity-total-row td {
+  background-color: var(--el-fill-color) !important;
+}
+</style>

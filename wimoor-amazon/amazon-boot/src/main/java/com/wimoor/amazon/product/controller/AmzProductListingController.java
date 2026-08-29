@@ -35,7 +35,6 @@ import com.wimoor.amazon.product.pojo.entity.AmzProductPriceRecord;
 import com.wimoor.amazon.product.pojo.entity.ProductInAutoprice;
 import com.wimoor.amazon.product.pojo.entity.ProductInfo;
 import com.wimoor.amazon.product.service.IAmzProductPriceRecordService;
-import com.wimoor.amazon.product.service.IAmzProductRefreshService;
 import com.wimoor.amazon.product.service.IProductCatalogItemService;
 import com.wimoor.amazon.product.service.IProductInAutopriceService;
 import com.wimoor.amazon.product.service.IProductInfoService;
@@ -65,7 +64,6 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/report/product/listing")
 public class AmzProductListingController {
 
-	final IAmzProductRefreshService iAmzProductRefreshService;
 	final IProductListingsItemService iProductListingsItemService;
 	final IAmazonAuthorityService amazonAuthorityService;
 	final IProductCatalogItemService iProductCatalogItemService;

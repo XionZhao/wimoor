@@ -21,14 +21,11 @@
 			   </el-dropdown>
 			   </div>
 		</div>
-		<div  class="phone pointer">
-			<connect-address-one @click="handToPage" title="常用地址" theme="outline" size="16" />
-		</div>
 		<div class="message">
 			<RemindMessage  ref="messageRef"></RemindMessage>
 		</div>
 		<div class="phone pointer">
-           <headset-one  @click="handleHelpQQ" theme="outline" size="16"  /> 
+           <robot-one  @click="openAIDrawer" theme="outline" size="16"  /> 
 		</div>
 		
 		<div class="avatar">
@@ -49,9 +46,9 @@
 					   </span>
 				   </template>
 			       <el-menu-item index="1-1" disabled class="company" > {{companyname}} </el-menu-item>
-			       <el-menu-item index="1-2"    @click="goTocenter">  个人中心</el-menu-item>
+			       <el-menu-item index="1-2"    @click="goTocenter">  <el-icon class="font-extraSmall"><user /></el-icon> 个人中心</el-menu-item>
 				   <el-sub-menu index="1-3">
-				     <template #title>切换账号</template>
+				     <template #title><el-icon class="font-extraSmall"><Switch /></el-icon> 切换账号</template>
 				     <el-menu-item index="1-3-1" 
 					 @click="changeAccount(item)" 
 					 :class="item.isactive? 'active':''" 
@@ -64,9 +61,15 @@
 					 </el-menu-item>
 				     <el-menu-item index="1-3-1000" @click="bindVisible=true"><el-icon><people-plus    size="14"/></el-icon>添加账号</el-menu-item>
 				   </el-sub-menu>
-				   <el-menu-item index="1-7"  @click="handDocument">
-					  <el-icon class="font-extraSmall"><help  /></el-icon> 帮助文档
-				   </el-menu-item>
+				   <el-menu-item index="1-9"  @click="handToPage">
+				  <el-icon class="font-extraSmall"><connect-address-one /></el-icon> 常用地址
+			   </el-menu-item>
+			   <el-menu-item index="1-10"  @click="handleHelpQQ">
+				  <el-icon class="font-extraSmall"><headset-one /></el-icon> 问题反馈
+			   </el-menu-item>
+			   <el-menu-item index="1-7"  @click="handDocument">
+				  <el-icon class="font-extraSmall"><help  /></el-icon> 帮助文档
+			   </el-menu-item>
 				  <el-menu-item index="1-8"   @click="changeTheme" >
 					  <div class="message pointer" v-if="lightSkin">
 					  <el-icon class="font-extraSmall">	<brightness theme="outline"   /></el-icon>白天模式
@@ -75,14 +78,18 @@
 					  	<el-icon class="font-extraSmall"><moon theme="outline"   /></el-icon>黑夜模式
 					  </div>
 				  </el-menu-item>
-				   <el-menu-item index="1-6" v-if="isSSO()" @click="backOldsys">返回旧系统</el-menu-item>
-			       <el-menu-item index="1-4" @click="logout">退出</el-menu-item>
-				   <el-menu-item index="1-5" @click="clearCath">清缓存</el-menu-item>
+				   <el-menu-item index="1-6" v-if="isSSO()" @click="backOldsys"><el-icon class="font-extraSmall"><back /></el-icon> 返回旧系统</el-menu-item>
+			       <el-menu-item index="1-4" @click="logout"><el-icon class="font-extraSmall"><power /></el-icon> 退出</el-menu-item>
+				   <el-menu-item index="1-5" @click="clearCath"><el-icon class="font-extraSmall"><clear /></el-icon> 清缓存</el-menu-item>
 			     </el-sub-menu>
 			   </el-menu>
 			 
 		</div>
 	</div>
+	<!-- AI对话抽屉 -->
+	<el-drawer v-model="aiDrawerVisible" class="ai-drawer" title="AI智能助手" size="60%" :destroy-on-close="true">
+		<DeepSeek innerType="deepseek" :drawer-mode="true" />
+	</el-drawer>
 	<!-- 绑定账号 -->
 	 <el-dialog v-model="bindVisible" title="绑定其它账号" :destroy-on-close='true' width="560px" >
 	 			 <el-form :inline="true" :model="bindForm" class="form-width-fill" label-width="auto">
@@ -109,30 +116,35 @@
 <script setup>
 import { menuApi } from "@/api/sys/admin/menuApi.js"
 import userApi from '@/api/sys/admin/userApi.js'
-import { toggleDark } from "@/components/composables/index.js"
+import { toggleDarkWithAnimation } from "@/components/composables/index.js"
 import finStore from "@/hooks/store/useFinanceStore.js"
 import useUserStore from "@/hooks/store/useUserStore.js"
 import store from '@/store/index'
 import request from "@/utils/request.js"
-import { ArrowDown, Check } from '@element-plus/icons-vue'
+import { ArrowDown, Check, User, Back, Delete as Clear, Switch } from '@element-plus/icons-vue'
 import {
 	Brightness,
 	ConnectAddressOne,
 	HeadsetOne,
 	Help,
 	Moon,
+	People,
 	PeoplePlus,
+	Power,
+	RobotOne,
 } from '@icon-park/vue-next'
 import { ElMessage } from 'element-plus'
-import { computed, onMounted, reactive, ref, inject } from 'vue'
+import { computed, onMounted, reactive, ref, inject, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import RemindMessage from "../remind_message/index.vue";
+import DeepSeek from "@/views/sys/deepseek/index.vue";
 const emitter=inject("emitter");
 const router = useRouter()
 const route = useRoute()
 // 响应式数据
 const bindVisible = ref(false)
 const siteVisible = ref(false)
+const aiDrawerVisible = ref(false)
 const image = ref("")
 const name = ref("")
 const avatarName = ref("")
@@ -193,9 +205,13 @@ const handToPage = () => {
 	}, 1000)
 }
 
+const openAIDrawer = () => {
+	aiDrawerVisible.value = true
+}
+
 const changeTheme = () => {
 	lightSkin.value = !lightSkin.value
-	toggleDark()
+	toggleDarkWithAnimation()
 }
 
 const isSSO = () => {
@@ -327,14 +343,22 @@ router.beforeEach((to,from)=>{
   needGroup.value=to.path.indexOf("/fin/")>=0;
   activeName=to.query.title;
 	});
+// 监听路由变化，进入财务页面时才加载租户列表
+watch(needGroup, (newVal) => {
+	if (newVal && tenantAllList.value.length === 0) {
+		loadTenantList();
+	}
+})
+
 // 生命周期
 onMounted(() => {
 	getData();
-	loadTenantList();
   needGroup.value=route.path.indexOf("/fin/")>=0;
   activeName=route.query.title;
-
-	
+  // 只在财务页面加载租户列表，避免财务服务不可用时在其他页面弹出错误提示
+  if (needGroup.value) {
+    loadTenantList();
+  }
 })
 
 // 暴露给模板
@@ -352,6 +376,7 @@ defineExpose({
 	logout,
 	getDecode,
 	getData,
+	openAIDrawer,
 })
 </script>
 
@@ -427,6 +452,14 @@ defineExpose({
  .avatar .el-menu--horizontal>.el-sub-menu .el-sub-menu__title{
  	border-bottom:none;
  }
+ .ai-drawer .el-drawer__header{
+    align-items: center;
+    color: var(--el-text-color-primary);
+    display: flex;
+      margin-bottom: 0px !important; 
+    padding: var(--el-drawer-padding-primary);
+    padding-bottom: 0;
+}
 </style>
 <style scoped>
 .tenant-dropdown .el-dropdown{
@@ -470,5 +503,16 @@ defineExpose({
 		padding-top:5px !important;
 		padding-bottom:5px !important;
 		opacity: .66  !important;
+	}
+	:deep(.el-drawer__body) {
+		padding: 0 !important;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
+	:deep(.el-drawer__header) {
+		margin-bottom: 0 !important;
+		padding: 12px 16px !important;
+		border-bottom: 1px solid #e8eaec;
 	}
 </style>

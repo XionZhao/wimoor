@@ -3,7 +3,7 @@
 		<div class="flex-center">
 			<el-space>
 		<Group @change="groupChange" ref="groupRef"  :init="true"/>
-		<el-input v-model="queryParams.search" clearable  @input="handleQuery"  placeholder="请输入" class="input-with-select">
+		<el-input v-model="queryParams.search" clearable @clear="handleQuery" v-debounce-input="handleQuery"  placeholder="请输入" class="input-with-select">
 			<template #prepend>
 				<el-select v-model="queryParams.ftype" @change='handleQuery' style="width:100px;" placeholder="SKU">
 					<el-option label="平台SKU" value="sku">平台SKU</el-option>
@@ -81,10 +81,11 @@
 		total:10,
 		showmarket:false,
 		queryParams:{
-			pagesize:10,
-			currentpage:1,
-			ftype:'sku',
-		}
+		pagesize:10,
+		currentpage:1,
+		ftype:'sku',
+		search:''
+	}
 	})
 	const groupid = router.currentRoute.value.query.groupid;
 	const marketplaceid = router.currentRoute.value.query.marketplaceid;

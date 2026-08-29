@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.voucher.mapper.FinVoucherTemplateTypeMapper">
+
+    <resultMap type="com.wimoor.finance.voucher.domain.FinVoucherTemplateType" id="FinVoucherTemplateTypeResult">
+        <result property="id"    column="id"    />
+        <result property="groupid"    column="groupid"    />
+        <result property="name"    column="name"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="modifyBy"    column="modify_by"    />
+        <result property="createdTime"    column="created_time"    />
+        <result property="updatedTime"    column="updated_time"    />
+    </resultMap>
+
+    <sql id="selectFinVoucherTemplateTypeVo">
+        select id, groupid, name, create_by, modify_by, created_time, updated_time from fin_vouchers_template_type
+    </sql>
+
+    <select id="selectFinVoucherTemplateTypeList" parameterType="com.wimoor.finance.voucher.domain.FinVoucherTemplateType" resultMap="FinVoucherTemplateTypeResult">
+        <include refid="selectFinVoucherTemplateTypeVo"/>
+        <where>
+            <if test="name != null and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="groupid != null"> and groupid = #{groupid}</if>
+        </where>
+        order by created_time desc
+    </select>
+
+    <select id="selectFinVoucherTemplateTypeAll" parameterType="String" resultMap="FinVoucherTemplateTypeResult">
+        <include refid="selectFinVoucherTemplateTypeVo"/>
+        <where>
+            <if test="groupid != null"> and groupid = #{groupid}</if>
+        </where>
+        order by created_time desc
+    </select>
+
+    <select id="selectFinVoucherTemplateTypeById" parameterType="Long" resultMap="FinVoucherTemplateTypeResult">
+        <include refid="selectFinVoucherTemplateTypeVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFinVoucherTemplateType" parameterType="com.wimoor.finance.voucher.domain.FinVoucherTemplateType" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_vouchers_template_type
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="groupid != null">groupid,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="modifyBy != null and modifyBy != ''">modify_by,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="groupid != null">#{groupid},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="modifyBy != null and modifyBy != ''">#{modifyBy},</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateFinVoucherTemplateType" parameterType="com.wimoor.finance.voucher.domain.FinVoucherTemplateType">
+        update fin_vouchers_template_type
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="modifyBy != null and modifyBy != ''">modify_by = #{modifyBy},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinVoucherTemplateTypeById" parameterType="Long">
+        delete from fin_vouchers_template_type where id = #{id}
+    </delete>
+
+    <delete id="deleteFinVoucherTemplateTypeByIds" parameterType="Long">
+        delete from fin_vouchers_template_type where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -87,8 +87,29 @@ public class OSSApiUtil   {
 	                ossClient.shutdown();	// 关闭OSSClient。
 	            }
 	        }
-	        return true;
+	        // 上传后验证文件是否存在
+	        return verifyObjectExists(bucketName, objectName);
 		}
+		 
+		 /**
+		  * 验证OSS对象是否存在
+		  * @param bucketName
+		  * @param objectName
+		  * @return
+		  */
+		 public boolean verifyObjectExists(String bucketName, String objectName) {
+			 OSS ossClient = this.getClient();
+			 try {
+				 return ossClient.doesObjectExist(bucketName, objectName);
+			 } catch (Exception e) {
+				 System.out.println("Verify object exists failed: " + e.getMessage());
+				 return false;
+			 } finally {
+				 if (ossClient != null) {
+					 ossClient.shutdown();
+				 }
+			 }
+		 }
 		 
 		 public  void getObject(String bucketName, String objectName, ObjectHandler handler, Map<String,Object> param) {
 		        // 填写Bucket名称，例如examplebucket。

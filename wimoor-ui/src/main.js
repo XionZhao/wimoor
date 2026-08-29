@@ -10,6 +10,7 @@ import store from './store';
 import ElementPlus from 'element-plus';
 import { ElMessage } from 'element-plus';
 import { hasPerm, hasPermi, dataType } from '@/directive/permission.js';
+import { debounceInput } from '@/directive/debounce-input.js';
 import require from '@/utils/system/require.js';
 import print from 'vue3-print-nb';
 import plugins from './plugins' // plugins
@@ -86,6 +87,7 @@ app.use(hasPermi)
 app.use(dataType)
 app.use(print)
 app.use(plugins)
+app.directive('debounce-input', debounceInput)
 // 全局组件挂载
 app.use(elementIcons)
 app.component('svg-icon', SvgIcon)

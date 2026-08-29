@@ -1,11 +1,6 @@
 package com.wimoor.amazon.auth.pojo.entity;
 
-import java.math.BigInteger;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
+import cn.hutool.core.util.StrUtil;
 import com.amazon.spapi.SellingPartnerAPIAA.LWAException;
 import com.amazon.spapi.SellingPartnerAPIAA.RateLimitConfiguration;
 import com.amazon.spapi.client.ApiException;
@@ -17,10 +12,14 @@ import com.wimoor.amazon.auth.service.IAmzAuthApiTimelimitService;
 import com.wimoor.amazon.auth.service.impl.AmazonAuthorityServiceImpl;
 import com.wimoor.common.pojo.entity.BaseEntity;
 import com.wimoor.util.SpringUtil;
-
-import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.math.BigInteger;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -172,6 +171,37 @@ public class AmazonAuthority  extends  BaseEntity  implements RateLimitConfigura
 			}
 		}
 		
+	}
+	@com.fasterxml.jackson.annotation.JsonIgnore
+	public void setApiRateLimit(Exception e) {
+		IAmzAuthApiTimelimitService amzAuthApiTimelimitService=SpringUtil.getBean("amzAuthApiTimelimitService");
+		AmzAuthApiTimelimit limit = amzAuthApiTimelimitService.getApiLimit(this.getId(),  this.useApi);
+		if(limit==null) {
+			limit=new AmzAuthApiTimelimit();
+			limit.setAmazonauthid(new BigInteger(this.getId()));
+			limit.setApiname(this.useApi);
+			limit.setRestore(0.01);
+			limit.setLog(e!=null?e.getMessage():"unknown error");
+			limit.setLastuptime(new Date());
+			try {
+				amzAuthApiTimelimitService.save(limit);
+			}catch(Exception me) {
+				me.printStackTrace();
+			}
+		}else {
+			if(limit.getRestore()==0.01){
+				limit.setNexttoken(null);
+				limit.setPages(0);
+			}
+			limit.setRestore(0.01);
+			limit.setLog(e!=null?e.getMessage():"unknown error");
+			limit.setLastuptime(new Date());
+			try {
+				amzAuthApiTimelimitService.update(limit);
+			}catch(Exception me) {
+				me.printStackTrace();
+			}
+		}
 	}
 	private void setRateLimit(AmzAuthApiTimelimit limit ,Map<String, List<String>> responseHeaders,ApiException e) {
 		String log=null;

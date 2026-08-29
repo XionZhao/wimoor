@@ -17,33 +17,46 @@
 -- 导出  事件 db_amazon.autoRefreshInsert 结构
 DELIMITER //
 CREATE EVENT `autoRefreshInsert` ON SCHEDULE EVERY 1 DAY STARTS '2025-04-08 17:47:39' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
-INSERT ignore into t_amz_product_refresh 
-		SELECT i.id,i.amazonauthid,
-		str_to_date('1949-10-01 00:00:00', '%Y-%m-%d %H:%i:%s'),
-		str_to_date('1949-10-01 00:00:00', '%Y-%m-%d %H:%i:%s'),
-		str_to_date('1949-10-01 00:00:00', '%Y-%m-%d %H:%i:%s'),
-		i.sku,i.asin,i.marketplaceid,i.isparent,i.invalid
-		FROM t_product_info i
-		LEFT JOIN t_amz_product_refresh r ON r.pid=i.id
-		LEFT JOIN t_amazon_auth a ON a.id=i.amazonauthid
-		WHERE a.`disable`=0 
-		AND i.invalid=0  
-		AND a.createtime>DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
-		AND r.pid IS NULL ;
+-- 插入新产品的刷新记录（三种类型）
+INSERT ignore into t_amz_product_refresh_type (pid, amazonauthid, type, refresh_time)
+SELECT i.id, i.amazonauthid, t.type, str_to_date('1949-10-01 00:00:00', '%Y-%m-%d %H:%i:%s')
+FROM t_product_info i
+CROSS JOIN (
+    SELECT 1 as type UNION ALL
+    SELECT 2 UNION ALL
+    SELECT 3
+) t
+LEFT JOIN t_amz_product_refresh_type r ON r.pid = i.id AND r.type = t.type
+LEFT JOIN t_amazon_auth a ON a.id = i.amazonauthid
+WHERE a.`disable` = 0
+AND i.invalid = 0
+AND a.createtime > DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+AND r.pid IS NULL ;
 
-UPDATE (SELECT  pid,MAX(opttime) opttime from t_amz_product_price_record   
-       where enddate>=DATE_SUB(NOW(),INTERVAL 1 DAY) AND enddate<NOW() GROUP BY pid) v
-LEFT JOIN t_amz_product_price_record r ON r.pid=v.pid and r.opttime=v.opttime
-LEFT JOIN t_product_in_opt o ON o.pid=r.pid
-LEFT JOIN t_amz_product_refresh i ON i.pid=o.pid
-SET i.price_refresh_time=null
- WHERE  i.pid IS NOT NULL 	;
-  
-update t_amz_product_price_record r
-LEFT JOIN t_product_in_opt o ON o.pid=r.pid
-LEFT JOIN t_amz_product_refresh i ON i.pid=o.pid
-SET i.price_refresh_time=null
- WHERE r.enddate>=DATE_SUB(NOW(),INTERVAL 1 DAY) AND r.enddate<NOW() AND i.pid IS NOT NULL 	;
+-- 重置价格刷新时间
+UPDATE t_amz_product_refresh_type r
+LEFT JOIN t_product_in_opt o ON o.pid = r.pid
+SET r.refresh_time = NULL
+WHERE r.type = 2
+AND r.pid IN (
+    SELECT pid FROM (
+        SELECT pid, MAX(opttime) opttime
+        FROM t_amz_product_price_record
+        WHERE enddate >= DATE_SUB(NOW(), INTERVAL 1 DAY) AND enddate < NOW()
+        GROUP BY pid
+    ) v
+)
+AND r.refresh_time IS NOT NULL ;
+
+UPDATE t_amz_product_refresh_type r
+LEFT JOIN t_product_in_opt o ON o.pid = r.pid
+SET r.refresh_time = NULL
+WHERE r.type = 2
+AND r.pid IN (
+    SELECT pid FROM t_amz_product_price_record
+    WHERE enddate >= DATE_SUB(NOW(), INTERVAL 1 DAY) AND enddate < NOW()
+)
+AND r.refresh_time IS NOT NULL ;
 
 delete from t_report_requestrecord WHERE reportType IN(
 'GET_FBA_FULFILLMENT_LONGTERM_STORAGE_FEE_CHARGES_DATA',

@@ -2,7 +2,7 @@
 <template>
   <div  class="flex-between">
     <el-space style="margin-bottom: 20px;">
-      <Group @change="groupChange" />
+      <Group @change="groupChange"   defaultValue="only" />
       <div>
         <Datepicker ref="datepickers" :shortIndex="1" @changedate="changedate" />
       </div>
@@ -190,7 +190,7 @@
                 <td><span v-if="formData['Promotional rebate refunds']&&formData['Promotional rebate refunds']<0" >{{outputmoney(formData['Promotional rebate refunds'])}}</span></td>
                 <td><span v-if="formData['Promotional rebate refunds']&&formData['Promotional rebate refunds']>=0" >{{outputmoney(formData['Promotional rebate refunds'])}}</span></td>
               </tr>
-<!--            <tr v-if="!formData.income || formData.income.length === 0">
+              <!--            <tr v-if="!formData.income || formData.income.length === 0">
                 <td>A-to-z Guarantee claims <span v-if="formData['A-to-z Guarantee claims_rmb']" class="font-extraSmall">(RMB:{{outputmoney(formData['A-to-z Guarantee claims_rmb'])}})</span></td>
                 <td><span v-if="formData['A-to-z Guarantee claims']&&formData['A-to-z Guarantee claims']<0" >{{outputmoney(formData['A-to-z Guarantee claims'])}}</span></td>
                 <td><span v-if="formData['A-to-z Guarantee claims']&&formData['A-to-z Guarantee claims']>=0" >{{outputmoney(formData['A-to-z Guarantee claims'])}}</span></td>
@@ -235,11 +235,6 @@
                 <td><span v-if="formData['Amazon Shipping Reimbursement Adjustments']&&formData['Amazon Shipping Reimbursement Adjustments']>=0" >{{outputmoney(formData['Amazon Shipping Reimbursement Adjustments'])}}</span></td>
                 <td><span v-if="formData['Amazon Shipping Reimbursement Adjustments']&&formData['Amazon Shipping Reimbursement Adjustments']<0" >{{outputmoney(formData['Amazon Shipping Reimbursement Adjustments'])}}</span></td>
               </tr>-->
-              <tr v-if="!formData.income || formData.income.length === 0">
-                  <td>Others <span v-if="formData['Others_rmb']" class="font-extraSmall">(RMB:{{outputmoney(formData['Others_rmb'])}})</span></td>
-                  <td><span v-if="formData['Others']&&formData['Others']<0" >{{outputmoney(formData['Others'])}}</span></td>
-                  <td><span v-if="formData['Others']&&formData['Others']>=0" >{{outputmoney(formData['Others'])}}</span></td>
-              </tr>
               <tr class="subtotal">
                 <td>subtotals</td>
                 <td>{{ outputmoney(incomeSubtotalDebits) }}</td>
@@ -360,6 +355,11 @@
                   <td>Liquidations fees <span v-if="formData['Liquidations fees_rmb']" class="font-extraSmall">(RMB:{{outputmoney(formData['Liquidations fees_rmb'])}})</span></td>
                   <td><span v-if="formData['Liquidations fees']&&formData['Liquidations fees']<0" >{{outputmoney(formData['Liquidations fees'])}}</span></td>
                   <td><span v-if="formData['Liquidations fees']&&formData['Liquidations fees']>=0" >{{outputmoney(formData['Liquidations fees'])}}</span></td>
+                </tr>
+                <tr v-if="!formData.expenses || formData.expenses.length === 0">
+                  <td>Others <span v-if="formData['Others_rmb']" class="font-extraSmall">(RMB:{{outputmoney(formData['Others_rmb'])}})</span></td>
+                  <td><span v-if="formData['Others']&&formData['Others']<0" >{{outputmoney(formData['Others'])}}</span></td>
+                  <td><span v-if="formData['Others']&&formData['Others']>=0" >{{outputmoney(formData['Others'])}}</span></td>
                 </tr>
 <!--                <tr v-if="!formData.expenses || formData.expenses.length === 0">
                   <td>Amazon Shipping Charges <span v-if="formData['Amazon Shipping Charges_rmb']" class="font-extraSmall">(RMB:{{outputmoney(formData['Amazon Shipping Charges_rmb'])}})</span></td>
@@ -594,8 +594,7 @@ const incomeSubtotalDebits = computed(() => {
       'Product sale refunds (non-FBA)',
       'Shipping credits',
       'Shipping credit refunds',
-      'Amazon Shipping Reimbursement Adjustments',
-      'Others'
+      'Amazon Shipping Reimbursement Adjustments'
     ];
     incomeFields.forEach(field => {
       const value = formData.value[field];
@@ -638,8 +637,7 @@ const incomeSubtotalCredits = computed(() => {
       'Product sale refunds (non-FBA)',
       'Shipping credits',
       'Shipping credit refunds',
-      'Amazon Shipping Reimbursement Adjustments',
-      "Others"
+      'Amazon Shipping Reimbursement Adjustments'
     ];
     incomeFields.forEach(field => {
       const value = formData.value[field];
@@ -678,6 +676,7 @@ const expensesSubtotalDebits = computed(() => {
       'Refund for Advertiser',
       'Commingling VAT',
       'Liquidations fees',
+      'Others',
       'Amazon Shipping Charges',
       'Receivables Deductions',
       'Shipping label purchases',
@@ -721,6 +720,7 @@ const expensesSubtotalCredits = computed(() => {
       'Refund for Advertiser',
       'Commingling VAT',
       'Liquidations fees',
+      'Others',
       'Amazon Shipping Charges',
       'Receivables Deductions',
       'Shipping label purchases',

@@ -14,7 +14,6 @@
         <wimoor.version>2.0.0</wimoor.version>
 	</properties>
     <dependencies>
- 
         <!-- 远程调用HTTP客户端 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>

@@ -13,17 +13,23 @@
 			      fit="cover"
 			    />
 			<el-image v-else style="width: 148px; height: 148px;"  :src="$require('empty/noimage40.png')" alt="暂无图片" ></el-image>
-			<el-button link type="info"  v-if="baseInfo.location && baseInfo.location!=undefined"  style="position: relative;top: -135px;margin-left: 25px;">扩展图片</el-button>
-			<el-image
-			      v-if="baseInfo.location && baseInfo.location!=undefined" 
-				  style="width: 148px; height: 148px;margin-left: 35px;" 
-				  :src="baseInfo.location"
-			      :zoom-rate="1.2"
-			      :preview-src-list="[baseInfo.location]"
-			      :initial-index="4"
-			      fit="cover"
-			    />
-			 
+		</el-descriptions-item>
+		<el-descriptions-item label="附件" v-if="attachmentList.length > 0" :span="2">
+			<div style="display:flex;gap:10px;flex-wrap:wrap;">
+				<div v-for="(item, index) in attachmentList" :key="item.id" class="attachment-item">
+					<el-image
+						v-if="item.fileType && item.fileType.startsWith('image')"
+						style="width: 148px; height: 148px"
+						:src="item.filePath"
+						:preview-src-list="attachmentList.filter(a=>a.fileType && a.fileType.startsWith('image')).map(a=>a.filePath)"
+						fit="cover"
+					/>
+					<div v-else class="file-icon-box" @click="downloadFile(item)">
+						<el-icon style="font-size:40px;color:#909399;"><Document /></el-icon>
+						<div class="file-name">{{item.fileName}}</div>
+					</div>
+				</div>
+			</div>
 		</el-descriptions-item>
 	    <el-descriptions-item label="产品名称"  :span="2">{{baseInfo.name}}</el-descriptions-item>
 	    <el-descriptions-item  label="SKU" :span="2">{{baseInfo.sku}}</el-descriptions-item>
@@ -173,11 +179,15 @@
 						<el-tag type="info" v-else> 备选</el-tag>
 						</div>
 						<div><span class="font-extraSmall">供货周期:</span>{{scope.row.deliverycycle}}天</div>
-						<div><span class="font-extraSmall">采购链接:</span>{{scope.row.purchaseUrl}} 
-						     <el-link target="_blank" :href="scope.row.purchaseUrl" type="primary">
+						<div><span class="font-extraSmall">采购链接:</span>
+					     <template v-if="scope.row.purchaseUrl">
+							 {{scope.row.purchaseUrl}}
+							 <el-link target="_blank" :href="scope.row.purchaseUrl" type="primary">
 							     <el-icon><Link /></el-icon>打开链接
-						     </el-link>
-					    </div>
+							 </el-link>
+						 </template>
+						 <span v-else>暂无链接</span>
+				    </div>
 					</template>
 				</el-table-column>
         <el-table-column label="其他信息" prop="productCode" width="310">
@@ -450,7 +460,7 @@
 <script setup>
 import '@/assets/css/packbox_table.css'
 import { ref,reactive,toRefs,} from 'vue'
-import {Edit,Link} from '@element-plus/icons-vue';
+import {Edit,Link,Document} from '@element-plus/icons-vue';
 import {useRouter } from 'vue-router'
 import {ElMessage } from 'element-plus';
 import {dateFormat} from '@/utils/index.js';
@@ -459,6 +469,7 @@ import inventoryApi from '@/api/erp/inventory/inventoryApi.js';
 import inventoryRptApi from '@/api/amazon/inventory/inventoryRptApi.js';
 import fbaCycleApi from '@/api/amazon/inbound/fbacycleApi.js';
 import warehouseApi from '@/api/erp/warehouse/warehouseApi.js';
+import materialApi from '@/api/erp/material/materialApi.js';
 import Template_item_edit from "@/views/finance/report/templates/components/template_item_edit.vue";
 
 		let router = useRouter();
@@ -483,11 +494,12 @@ import Template_item_edit from "@/views/finance/report/templates/components/temp
 			fbainventoryList:[],
 			localtype:'self_usable',
 			nowid:'',
+			attachmentList:[],
 		})
 		
 		let{
 			activeName,baseInfo,tagNameList,assemblyList,supplierList,
-			itemDim,pkgDim,boxDim,consList,consPList,logistics,custom,logisItemList,parentList,inventoryList,fbainventoryList,localtype,nowid
+			itemDim,pkgDim,boxDim,consList,consPList,logistics,custom,logisItemList,parentList,inventoryList,fbainventoryList,localtype,nowid,attachmentList
 		}=toRefs(state)
 		function loadData(datas){
 			state.baseInfo=datas.material;
@@ -512,6 +524,25 @@ import Template_item_edit from "@/views/finance/report/templates/components/temp
 			state.logisItemList=datas.customsItemList;
 			state.parentList=datas.parentList;
 			loadInventory(datas.material.id,datas.material.sku);
+			loadAttachments(datas.material.id);
+		}
+		function loadAttachments(materialid){
+			if(materialid){
+				materialApi.getAttachments(materialid).then((res)=>{
+					if(res.data){
+						state.attachmentList=res.data;
+					}
+				});
+			}
+		}
+		function downloadFile(item){
+			const link=document.createElement('a');
+			link.href=item.filePath;
+			link.download=item.fileName;
+			link.target='_blank';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
 		}
 		function gotoDetails(mids){
 			router.push({
@@ -633,5 +664,33 @@ import Template_item_edit from "@/views/finance/report/templates/components/temp
 }
 .table-label {
   background-color: var(--el-bg-color);
+}
+.attachment-item {
+  position: relative;
+}
+.file-icon-box {
+  width: 148px;
+  height: 148px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #f5f7fa;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  gap: 4px;
+}
+.file-icon-box:hover {
+  border-color: #409eff;
+}
+.file-name {
+  width: 130px;
+  font-size: 11px;
+  color: #606266;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

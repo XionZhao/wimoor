@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,4 +19,7 @@ import java.util.Map;
 public interface AmazonAdvFeignClient {
     @PostMapping("/amazonadv/api/v1/ads/invoices/getInvoicesSummary")
     public Result<Map<String,Object>> getInvoicesSummaryAction(@RequestBody Map<String,Object> param);
+
+    @PostMapping("/amazonadv/api/v1/advReport/getCostGroupByMonth")
+    public Result<List<Map<String, Object>>> getCostGroupByMonth(@RequestBody Map<String, Object> param);
 }

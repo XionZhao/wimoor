@@ -1,0 +1,448 @@
+﻿{
+    "module":  "Amazon数据汇总",
+    "description":  "Amazon店铺销售数据汇总、图表分析、Top商品排名、订单统计等数据看板查询",
+    "service":  "wimoor-amazon",
+    "tools":  [
+                  {
+                      "name":  "amz_query_dashboard_summary",
+                      "description":  "查询Amazon数据看板汇总信息，返回店铺整体销售、退货、广告等核心指标概览",
+                      "menu_id":  121,
+                      "endpoint":  "/amazon/api/v1/summary/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_chart_sales",
+                      "description":  "查询销售趋势图表数据，按天维度展示销售额和订单数变化曲线",
+                      "menu_id":  121,
+                      "endpoint":  "/amazon/api/v1/summary/queryChartSales",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取，全选时传\u0027all\u0027"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "beginDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "labels":  "日期标签数组",
+                                              "quantityList":  "每日销量数组",
+                                              "orderNumberList":  "每日订单数数组"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_chart_return",
+                      "description":  "查询退货趋势图表数据，按天维度展示退货数量变化曲线",
+                      "menu_id":  121,
+                      "endpoint":  "/amazon/api/v1/summary/queryChartReturn",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "beginDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "labels":  "日期标签数组",
+                                              "quantityList":  "每日退货数量数组"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_chart_market",
+                      "description":  "查询各站点/市场销售分布数据，展示不同国家站点的销售占比",
+                      "menu_id":  121,
+                      "endpoint":  "/amazon/api/v1/summary/queryChartMarket",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "beginDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "purchase_date":  "日期",
+                                              "quantity":  "销量",
+                                              "ordernumber":  "订单数",
+                                              "marketplaceid":  "站点ID",
+                                              "sales_channel":  "销售渠道"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_sales_summary",
+                      "description":  "查询销售人员销量排名，按天维度展示各销售人员的销售业绩",
+                      "menu_id":  121,
+                      "endpoint":  "/amazon/api/v1/summary/querySales",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "daytype":  {
+                                                     "type":  "integer",
+                                                     "description":  "天数类型，如7、15、30，表示统计最近N天的数据"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+                                       "daytype"
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：userid(用户ID)、name(销售人员名称)、location(头像URL)、quantity(销售数量)、orderprice(订单金额)、daytype(统计天数类型)、oldorderprice(上期订单金额)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_top5_products",
+                      "description":  "查询销售Top5商品排名，展示销量最好的前5个商品",
+                      "menu_id":  121,
+                      "endpoint":  "/amazon/api/v1/summary/top5",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "beginDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "groupname":  "店铺名称",
+                                              "marketname":  "站点名称",
+                                              "catename":  "分类名称",
+                                              "image":  "商品图片",
+                                              "name":  "商品名称",
+                                              "sku":  "SKU编码",
+                                              "quantity":  "销量",
+                                              "orderprice":  "销售额",
+                                              "fulfillable":  "可售库存"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_order_total",
+                      "description":  "查询订单总体汇总数据，包含近12个月的订单金额和数量统计",
+                      "menu_id":  121,
+                      "endpoint":  "/amazon/api/v1/salessum/getOrderTotal",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "startdate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd，查询从此日期起到当前的汇总数据"
+                                                   }
+                                 },
+                      "required":  [
+                                       "startdate"
+                                   ],
+                      "response_fields":  {
+                                              "orderpricesum":  "订单总金额",
+                                              "ordersum":  "订单总数",
+                                              "purchase_date":  "按月分组的日期键，对应值包含该月orderprice和ordersum"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_chart_sales_summary",
+                      "description":  "查询销售汇总图表数据，综合展示多维度销售趋势",
+                      "menu_id":  121,
+                      "endpoint":  "/amazon/api/v1/summary/queryChartSalesSummary",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "beginDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "labels":  "日期标签数组",
+                                              "quantityList":  "每日销量数组",
+                                              "orderNumberList":  "每日订单数数组"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_chart_return_summary",
+                      "description":  "查询退货汇总图表数据，综合展示退货趋势",
+                      "menu_id":  121,
+                      "endpoint":  "/amazon/api/v1/summary/queryChartReturnSummary",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "beginDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "labels":  "日期标签数组",
+                                              "quantityList":  "每日退货数量数组"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_summary_performance",
+                      "description":  "查询店铺绩效汇总数据，包括销售表现、流量、转化率等综合指标",
+                      "menu_id":  121,
+                      "endpoint":  "/amazon/api/v1/summary/sumPerformance",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "orderDefectRate":  "订单缺陷率",
+                                              "orderDefectRateTargetValue":  "订单缺陷率目标值",
+                                              "policyTargetValue":  "政策违规目标值",
+                                              "policyDefectsCount":  "政策违规数量",
+                                              "validTrackingRate":  "有效追踪率",
+                                              "validTrackingRateTargetValue":  "有效追踪率目标值",
+                                              "lateShipmentRate":  "迟发率",
+                                              "lateShipmentRateTargetValue":  "迟发率目标值",
+                                              "cancelRate":  "预售取消率",
+                                              "cancelRateTargetValue":  "预售取消率目标值",
+                                              "invoiceDefectRate":  "发票缺陷率",
+                                              "invoiceDefectRateTargetValue":  "发票缺陷率目标值",
+                                              "refreshTime":  "数据刷新时间"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_order_data",
+                      "description":  "查询订单汇总明细数据，按SKU维度展示销售统计，支持分页",
+                      "menu_id":  121,
+                      "endpoint":  "/amazon/api/v1/salessum/getOrderData",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplace":  {
+                                                         "type":  "string",
+                                                         "description":  "站点ID"
+                                                     },
+                                     "region":  {
+                                                    "type":  "string",
+                                                    "description":  "区域代码，如NA、EU、FE"
+                                                },
+                                     "owner":  {
+                                                   "type":  "string",
+                                                   "description":  "产品负责人ID"
+                                               },
+                                     "color":  {
+                                                   "type":  "string",
+                                                   "description":  "产品颜色"
+                                               },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持SKU搜索"
+                                                },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             },
+                                     "fromdatestr":  {
+                                                         "type":  "string",
+                                                         "description":  "开始日期，格式：yyyy/MM/dd"
+                                                     },
+                                     "enddatestr":  {
+                                                        "type":  "string",
+                                                        "description":  "结束日期，格式：yyyy/MM/dd"
+                                                    },
+                                     "summaryType":  {
+                                                         "type":  "string",
+                                                         "description":  "汇总维度：day(按天)、week(按周)、month(按月)"
+                                                     },
+                                     "summaryData":  {
+                                                         "type":  "string",
+                                                         "description":  "汇总数据类型，默认quantity"
+                                                     },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "SKU编码",
+                                              "quantity":  "销量",
+                                              "orderprice":  "订单金额",
+                                              "ordernumber":  "订单数",
+                                              "purchase_date":  "日期",
+                                              "marketplaceid":  "站点ID",
+                                              "region":  "区域",
+                                              "owner":  "负责人",
+                                              "color":  "颜色"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_order_sum_field",
+                      "description":  "查询订单汇总字段配置，获取可用的汇总统计字段列表",
+                      "menu_id":  121,
+                      "endpoint":  "/amazon/api/v1/salessum/getOrderSumField",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplace":  {
+                                                         "type":  "string",
+                                                         "description":  "站点ID"
+                                                     },
+                                     "region":  {
+                                                    "type":  "string",
+                                                    "description":  "区域代码"
+                                                },
+                                     "owner":  {
+                                                   "type":  "string",
+                                                   "description":  "产品负责人ID"
+                                               },
+                                     "color":  {
+                                                   "type":  "string",
+                                                   "description":  "产品颜色"
+                                               },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                },
+                                     "fromdatestr":  {
+                                                         "type":  "string",
+                                                         "description":  "开始日期，格式：yyyy/MM/dd"
+                                                     },
+                                     "enddatestr":  {
+                                                        "type":  "string",
+                                                        "description":  "结束日期，格式：yyyy/MM/dd"
+                                                    },
+                                     "summaryType":  {
+                                                         "type":  "string",
+                                                         "description":  "汇总维度：day、week、month"
+                                                     }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "name":  "字段显示名称（如\u002706月23日\u0027）",
+                                              "label":  "字段标识（如\u0027v20260623\u0027，用于数据查询key）"
+                                          }
+                  }
+              ]
+}

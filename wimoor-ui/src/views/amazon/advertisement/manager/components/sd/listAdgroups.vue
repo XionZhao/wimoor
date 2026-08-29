@@ -5,13 +5,13 @@
 				<el-option v-for="item in adStatesOptions" :label="item.name" :value="item.value"></el-option>
 			</el-select>
 			<DateSelect @setDate="setDate" @dateTypeSwitch="handleQuery"/>
-			<el-input v-model="queryParams.search" clearable @input="handleQuery" placeholder="搜索广告组名称">
-					 <template #suffix>
-					  <el-icon @click.stop="handleQuery"><Search /></el-icon>
-					 </template>
-			</el-input>	
-			<el-button @click="clearSearch">重置</el-button>
-			<DataFilter :activeName="activeName"  @change="changeDataFilter"/>
+			<el-input v-model="queryParams.search" clearable @clear="handleQuery" v-debounce-input="handleQuery" placeholder="搜索广告组名称">
+				 <template #suffix>
+				  <el-icon @click.stop="handleQuery"><Search /></el-icon>
+				 </template>
+		</el-input>	
+		<el-button @click="clearSearch">重置</el-button>
+		<DataFilter :activeName="activeName"  @change="changeDataFilter"/>
 		</el-space>
 	</el-row>
 	<el-row class="flex-center-between">

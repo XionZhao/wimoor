@@ -1,0 +1,83 @@
+{
+  "module": "帮助文档",
+  "description": "帮助文档查询模块，用于搜索和获取系统帮助文档内容，为用户提供操作指导",
+  "tools": [
+    {
+      "name": "helpdoc_search",
+      "description": "根据关键词搜索帮助文档，返回相关的文档内容。用于回答用户关于系统操作、功能使用等问题。支持按关键词、分类搜索。",
+      "menu_id": null,
+      "endpoint": "/admin/api/v1/help-doc/search",
+      "method": "GET",
+      "service": "wimoor-admin",
+      "params": {
+        "keyword": {"type": "string", "description": "搜索关键词，如：采购、库存、发货、盘点、订单等"},
+        "category": {"type": "string", "description": "文档分类，可选值：erp、amazon、finance、setting"},
+        "limit": {"type": "integer", "description": "返回数量限制，默认3"}
+      },
+      "required": [],
+      "response_fields": {
+        "docKey": "文档标识",
+        "title": "文档标题",
+        "category": "文档分类",
+        "content": "文档内容（Markdown格式，包含详细的操作指南）",
+        "relatedDocs": "关联文档标识（逗号分隔）"
+      },
+      "example_queries": [
+        "如何创建采购单",
+        "库存盘点怎么操作",
+        "发货到FBA的步骤",
+        "怎么看FBA库存",
+        "订单管理在哪里",
+        "怎么录入凭证",
+        "如何添加用户",
+        "广告怎么设置"
+      ]
+    },
+    {
+      "name": "helpdoc_get",
+      "description": "根据文档标识获取帮助文档的完整内容。用于获取特定功能模块的详细操作指南。",
+      "menu_id": null,
+      "endpoint": "/admin/api/v1/help-doc/get",
+      "method": "GET",
+      "service": "wimoor-admin",
+      "params": {
+        "docKey": {"type": "string", "description": "文档标识，如：purchase、inventory、stocktake、shipment、fba_inventory、order、advertising、finance、setting"}
+      },
+      "required": ["docKey"],
+      "response_fields": {
+        "docKey": "文档标识",
+        "title": "文档标题",
+        "category": "文档分类",
+        "content": "文档内容（Markdown格式，包含详细的操作指南、注意事项、相关模块等）",
+        "keywords": "关键词",
+        "relatedDocs": "关联文档标识"
+      },
+      "available_doc_keys": [
+        {"docKey": "purchase", "title": "采购管理", "category": "erp"},
+        {"docKey": "inventory", "title": "库存管理", "category": "erp"},
+        {"docKey": "stocktake", "title": "库存盘点", "category": "erp"},
+        {"docKey": "shipment", "title": "发货管理", "category": "erp"},
+        {"docKey": "fba_inventory", "title": "FBA库存管理", "category": "amazon"},
+        {"docKey": "order", "title": "订单管理", "category": "amazon"},
+        {"docKey": "advertising", "title": "广告管理", "category": "amazon"},
+        {"docKey": "finance", "title": "财务管理", "category": "finance"},
+        {"docKey": "setting", "title": "系统设置", "category": "setting"}
+      ]
+    },
+    {
+      "name": "helpdoc_index",
+      "description": "获取所有帮助文档的索引列表，用于了解系统有哪些功能模块的帮助文档可供查询。",
+      "menu_id": null,
+      "endpoint": "/admin/api/v1/help-doc/index",
+      "method": "GET",
+      "service": "wimoor-admin",
+      "params": {},
+      "required": [],
+      "response_fields": {
+        "category": "分类标识",
+        "categoryName": "分类名称",
+        "docs": "该分类下的文档列表（包含docKey、title、keywords）"
+      }
+    }
+  ]
+}

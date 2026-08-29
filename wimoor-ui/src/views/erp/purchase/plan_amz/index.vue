@@ -156,8 +156,9 @@
 		</el-table-column>
        
 	<el-table-column label="建议采购"
-		prop="needpurchase"  
-		:sort-orders="sortOrders" sortable='custom' 
+		prop="needpurchase"
+		sort-by="reallyamount"
+		:sort-orders="sortOrders" sortable='custom'
 		 width="110">
 	 	<template #default="scope">
 			<div class="font-bold font-gray">

@@ -1,0 +1,866 @@
+﻿{
+    "module":  "Amazon入库管理",
+    "description":  "Amazon FBA入库货件管理、发货记录、物流报表、入库商品批次、收货地址、FBA配送中心、FBA补货周期等入库全流程查询",
+    "service":  "wimoor-amazon",
+    "tools":  [
+                  {
+                      "name":  "amz_query_inbound_shipment",
+                      "description":  "查询FBA入库货件同步列表，展示货件状态、物流信息、商品明细等",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/shipFormSync/getSyncList",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "货件ID搜索关键词"
+                                                },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "marketplaceid"
+                                   ],
+                      "response_fields":  {
+                                              "shipmentid":  "货件ID",
+                                              "name":  "货件名称",
+                                              "status":  "内部审核状态(0=驳回,2=已审核,5=已发货,6=已结束)",
+                                              "shipmentstatus":  "亚马逊货件状态(如WORKING/SHIPPED/RECEIVING/CLOSED等)",
+                                              "groupid":  "店铺分组ID",
+                                              "groupname":  "店铺分组名称",
+                                              "marketplaceid":  "站点ID",
+                                              "countryCode":  "国家代码",
+                                              "centerId":  "目标FBA配送中心ID",
+                                              "skuamount":  "SKU数量",
+                                              "sumQuantity":  "总发货量",
+                                              "sumshipped":  "实际发货数量",
+                                              "sumrec":  "已接收数量",
+                                              "warehouse":  "仓库名称",
+                                              "warehouseid":  "仓库ID",
+                                              "country":  "国家名称",
+                                              "number":  "单据编码",
+                                              "createdate":  "创建日期",
+                                              "auditime":  "审核时间",
+                                              "shopdate":  "发货日期",
+                                              "arrivalTime":  "预计到货日期",
+                                              "company":  "物流公司",
+                                              "transtype":  "运输方式ID",
+                                              "transtypename":  "运输方式名称",
+                                              "ordernum":  "物流追踪编码",
+                                              "remark":  "备注"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_ship_record",
+                      "description":  "查询FBA发货记录列表，展示历史发货记录和入库进度",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/shipInboundPlan/getShipRecord",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码，用于筛选特定商品的发货记录"
+                                             }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "marketplaceid"
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：shipmentid(货件ID)、shipmentname(货件名称)、status(状态)、shipdate(发货日期)、quantity(发货数量)、quantityreceived(收货数量)、marketplaceid(站点)、carrier(承运商)、isbad(是否存在异常1=异常)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_ship_record_by_market",
+                      "description":  "按站点查询FBA发货记录，展示不同站点的发货统计",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/shipInboundPlan/getShipRecordByMarket",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "marketplaceid":  "站点ID",
+                                              "createdate":  "创建日期",
+                                              "Quantity":  "发货数量",
+                                              "status":  "内部状态码",
+                                              "shipmentstatus":  "亚马逊货件状态名称"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_ship_time_list",
+                      "description":  "查询FBA发货时间列表，展示货件的物流时效数据",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/shipInboundItem/getShipTimeList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             },
+                                     "msku":  {
+                                                  "type":  "string",
+                                                  "description":  "母SKU编码"
+                                              },
+                                     "startDate":  {
+                                                       "type":  "string",
+                                                       "description":  "开始日期，格式：yyyy-MM-dd"
+                                                   },
+                                     "endDate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：sku(SKU编码)、qty(发货数量)、msku(母SKU)、name(产品名称)、wname(仓库名称)、gname(店铺名称)、marketname(站点名称)、createdate(创建日期)、shipmentid(货件ID)、approveDate(审核日期)、shipDate(发货日期)、boxDate(装箱日期)、pickDate(配货日期)、placementDate(分配日期)、transportationDate(运输日期)、doneDate(完成日期)、labelDate(贴标日期)、traceDate(追踪日期)、customsDate(清关日期)、shippedDate(发货确认日期)、receiveDate(收货日期)、endDate(结束日期)、image(产品图片URL)、shipdays(发货天数)、receivedays(收货天数)、days(总天数)、company(物流公司)、logitics(物流公司名称)、channame(渠道名称)、subarea(分区)、channelname(渠道名称)、transtype(运输类型)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_shipment_report",
+                      "description":  "查询FBA入库物流报表，按时间段汇总发货数据",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/ship/report/getShipmentReport",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "fromdate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "enddate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型"
+                                                    },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型"
+                                                  },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：ShipmentId(货件ID)、groupname(店铺名称)、market(国家代码)、center(目标FBA配送中心)、warehouse(仓库名称)、createdate(创建日期)、shiped_date(发货日期)、arrivalTime(预计到货日期)、company(物流公司)、channame(渠道名称)、skunum(SKU数量)、number(单据编码)、qtyshipped(发货数量)、qtyreceived(收货数量)、otherfee(其他费用)、price(运费)、singleprice(单价)、transweight(计费重量)、totalprice(总费用)、wunit(重量单位)、weightkg(重量)、shipmentstatus(货件状态名称)、sumrec(已接收数量)、status(内部状态码)、start_receive_date(开始接收日期)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_shipment_report_by_logistics",
+                      "description":  "查询FBA入库物流商维度报表，按物流商汇总发货和运费数据",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/ship/report/getShipmentReportByLoistics",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "companyid":  {
+                                                       "type":  "string",
+                                                       "description":  "物流公司ID"
+                                                   },
+                                     "channelid":  {
+                                                       "type":  "string",
+                                                       "description":  "渠道ID"
+                                                   },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "type":  {
+                                                  "type":  "string",
+                                                  "description":  "类型"
+                                              },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型"
+                                                  },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型"
+                                                    },
+                                     "groupby":  {
+                                                     "type":  "array",
+                                                     "description":  "分组维度列表"
+                                                 },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含物流公司维度的汇总字段（company/shipmentcount/totalquantity/totalfee/avgfeeperunit/currency等）",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_shipment_report_by_warehouse_logistics",
+                      "description":  "查询FBA入库仓库+物流商维度交叉报表",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/ship/report/getShipmentReportByWarehouseLoistics",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "companyid":  {
+                                                       "type":  "string",
+                                                       "description":  "物流公司ID"
+                                                   },
+                                     "channelid":  {
+                                                       "type":  "string",
+                                                       "description":  "渠道ID"
+                                                   },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "type":  {
+                                                  "type":  "string",
+                                                  "description":  "类型"
+                                              },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型"
+                                                  },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型"
+                                                    },
+                                     "groupby":  {
+                                                     "type":  "array",
+                                                     "description":  "分组维度列表"
+                                                 },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "说明":  "返回Map结构，key为仓库+物流商组合维度，value为该维度下的汇总数据列表，每项包含warehouse(仓库)、company(物流公司)、shipmentcount(货件数量)、totalquantity(总数量)、totalfee(总运费)、currency(币种)等字段"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_shipment_detail_report",
+                      "description":  "查询FBA入库明细报表，展示每个货件的详细物流和费用数据",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/ship/report/getShipmentDetailReport",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "fromdate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "enddate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "shipmentid":  {
+                                                        "type":  "string",
+                                                        "description":  "货件ID"
+                                                    },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型"
+                                                    },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型"
+                                                  },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：ShipmentId(货件ID)、groupname(店铺名称)、market(国家代码)、center(目标FBA配送中心)、warehouse(仓库名称)、createdate(创建日期)、shiped_date(发货日期)、arrivalTime(预计到货日期)、company(物流公司)、channame(渠道名称)、skunum(SKU数量)、number(单据编码)、qtyshipped(发货数量)、qtyreceived(收货数量)、shipmentstatus(货件状态名称)、sumrec(已接收数量)、status(内部状态码)、start_receive_date(开始接收日期)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_inbound_item_batch_list",
+                      "description":  "查询FBA入库商品批次列表，展示入库商品的批次和费用信息",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/shipInboundItem/getInboundItemBatchList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "searchType":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型"
+                                                    },
+                                     "status":  {
+                                                    "type":  "string",
+                                                    "description":  "状态筛选"
+                                                },
+                                     "owner":  {
+                                                   "type":  "string",
+                                                   "description":  "负责人ID"
+                                               },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：groupname(店铺名称)、marketname(站点名称)、image(产品图片URL)、sku(SKU编码)、name(产品名称)、status(状态码)、number(单据编码)、shipmentid(货件ID)、QuantityShipped(发货数量)、QuantityReceived(接收数量)、shipmentstatus(货件状态)、ReceivedDate(接收日期)、QuantityReceivedSub(扣减数量)、unitcost(单位采购成本)、totalcost(采购总成本)、totaltransfee(头程总费用)、unittransfee(单位头程费用)、opttime(操作时间)、QuantityReceivedBalance(接收余额)、statusname(状态名称：未开始/扣减中/已扣完/未处理)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_inbound_item_detail",
+                      "description":  "查询FBA入库商品详情，展示单个货件内商品的收货明细",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/shipInboundItem/findDetailByShipment",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "shipmentid":  {
+                                                        "type":  "string",
+                                                        "description":  "货件ID"
+                                                    },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             }
+                                 },
+                      "required":  [
+                                       "shipmentid"
+                                   ],
+                      "response_fields":  {
+                                              "shipmentid":  "货件ID",
+                                              "sku":  "SKU编码",
+                                              "amazon_order_id":  "亚马逊订单号",
+                                              "purchase_date":  "下单日期",
+                                              "payments_date":  "付款日期",
+                                              "shipment_date":  "发货日期",
+                                              "quantity":  "发货数量",
+                                              "item_price":  "商品价格",
+                                              "ship_city":  "收货城市",
+                                              "ship_country":  "收货国家",
+                                              "carrier":  "承运商",
+                                              "tracking_number":  "追踪编号",
+                                              "estimated_arrival_date":  "预计到货日期"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_fee_report",
+                      "description":  "查询FBA入库费用报表，汇总各货件的运费和入库费",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/shipTransCompany/getShipmentFeeReport",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "fromdate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "enddate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "companyid":  {
+                                                       "type":  "string",
+                                                       "description":  "物流公司ID"
+                                                   },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "datetype":  {
+                                                      "type":  "string",
+                                                      "description":  "日期类型"
+                                                  },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型"
+                                                    },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：sellersku(平台SKU)、qty(数量)、NAME(产品名称)、opttime(发货日期)、location(产品图片URL)、msku(本地SKU)、ownername(产品负责人)、skufee(SKU分摊费用)、avgfee(单件平均费用)、groupid(店铺分组ID)、marketplaceid(站点ID)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_fee_detail_report",
+                      "description":  "查询FBA入库费用明细报表",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/shipTransCompany/getShipmentFeeDetailReport",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "fromdate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "enddate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "companyid":  {
+                                                       "type":  "string",
+                                                       "description":  "物流公司ID"
+                                                   },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：ShipmentId(货件ID)、number(单据编码)、psku(平台SKU)、qty(发货数量)、shipcompany(发货承运商)、channame(发货渠道)、asin(ASIN编码)、marketplace(收货站点)、location(产品图片URL)、msku(本地SKU)、color(颜色)、statusname(状态名称)、ownername(产品负责人)、optname(发货人)、warehouse(发货仓库)、name(产品名称)、opttime(发货日期)、groupname(发货店铺)、transweight(实际结算重量)、length(长)、width(宽)、height(高)、weight(重量)、fwunit(运费重量单位)、skuweight(SKU预估重量)、shipmentfee(货件运费)、skufee(SKU分摊费用)、skufeeavg(SKU单件费用)",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_sku_fee_report",
+                      "description":  "查询FBA入库SKU维度费用报表，按SKU汇总入库费用",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/shipTransCompany/getShipmentSkuFeeReport",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "fromdate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "enddate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "companyid":  {
+                                                       "type":  "string",
+                                                       "description":  "物流公司ID"
+                                                   },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：sellersku(平台SKU)、qty(数量)、NAME(产品名称)、opttime(发货日期)、location(产品图片URL)、msku(本地SKU)、ownername(产品负责人)、skufee(SKU分摊费用)、avgfee(单件平均费用)",
+                                              "chartdata":  "图表数据，用于费用趋势展示",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_address_list",
+                      "description":  "查询FBA发货地址列表，展示已保存的发货仓库/供应商地址",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/shipaddress/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID"
+                                                       },
+                                     "isdisable":  {
+                                                       "type":  "string",
+                                                       "description":  "是否禁用"
+                                                   },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "地址ID",
+                                              "name":  "地址名称",
+                                              "country":  "国家",
+                                              "state":  "州/省",
+                                              "city":  "城市",
+                                              "addressline1":  "地址行1",
+                                              "addressline2":  "地址行2",
+                                              "postalcode":  "邮编",
+                                              "phonenumber":  "联系电话"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_fulfillment_center",
+                      "description":  "查询FBA配送中心列表，展示Amazon FBA仓库信息",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/amzShipFulfillmentCenter/getpage",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "country":  {
+                                                     "type":  "string",
+                                                     "description":  "国家筛选"
+                                                 },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索内容"
+                                                },
+                                     "tierid":  {
+                                                    "type":  "string",
+                                                    "description":  "层级ID"
+                                                },
+                                     "dispatchtype":  {
+                                                          "type":  "string",
+                                                          "description":  "发货类型"
+                                                      },
+                                     "isclothing":  {
+                                                        "type":  "boolean",
+                                                        "description":  "是否服装类"
+                                                    },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "分页数据数组，每项包含：id(记录ID)、code(配送中心代码)、name(配送中心名称)、country(国家代码)、state(州代码)、city(城市)、address(地址)、postalcode(邮编)等字段",
+                                              "total":  "总记录数",
+                                              "size":  "每页大小",
+                                              "current":  "当前页码"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_fba_cycle_list",
+                      "description":  "查询FBA补货周期列表，展示SKU维度的补货计划和库存周转数据",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/amzInboundFbaCycle/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "transtype":  {
+                                                       "type":  "string",
+                                                       "description":  "运输类型筛选"
+                                                   }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "记录ID",
+                                              "shopid":  "公司ID",
+                                              "transtype":  "运输类型ID",
+                                              "marketplaceid":  "站点ID",
+                                              "name":  "配置名称",
+                                              "number":  "编号",
+                                              "stockingCycle":  "安全库存周期(天)",
+                                              "minCycle":  "发货频率(天)",
+                                              "putOnDays":  "上架周期(天)",
+                                              "firstLegDays":  "头程周期(天)",
+                                              "isdefault":  "是否默认配置",
+                                              "remark":  "备注",
+                                              "operator":  "操作人ID",
+                                              "operatorname":  "操作人名称",
+                                              "opttime":  "修改时间"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_customs_rate",
+                      "description":  "查询海关税率配置，获取FBA入库相关的关税税率信息",
+                      "menu_id":  11,
+                      "endpoint":  "/amazon/api/v1/customsSet/getRate",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "marketplaceId":  "站点ID",
+                                              "market":  "市场标识",
+                                              "name":  "站点名称",
+                                              "region_name":  "区域名称",
+                                              "region":  "区域代码",
+                                              "point_name":  "销售点名称",
+                                              "aws_region":  "AWS区域",
+                                              "currency":  "币种",
+                                              "language":  "语言",
+                                              "rate":  "税率",
+                                              "price_type":  "价格类型(cost=采购价)"
+                                          }
+                  }
+              ]
+}

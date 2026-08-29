@@ -8,6 +8,12 @@ import com.wimoor.common.user.UserInfo;
 
 public interface IShipCrossborderXmlSevice {
 
+    /**
+     * 检查是否存在冲突记录（只读操作，不开启事务）
+     * 当force=false时，如果存在冲突则抛出BizException
+     */
+    void checkConflict(ShipInboundCustomsXml xmlInfo);
+
     public ShipInboundCustomsXml createOrder(UserInfo userinfo, ShipInboundCustomsXml xmlInfo) throws Exception;
     public ShipInboundCustomsXml createInventory(UserInfo userinfo, ShipInboundCustomsXml xmlInfo) throws Exception;
     public ShipInboundCustomsXml createDeclaration(UserInfo userinfo, ShipInboundCustomsXml xmlInfo) throws Exception;

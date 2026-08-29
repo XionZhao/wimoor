@@ -25,10 +25,10 @@
 		    <version>3.10.2</version>
 		</dependency>
 		 <!-- minio分布式对象存储 -->
-		 <dependency>
-		    <groupId>io.minio</groupId>
-		    <artifactId>minio</artifactId>
-		    <version>8.5.7</version>
+		<dependency>
+			<groupId>io.minio</groupId>
+			<artifactId>minio</artifactId>
+			<version>8.5.17</version>
 		</dependency>
          <!-- ftp对象存储 --> 
         <dependency>

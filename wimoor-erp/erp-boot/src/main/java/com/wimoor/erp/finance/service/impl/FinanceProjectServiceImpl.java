@@ -33,7 +33,7 @@ public class FinanceProjectServiceImpl  extends ServiceImpl<FinanceProjectMapper
 	}
 	
 
-	public Map<String, Object> saveProject(String name, UserInfo user) {
+	public Map<String, Object> saveProject(String name, Integer feetype, UserInfo user) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		if ("商品运费".equals(name) || "采购商品".equals(name)) {
 			throw new BizException("添加失败!该公司下已有该项目!");
@@ -51,6 +51,8 @@ public class FinanceProjectServiceImpl  extends ServiceImpl<FinanceProjectMapper
 			project.setCreator(user.getId());
 			project.setIssys(false);
 			project.setName(name);
+			// 费用类型默认归属供应商款项(0)，未传时取默认值
+			project.setFeetype(feetype == null ? 0 : feetype);
 			project.setOperator(user.getId());
 			project.setOpttime(nowdate);
 			project.setShopid(user.getCompanyid());
@@ -65,46 +67,56 @@ public class FinanceProjectServiceImpl  extends ServiceImpl<FinanceProjectMapper
 		return map;
 	}
 
-	public Map<String, Object> updateProject(String id, String name, UserInfo user) {
+	public Map<String, Object> updateProject(String id, String name, Boolean isdefault, Integer feetype, UserInfo user) {
 		Map<String, Object> map = new HashMap<String, Object>();
-		if ("商品运费".equals(name) || "采购商品".equals(name)) {
-			throw new BizException("添加失败!该公司下已有该项目!");
+		if (GeneralUtil.isEmpty(id)) {
+			map.put("msg", "更新失败!");
+			return map;
 		}
-		if (GeneralUtil.isNotEmpty(id)) {
+		FinanceProject oldpro = this.baseMapper.selectById(id);
+		if (oldpro == null) {
+			map.put("msg", "更新失败!");
+			return map;
+		}
+		// 仅更新isdefault的情况
+		if (isdefault != null && GeneralUtil.isEmpty(name)) {
+			// 系统项目不允许修改isdefault
+			if (!Boolean.TRUE.equals(oldpro.getIssys())) {
+				oldpro.setIsdefault(isdefault);
+			}
+			if (feetype != null) {
+				oldpro.setFeetype(feetype);
+			}
+			oldpro.setOperator(user.getId());
+			oldpro.setOpttime(new Date());
+			int result = this.baseMapper.updateById(oldpro);
+			map.put("msg", result > 0 ? "更新成功!" : "更新失败!");
+			return map;
+		}
+		// 更新名称的情况
+		if (GeneralUtil.isNotEmpty(name)) {
+			if ("商品运费".equals(name) || "采购商品".equals(name)) {
+				throw new BizException("添加失败!该公司下已有该项目!");
+			}
 			QueryWrapper<FinanceProject> queryWrapper=new QueryWrapper<FinanceProject>();
 			queryWrapper.eq("shopid", user.getCompanyid());
 			queryWrapper.eq("name", name);
 			List<FinanceProject> list =  this.baseMapper.selectList(queryWrapper);
-			if (list.size() > 0 && list != null) {
-				if (list.get(0).getId().equals(id)) {
-					FinanceProject oldpro =  this.baseMapper.selectById(id);
-					oldpro.setOperator(user.getId());
-					oldpro.setOpttime(new Date());
-					oldpro.setName(name);
-					int result =  this.baseMapper.updateById(oldpro);
-					if (result > 0) {
-						map.put("msg", "更新成功!");
-					} else {
-						map.put("msg", "更新失败!");
-					}
-				} else {
-					throw new BizException( "更新失败!该公司下已有该项目!");
-				}
-			} else {
-				FinanceProject oldpro =  this.baseMapper.selectById(id);
-				oldpro.setOperator(user.getId());
-				oldpro.setOpttime(new Date());
-				oldpro.setName(name);
-				int result =  this.baseMapper.updateById(oldpro);
-				if (result > 0) {
-					map.put("msg", "更新成功!");
-				} else {
-					map.put("msg", "更新失败!");
-				}
+			if (list != null && list.size() > 0 && !list.get(0).getId().equals(id)) {
+				throw new BizException( "更新失败!该公司下已有该项目!");
 			}
-		} else {
-			map.put("msg", "更新失败!");
+			oldpro.setName(name);
 		}
+		if (isdefault != null) {
+			oldpro.setIsdefault(isdefault);
+		}
+		if (feetype != null) {
+			oldpro.setFeetype(feetype);
+		}
+		oldpro.setOperator(user.getId());
+		oldpro.setOpttime(new Date());
+		int result = this.baseMapper.updateById(oldpro);
+		map.put("msg", result > 0 ? "更新成功!" : "更新失败!");
 		return map;
 	}
 

@@ -31,4 +31,10 @@ public interface FinJournalAccountMapper extends BaseMapper<FinJournalAccount>{
 	List<Map<String,Object>> findMonthCharts(@Param("shopid")String shopid,@Param("acc")String acc,@Param("year")String year);
 	
 	List<Map<String,Object>> findMonthDetailCharts(@Param("shopid")String shopid,@Param("acc")String acc,@Param("year")String year,@Param("month")String month);
+
+	/**
+	 * 按opttime日期查询台账记录（用于凭证生成）
+	 * 包含 out/in/cancel 三种类型，关联项目名称和账户名称，按groupid筛选
+	 */
+	List<Map<String, Object>> findJournalForVoucher(@Param("groupid") String groupid, @Param("optDate") String optDate);
 }

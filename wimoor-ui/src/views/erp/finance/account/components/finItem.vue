@@ -8,21 +8,40 @@
 					<div v-else>{{scope.row.showname}}</div>
 			  </template>
 			  </el-table-column>
+			  <el-table-column label="费用类型" width="150" align="center">
+				  <template #default="scope">
+					  <el-select v-if="scope.row.edit" v-model="scope.row.feetype" placeholder="请选择">
+						  <el-option label="归属供应商款项" :value="0" />
+						  <el-option label="非供应商款项" :value="1" />
+					  </el-select>
+					  <span v-else>{{ scope.row.feetype === 1 ? '非供应商款项' : '归属供应商款项' }}</span>
+				  </template>
+			  </el-table-column>
+			  <el-table-column label="默认" width="80" align="center">
+				  <template #default="scope">
+					  <el-switch v-if="scope.row.id" v-model="scope.row.isdefault"
+					   :disabled="scope.row.issys"
+					   @change="handleDefaultChange(scope.row)" />
+				  </template>
+			  </el-table-column>
 		      <el-table-column  label="操作"  >
 			     <template #default="scope">
-					 <el-button v-if="!scope.row.edit" type="primary"
-					  @click="scope.row.edit=true"
-					  link>编辑</el-button>
-					 <el-button v-if="!scope.row.edit" type="primary"
-					  @click="handleDelete(scope.row)"
-					  link>删除</el-button>
-					  
-					  <el-button  v-if="scope.row.edit" type="primary"
-					   @click="handleSave(scope.row)"
-					   link>保存</el-button>
-					   <el-button v-if="scope.row.edit"  type="primary"
-					    @click="handleCancel(scope.row)"
-					    link>取消</el-button>
+					 <template v-if="!scope.row.issys">
+						 <el-button v-if="!scope.row.edit" type="primary"
+						  @click="scope.row.edit=true"
+						  link>编辑</el-button>
+						 <el-button v-if="!scope.row.edit" type="primary"
+						  @click="handleDelete(scope.row)"
+						  link>删除</el-button>
+						 
+						  <el-button  v-if="scope.row.edit" type="primary"
+						   @click="handleSave(scope.row)"
+						   link>保存</el-button>
+						   <el-button v-if="scope.row.edit"  type="primary"
+						    @click="handleCancel(scope.row)"
+						    link>取消</el-button>
+					 </template>
+					 <span v-else style="color:#999;font-size:12px;">系统内置</span>
 				 </template>
 			  </el-table-column>
 		    </el-table>
@@ -64,11 +83,18 @@
 				return ;
 			}
 		}
-		state.feeTableData.push(  {  name:'', id:"",edit:true} );
+		state.feeTableData.push(  {  name:'', id:"",edit:true,feetype:0 } );
 	}
 	
 	
-	function handleCancel(item){
+	// 切换默认状态
+function handleDefaultChange(row) {
+	projectApi.updateProject({"id":row.id,"isdefault":row.isdefault}).then((res)=>{
+		emit("change");
+	});
+}
+
+function handleCancel(item){
 		if(item.id==""){
 			state.feeTableData = state.feeTableData.filter(item => item.id != "");
 		}else{
@@ -82,11 +108,10 @@
 		state.feeTableData=[];
 		projectApi.getProject().then((res)=>{
 			 res.data.forEach(item=>{
-				 if(item.issys==false){
-					 item.showname=item.name;
-				 	 state.feeTableData.push(item);
-				 }
-			 });
+			 item.showname=item.name;
+			 item.feetype = item.feetype == null ? 0 : item.feetype;
+			 state.feeTableData.push(item);
+		 });
 		});
 	}
 	function handleDelete(row){
@@ -98,14 +123,14 @@
 	}
 	function handleSave(row){
 		if(row.id){
-			projectApi.updateProject({"id":row.id,"name":row.name}).then((res)=>{
-				 ElMessage.success( '修改成功');
-				 row.showname=row.name;
-				 row.edit=false;
-				 emit("change");
-			});
-		}else{
-			projectApi.saveProject({"name":row.name}).then((res)=>{
+		projectApi.updateProject({"id":row.id,"name":row.name,"feetype":row.feetype}).then((res)=>{
+			 ElMessage.success( '修改成功');
+			 row.showname=row.name;
+			 row.edit=false;
+			 emit("change");
+		});
+	}else{
+		projectApi.saveProject({"name":row.name,"feetype":row.feetype}).then((res)=>{
 				ElMessage.success('添加成功');
 				row.showname=row.name;
 				row.id=res.data.id;

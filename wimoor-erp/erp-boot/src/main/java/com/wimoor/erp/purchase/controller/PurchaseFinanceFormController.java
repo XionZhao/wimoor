@@ -18,6 +18,7 @@ import com.wimoor.common.service.impl.SystemControllerLog;
 import com.wimoor.common.user.UserInfo;
 import com.wimoor.common.user.UserInfoContext;
 import com.wimoor.erp.purchase.pojo.dto.FinanceFormPayMethDTO;
+import com.wimoor.erp.purchase.pojo.dto.ManualPaymentSaveDTO;
 import com.wimoor.erp.purchase.pojo.dto.PurchaseFinanceListDTO;
 import com.wimoor.erp.purchase.service.IPurchaseFinanceFormService;
 
@@ -51,6 +52,11 @@ public class PurchaseFinanceFormController {
 			param.put("supplierid",  dto.getSupplierid() ); 
 		}else {
 			param.put("supplierid",null); 
+		}
+		if(StrUtil.isNotEmpty(dto.getGroupid())) {
+			param.put("groupid",  dto.getGroupid() ); 
+		}else {
+			param.put("groupid",null); 
 		}
 		if(StrUtil.isNotEmpty(dto.getSearchtype())) {
 			param.put("searchtype",  dto.getSearchtype() ); 
@@ -139,7 +145,13 @@ public class PurchaseFinanceFormController {
 		return Result.success(purchaseFinanceFormService.paymentForm(ids,userinfo));
 	}
 	
-	
+	//手动新增请款单（无关联采购单）
+	@PostMapping("/saveManual")
+	@Transactional
+	public Result<Map<String, Object>> saveManualAction(@RequestBody ManualPaymentSaveDTO dto){
+		UserInfo userinfo = UserInfoContext.get();
+		return Result.success(purchaseFinanceFormService.saveManual(dto, userinfo));
+	}
 	
 	
 	

@@ -32,8 +32,7 @@
 				   <el-input  
 				   v-model="queryParams.search" 
 				   clearable 
-				   @input="handleQuery"  
-				   @clear="handleQuery" 
+				   v-debounce-input="handleQuery"  
 				   placeholder="请输入SKU" 
 				   class="input-with-select" >
 				   <template #append>

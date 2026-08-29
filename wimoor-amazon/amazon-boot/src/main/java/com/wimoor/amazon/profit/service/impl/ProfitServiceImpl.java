@@ -1,6 +1,7 @@
 package com.wimoor.amazon.profit.service.impl;
 
 import cn.hutool.core.math.Calculator;
+import cn.hutool.core.util.StrUtil;
 import com.googlecode.aviator.AviatorEvaluator;
 import com.wimoor.amazon.auth.pojo.entity.Marketplace;
 import com.wimoor.amazon.auth.service.IAmazonAuthorityService;
@@ -99,6 +100,9 @@ public class ProfitServiceImpl implements IProfitService{
 		List<Map<String, String>> resultList = new ArrayList<Map<String, String>>();
 		List<BigDecimal> marginList = findMarginList();//固定参考利率列表
 		ReferralFee resultfee = referralFeeService.getReferralFeeByTypeCountry(typeId, country);//根据国家和id或parent_id查询计算标准
+		if (resultfee == null) {
+			return resultList;
+		}
 		BigDecimal referralR = resultfee.getPercent1();//估算Amazon Referral Fee，按第一个百分比计算
 		BigDecimal minimum = resultfee.getLoweast();//Amazon Referral Fee最低费用
 		if("UK".equals(country)){//2020年09月01日起，在UK站点加收2%的数字服务税。
@@ -110,11 +114,11 @@ public class ProfitServiceImpl implements IProfitService{
 			minimum = new BigDecimal("0");
 		}
 		BigDecimal FBA = getAmazonFeeButRef(costDetail);//除亚马逊佣金之外的所有亚马逊直接收费，不含FBA的GST税，UK包含dst税
-		BigDecimal temp = new BigDecimal("1").divide(new BigDecimal("1").add(costDetail.getVatRate()),4, RoundingMode.HALF_UP);
-		BigDecimal temp2 = costDetail.getSelling_GSTRate().divide(new BigDecimal("1").add(costDetail.getSelling_GSTRate()),4, RoundingMode.HALF_UP);
+		BigDecimal vatRate = new BigDecimal("1").divide(new BigDecimal("1").add(costDetail.getVatRate()),4, RoundingMode.HALF_UP);
+		BigDecimal sellingGSTRate = costDetail.getSelling_GSTRate().divide(new BigDecimal("1").add(costDetail.getSelling_GSTRate()),4, RoundingMode.HALF_UP);
 		for (int i = 0; i < marginList.size(); i++) {
 			Map<String, String> map = new HashMap<String, String>();
-			Map<String, BigDecimal> priceResult = estimateSellingPrice(costDetail, referralR, minimum, FBA, temp, temp2, marginList.get(i));
+			Map<String, BigDecimal> priceResult = estimateSellingPrice(costDetail, referralR, minimum, FBA, vatRate, sellingGSTRate, marginList.get(i));
 			if(priceResult!=null){
 				BigDecimal sellingPrice = priceResult.get("sellingPrice");
 				BigDecimal referralFee = priceResult.get("referralFee");
@@ -136,7 +140,7 @@ public class ProfitServiceImpl implements IProfitService{
 							.setScale(4, RoundingMode.HALF_UP);
 					costDetail.setFbaTaxFee(fbaTaxFee);
 					FBA = getAmazonFeeButRef(costDetail);
-					priceResult = estimateSellingPrice(costDetail, referralR, minimum, FBA, temp, temp2, marginList.get(i));
+					priceResult = estimateSellingPrice(costDetail, referralR, minimum, FBA, vatRate, sellingGSTRate, marginList.get(i));
 					sellingPrice = priceResult.get("sellingPrice");
 					referralFee = priceResult.get("referralFee");
 				} else {
@@ -147,7 +151,7 @@ public class ProfitServiceImpl implements IProfitService{
 						if("UK".equals(country)){
 							FBA = getAmazonFeeButRef(costDetail);
 						}
-						sellingPrice = getSellingPrice(costDetail, FBA, temp, temp2, marginList.get(i));
+						sellingPrice = getSellingPrice(costDetail, FBA, vatRate, sellingGSTRate, marginList.get(i));
 					} else {
 						if("UK".equals(country)){
 							referralFee = sellingPrice.multiply(resultfee.getPercent1());
@@ -170,14 +174,14 @@ public class ProfitServiceImpl implements IProfitService{
 	 *        2.price=[(1-C)*(purchase+shipMent+others+FBA（所有亚马逊直接收费）+ minimum+关税-FBA（所有亚马逊直接收费+fbaTax）*lostrate-minimum*lostrate)+fbaTax+进口GST税]/(1-C)*[1/(1+vatRate)-selling_GSTRate/(1+selling_GSTRate)-rateFee-lostrate]-margin
 	 */
 	public Map<String, BigDecimal> estimateSellingPrice(CostDetail costDetail,BigDecimal referralR,BigDecimal minimum,BigDecimal FBA,
-			BigDecimal temp,BigDecimal temp2,BigDecimal margin) {
+			BigDecimal vatRate,BigDecimal sellingGSTRate,BigDecimal margin) {
 		Map<String, BigDecimal> result = new HashMap<String, BigDecimal>();
 		// 先假设,佣金=售价*R
 		BigDecimal a = new BigDecimal("1").subtract(costDetail.getCorporateInRate());//(1-C)
 		BigDecimal m1 = costDetail.getPurchase().add(costDetail.getShipment()).add(costDetail.getOthers()).add(FBA)
 				.subtract(FBA.add(costDetail.getFbaTaxFee()).multiply(costDetail.getCurrencyTransportRate())).add(costDetail.getTax());
 		BigDecimal m = a.multiply(m1).add(costDetail.getFbaTaxFee()).add(costDetail.getImport_GST());
-		BigDecimal d1 = temp.subtract(temp2).subtract(costDetail.getRateFee())
+		BigDecimal d1 = vatRate.subtract(sellingGSTRate).subtract(costDetail.getRateFee())
 				.subtract(costDetail.getCurrencyTransportRate()).subtract(referralR)
 				.add(referralR.multiply(costDetail.getCurrencyTransportRate()));
 		if(d1.floatValue()<0){
@@ -196,7 +200,7 @@ public class ProfitServiceImpl implements IProfitService{
 			
 			m = a.multiply(m2).add(costDetail.getFbaTaxFee()).add(costDetail.getImport_GST());
 			
-			BigDecimal d2 = temp.subtract(temp2).subtract(costDetail.getRateFee()).subtract(costDetail.getCurrencyTransportRate());
+			BigDecimal d2 = vatRate.subtract(sellingGSTRate).subtract(costDetail.getRateFee()).subtract(costDetail.getCurrencyTransportRate());
 			d = a.multiply(d2).subtract(margin);
 			
 			sellingPrice = m.divide(d, 2, RoundingMode.HALF_UP);
@@ -207,7 +211,7 @@ public class ProfitServiceImpl implements IProfitService{
 		return result;
 	}
 	
-	public BigDecimal getSellingPrice(CostDetail costDetail, BigDecimal FBA, BigDecimal temp, BigDecimal temp2,
+	public BigDecimal getSellingPrice(CostDetail costDetail, BigDecimal FBA, BigDecimal vatRate, BigDecimal sellingGSTRate,
 			BigDecimal margin) {
 		BigDecimal a = new BigDecimal("1").subtract(costDetail.getCorporateInRate());// (1-C)
 		BigDecimal m2 = costDetail.getPurchase().add(costDetail.getShipment()).add(costDetail.getOthers()).add(FBA)
@@ -215,7 +219,7 @@ public class ProfitServiceImpl implements IProfitService{
 				.subtract(FBA.add(costDetail.getFbaTaxFee()).multiply(costDetail.getCurrencyTransportRate()))
 				.subtract(costDetail.getReferralFee().multiply(costDetail.getCurrencyTransportRate()));
 		BigDecimal m = a.multiply(m2).add(costDetail.getFbaTaxFee()).add(costDetail.getImport_GST());
-		BigDecimal d2 = temp.subtract(temp2).subtract(costDetail.getRateFee())
+		BigDecimal d2 = vatRate.subtract(sellingGSTRate).subtract(costDetail.getRateFee())
 				.subtract(costDetail.getCurrencyTransportRate());
 		BigDecimal d = a.multiply(d2).subtract(margin);
 
@@ -569,6 +573,13 @@ public class ProfitServiceImpl implements IProfitService{
 
 			} else {
 				productTierId = profitServiceX.determineProductTier(country, inputDimensionnew, isMedia);
+				// 当该国家找不到产品层级时，尝试使用仓库站点国家的数据作为回退
+				if (productTierId == null && profitConfigCountry != null) {
+					String warehousesite = profitConfigCountry.getWarehousesite();
+					if (StrUtil.isNotBlank(warehousesite) && !warehousesite.equalsIgnoreCase(country)) {
+						productTierId = profitServiceX.determineProductTier(warehousesite.toUpperCase(), inputDimensionnew, isMedia);
+					}
+				}
 				if (productTierId != null) {
 					ProductTier productTier = productTierService.selectByPKey(productTierId);
 					productTierName = productTier.getAmzName()==null?productTier.getName():productTier.getAmzName();
@@ -734,6 +745,13 @@ public class ProfitServiceImpl implements IProfitService{
 				costDetail.setSipp(sippfee);
 			} else {
 				String productTierId = profitServiceX.determineProductTier(country, inputDimension, isMedia);
+				// 当该国家找不到产品层级时，尝试使用仓库站点国家的数据作为回退
+				if (productTierId == null) {
+					String warehousesite = profitConfigX.getWarehousesite();
+					if (StrUtil.isNotBlank(warehousesite) && !warehousesite.equalsIgnoreCase(country)) {
+						productTierId = profitServiceX.determineProductTier(warehousesite.toUpperCase(), inputDimension, isMedia);
+					}
+				}
 				if (productTierId == null) {
 					return null;
 				}
@@ -1568,6 +1586,9 @@ public class ProfitServiceImpl implements IProfitService{
 	public BigDecimal calculateReferralFee(int typeId, BigDecimal sellingPrice, String country) {
 		BigDecimal referralFee = new BigDecimal("0.0");
 		ReferralFee resultfee = referralFeeService.getReferralFeeByTypeCountry(typeId, country);// 根据国家和id或parent_id查询计算标准
+		if (resultfee == null) {
+			return referralFee;
+		}
 		BigDecimal min = resultfee.getLoweast();
 		if(country.equals("US")&&typeId==11) {
 			if(sellingPrice.subtract(resultfee.getTop2()).doubleValue()>0) {

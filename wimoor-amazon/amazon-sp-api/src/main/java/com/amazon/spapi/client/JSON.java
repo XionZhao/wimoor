@@ -177,6 +177,9 @@ public class JSON {
                     return null;
                 default:
                     String date = in.nextString();
+                    if (date == null || date.trim().isEmpty()) {
+                        return null;
+                    }
                     if (date.endsWith("+0000")) {
                         date = date.substring(0, date.length()-5) + "Z";
                     }
@@ -221,6 +224,9 @@ public class JSON {
                     return null;
                 default:
                     String date = in.nextString();
+                    if (date == null || date.trim().isEmpty()) {
+                        return null;
+                    }
                     return LocalDate.parse(date, formatter);
             }
         }

@@ -100,6 +100,10 @@ function handleCurrentChange(val) {
   background: #fff;
   padding:10px;
 }
+.dark .pagination-container {
+  background: #111111;
+  padding:10px;
+}
 .pagination-container.hidden {
   display: none;
 }

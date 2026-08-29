@@ -424,3 +424,37 @@ onMounted(async () => {
   width: 120px;
 }
 </style>
+
+<style>
+/* 暗黑模式适配 */
+.dark .summary-item .el-descriptions__label {
+  background-color: var(--el-fill-color-light) !important;
+  color: var(--el-text-color-regular) !important;
+}
+
+.dark .summary-value {
+  color: var(--el-text-color-primary);
+}
+
+.dark .table-container {
+  background-color: var(--el-bg-color);
+}
+
+.dark .el-table__header th {
+  background-color: var(--el-fill-color-light) !important;
+}
+
+.dark .el-table td,
+.dark .el-table th {
+  border-color: var(--el-border-color-lighter);
+}
+
+.dark .el-table {
+  --el-table-header-text-color: var(--el-text-color-regular);
+  --el-table-row-hover-bg-color: var(--el-fill-color-light);
+}
+
+.dark .el-table__row:hover > td {
+  background-color: var(--el-fill-color-light);
+}
+</style>

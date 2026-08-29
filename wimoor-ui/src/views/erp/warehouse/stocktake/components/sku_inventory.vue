@@ -3,7 +3,7 @@
   	<el-dialog v-model="dialog.visible" class="skuinventory" title="添加产品" @opened="loadData()" width="80%" top="6vh" :before-close="handleClose">
   		<div class="con-header">
   			<el-row>
-  				<el-input v-model="queryParams.search" @input="loadData" placeholder="搜索产品SKU">
+  				<el-input v-model="queryParams.search" v-debounce-input="loadData" placeholder="搜索产品SKU">
   					<template #suffix>
   						<el-icon :size="16">
   							<Search />
@@ -264,7 +264,7 @@
 							loadDataByAddressId(res.data.addressid);
 						}
 					})
-			}else{ 
+			}else{
 				var shelfid=state.queryParams.warehouseid;
 				shelfApi.detailShelf(shelfid).then(res=>{
 					if(res.data){

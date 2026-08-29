@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wimoor.finance.ledger.mapper.FinCarrierLedgerMapper">
+
+    <!-- 查询承运商台账汇总（按承运商维度，数据库直接汇总） -->
+    <select id="selectCarrierLedgerSummary" resultType="java.util.Map">
+        SELECT
+            v.companyid AS companyid,
+            com.`name` AS logitics,
+            v.totalqty AS totalqty,
+            v.totalout AS totalout,
+            v.totalrec AS totalrec,
+            v.lessrec AS lessrec,
+            v.worth AS worth,
+            v.readweight AS readweight,
+            IFNULL(n.transweight_kg, 0) AS transweight_kg,
+            IFNULL(n.shipfee, 0) AS shipfee,
+            IFNULL(n.totalbox, 0) AS totalbox,
+            IFNULL(n.totalotherfee, 0) AS totalotherfee,
+            IFNULL(n.shipmentnum, 0) AS shipmentnum
+        FROM (
+            SELECT
+                de.company AS companyid,
+                SUM(item.quantity) AS totalqty,
+                SUM(item.quantity) AS totalout,
+                SUM(item.received) AS totalrec,
+                SUM(item.received - item.quantity) AS lessrec,
+                SUM(item.quantity * m.price) AS worth,
+                SUM(IFNULL(dd.weight, 0) * item.quantity) AS readweight
+            FROM db_amazon.t_erp_ship_v2_inboundshipment_item item
+            LEFT JOIN db_amazon.t_erp_ship_v2_inboundshipment shipment ON shipment.ShipmentId = item.ShipmentId
+            LEFT JOIN db_amazon.t_erp_ship_v2_inboundplan plan ON plan.id = shipment.formid
+            LEFT JOIN db_erp.t_erp_material m ON m.sku = item.sku AND plan.shopid = m.shopid AND m.isDelete = 0
+            LEFT JOIN db_erp.t_dimensions dd ON dd.id = m.pkgDimensions
+            LEFT JOIN db_amazon.t_erp_ship_inboundtrans trans ON trans.shipmentid = shipment.shipment_confirmation_id
+            LEFT JOIN db_erp.t_erp_ship_transdetail de ON de.id = trans.channel
+            WHERE plan.shopid = #{shopid}
+              AND shipment.status &gt;= 5
+              <if test="groupid != null and groupid != ''">
+                  AND plan.groupid = #{groupid}
+              </if>
+              <if test="marketplaceid != null and marketplaceid != ''">
+                  AND plan.marketplaceid = #{marketplaceid}
+              </if>
+              <if test="companyid != null and companyid != ''">
+                  AND de.company = #{companyid}
+              </if>
+              <if test="channelid != null and channelid != ''">
+                  AND trans.channel = #{channelid}
+              </if>
+              <if test="fromDate != null and fromDate != ''">
+                  AND shipment.shiped_date &gt;= #{fromDate}
+              </if>
+              <if test="toDate != null and toDate != ''">
+                  AND shipment.shiped_date &lt;= #{toDate}
+              </if>
+            GROUP BY de.company
+        ) v
+        LEFT JOIN (
+            SELECT
+                de.company AS companyid,
+                SUM(CASE WHEN trans.wunit = 'kg' THEN trans.transweight ELSE 0 END) AS transweight_kg,
+                SUM(IFNULL(trans.singleprice, 0) * IFNULL(trans.transweight, 0) + IFNULL(trans.otherfee, 0)) AS shipfee,
+                SUM(trans.otherfee) AS totalotherfee,
+                COUNT(DISTINCT shipment.shipment_confirmation_id) AS shipmentnum,
+                SUM(
+                    (SELECT COUNT(b.id) FROM db_amazon.t_erp_ship_v2_inboundshipment_box b
+                     LEFT JOIN db_amazon.t_erp_ship_v2_inboundshipment sh ON sh.shipmentid = b.shipmentid
+                     WHERE sh.shipment_confirmation_id = shipment.shipment_confirmation_id)
+                ) AS totalbox
+            FROM db_amazon.t_erp_ship_v2_inboundshipment shipment
+            LEFT JOIN db_amazon.t_erp_ship_v2_inboundplan plan ON plan.id = shipment.formid
+            LEFT JOIN db_amazon.t_erp_ship_inboundtrans trans ON trans.shipmentid = shipment.shipment_confirmation_id
+            LEFT JOIN db_erp.t_erp_ship_transdetail de ON de.id = trans.channel
+            WHERE plan.shopid = #{shopid}
+              AND (shipment.status &gt;= 5 OR shipment.start_receive_date IS NOT NULL)
+              <if test="groupid != null and groupid != ''">
+                  AND plan.groupid = #{groupid}
+              </if>
+              <if test="marketplaceid != null and marketplaceid != ''">
+                  AND plan.marketplaceid = #{marketplaceid}
+              </if>
+              <if test="companyid != null and companyid != ''">
+                  AND de.company = #{companyid}
+              </if>
+              <if test="channelid != null and channelid != ''">
+                  AND trans.channel = #{channelid}
+              </if>
+              <if test="fromDate != null and fromDate != ''">
+                  AND shipment.shiped_date &gt;= #{fromDate}
+              </if>
+              <if test="toDate != null and toDate != ''">
+                  AND shipment.shiped_date &lt;= #{toDate}
+              </if>
+            GROUP BY de.company
+        ) n ON v.companyid = n.companyid
+        LEFT JOIN db_erp.t_erp_ship_transcompany com ON com.id = v.companyid
+        WHERE com.`name` IS NOT NULL
+    </select>
+
+    <!-- 查询承运商台账统计数据（全局汇总） -->
+    <select id="selectCarrierLedgerStatistics" resultType="java.util.Map">
+        SELECT
+            COUNT(DISTINCT v.companyid) AS carrierCount,
+            SUM(v.totalout) AS totalout,
+            SUM(v.readweight) AS readweight,
+            IFNULL(SUM(n.transweight_kg), 0) AS transweight_kg,
+            IFNULL(SUM(n.shipfee), 0) AS shipfee,
+            IFNULL(SUM(n.totalotherfee), 0) AS totalotherfee,
+            IFNULL(SUM(n.shipmentnum), 0) AS shipmentnum
+        FROM (
+            SELECT
+                de.company AS companyid,
+                SUM(item.quantity) AS totalout,
+                SUM(IFNULL(dd.weight, 0) * item.quantity) AS readweight
+            FROM db_amazon.t_erp_ship_v2_inboundshipment_item item
+            LEFT JOIN db_amazon.t_erp_ship_v2_inboundshipment shipment ON shipment.ShipmentId = item.ShipmentId
+            LEFT JOIN db_amazon.t_erp_ship_v2_inboundplan plan ON plan.id = shipment.formid
+            LEFT JOIN db_erp.t_erp_material m ON m.sku = item.sku AND plan.shopid = m.shopid AND m.isDelete = 0
+            LEFT JOIN db_erp.t_dimensions dd ON dd.id = m.pkgDimensions
+            LEFT JOIN db_amazon.t_erp_ship_inboundtrans trans ON trans.shipmentid = shipment.shipment_confirmation_id
+            LEFT JOIN db_erp.t_erp_ship_transdetail de ON de.id = trans.channel
+            WHERE plan.shopid = #{shopid}
+              AND shipment.status &gt;= 5
+              <if test="groupid != null and groupid != ''">
+                  AND plan.groupid = #{groupid}
+              </if>
+              <if test="marketplaceid != null and marketplaceid != ''">
+                  AND plan.marketplaceid = #{marketplaceid}
+              </if>
+              <if test="companyid != null and companyid != ''">
+                  AND de.company = #{companyid}
+              </if>
+              <if test="channelid != null and channelid != ''">
+                  AND trans.channel = #{channelid}
+              </if>
+              <if test="fromDate != null and fromDate != ''">
+                  AND shipment.shiped_date &gt;= #{fromDate}
+              </if>
+              <if test="toDate != null and toDate != ''">
+                  AND shipment.shiped_date &lt;= #{toDate}
+              </if>
+            GROUP BY de.company
+        ) v
+        LEFT JOIN (
+            SELECT
+                de.company AS companyid,
+                SUM(CASE WHEN trans.wunit = 'kg' THEN trans.transweight ELSE 0 END) AS transweight_kg,
+                SUM(IFNULL(trans.singleprice, 0) * IFNULL(trans.transweight, 0) + IFNULL(trans.otherfee, 0)) AS shipfee,
+                SUM(trans.otherfee) AS totalotherfee,
+                COUNT(DISTINCT shipment.shipment_confirmation_id) AS shipmentnum
+            FROM db_amazon.t_erp_ship_v2_inboundshipment shipment
+            LEFT JOIN db_amazon.t_erp_ship_v2_inboundplan plan ON plan.id = shipment.formid
+            LEFT JOIN db_amazon.t_erp_ship_inboundtrans trans ON trans.shipmentid = shipment.shipment_confirmation_id
+            LEFT JOIN db_erp.t_erp_ship_transdetail de ON de.id = trans.channel
+            WHERE plan.shopid = #{shopid}
+              AND (shipment.status &gt;= 5 OR shipment.start_receive_date IS NOT NULL)
+              <if test="groupid != null and groupid != ''">
+                  AND plan.groupid = #{groupid}
+              </if>
+              <if test="marketplaceid != null and marketplaceid != ''">
+                  AND plan.marketplaceid = #{marketplaceid}
+              </if>
+              <if test="companyid != null and companyid != ''">
+                  AND de.company = #{companyid}
+              </if>
+              <if test="channelid != null and channelid != ''">
+                  AND trans.channel = #{channelid}
+              </if>
+              <if test="fromDate != null and fromDate != ''">
+                  AND shipment.shiped_date &gt;= #{fromDate}
+              </if>
+              <if test="toDate != null and toDate != ''">
+                  AND shipment.shiped_date &lt;= #{toDate}
+              </if>
+            GROUP BY de.company
+        ) n ON v.companyid = n.companyid
+    </select>
+
+    <!-- 查询承运商对账记录 -->
+    <select id="selectReconcileRecord" resultType="com.wimoor.finance.ledger.domain.FinCarrierReconcileRecord">
+        SELECT id, groupid, carrier_id AS carrierId, carrier_name AS carrierName,
+               company_name AS companyName, reconcile_month AS reconcileMonth,
+               total_plan_qty AS totalPlanQty, total_actual_qty AS totalActualQty,
+               total_received_qty AS totalReceivedQty, total_ship_fee AS totalShipFee,
+               total_other_fee AS totalOtherFee, total_worth AS totalWorth,
+               total_shipment_num AS totalShipmentNum, reconcile_by AS reconcileBy,
+               reconcile_time AS reconcileTime, created_time AS createdTime,
+               updated_time AS updatedTime
+        FROM fin_carrier_reconcile_record
+        WHERE groupid = #{groupid} AND carrier_id = #{carrierId} AND reconcile_month = #{reconcileMonth}
+    </select>
+
+    <!-- 查询承运商最新对账记录 -->
+    <select id="selectLatestReconcileRecord" resultType="com.wimoor.finance.ledger.domain.FinCarrierReconcileRecord">
+        SELECT id, groupid, carrier_id AS carrierId, carrier_name AS carrierName,
+               company_name AS companyName, reconcile_month AS reconcileMonth,
+               total_plan_qty AS totalPlanQty, total_actual_qty AS totalActualQty,
+               total_received_qty AS totalReceivedQty, total_ship_fee AS totalShipFee,
+               total_other_fee AS totalOtherFee, total_worth AS totalWorth,
+               total_shipment_num AS totalShipmentNum, reconcile_by AS reconcileBy,
+               reconcile_time AS reconcileTime, created_time AS createdTime,
+               updated_time AS updatedTime
+        FROM fin_carrier_reconcile_record
+        WHERE groupid = #{groupid} AND carrier_id = #{carrierId}
+        ORDER BY reconcile_time DESC
+        LIMIT 1
+    </select>
+
+    <!-- 插入承运商对账记录 -->
+    <insert id="insertReconcileRecord" parameterType="com.wimoor.finance.ledger.domain.FinCarrierReconcileRecord">
+        INSERT INTO fin_carrier_reconcile_record
+        (groupid, carrier_id, carrier_name, company_name, reconcile_month,
+         total_plan_qty, total_actual_qty, total_received_qty,
+         total_ship_fee, total_other_fee, total_worth, total_shipment_num,
+         reconcile_by, reconcile_time)
+        VALUES
+        (#{groupid}, #{carrierId}, #{carrierName}, #{companyName}, #{reconcileMonth},
+         #{totalPlanQty}, #{totalActualQty}, #{totalReceivedQty},
+         #{totalShipFee}, #{totalOtherFee}, #{totalWorth}, #{totalShipmentNum},
+         #{reconcileBy}, #{reconcileTime})
+    </insert>
+
+    <!-- 更新承运商对账记录 -->
+    <update id="updateReconcileRecord" parameterType="com.wimoor.finance.ledger.domain.FinCarrierReconcileRecord">
+        UPDATE fin_carrier_reconcile_record
+        SET carrier_name = #{carrierName},
+            company_name = #{companyName},
+            total_plan_qty = #{totalPlanQty},
+            total_actual_qty = #{totalActualQty},
+            total_received_qty = #{totalReceivedQty},
+            total_ship_fee = #{totalShipFee},
+            total_other_fee = #{totalOtherFee},
+            total_worth = #{totalWorth},
+            total_shipment_num = #{totalShipmentNum},
+            reconcile_by = #{reconcileBy},
+            reconcile_time = #{reconcileTime}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

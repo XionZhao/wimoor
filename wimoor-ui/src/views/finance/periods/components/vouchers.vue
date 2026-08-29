@@ -1,8 +1,12 @@
 <template>
   <div class="flex-between" style="margin-bottom:10px">
-    <div><el-checkbox>全选</el-checkbox></div>
+    <div>
+      <el-checkbox v-model="isAllSelected" :indeterminate="isIndeterminate" @change="handleSelectAll">全选</el-checkbox>
+    </div>
     <div><el-space>
       <el-button>重新测算</el-button>
+      <el-button type="warning" plain icon="Download" @click="handleExportConfig">导出配置</el-button>
+      <el-button type="warning" plain icon="Upload" @click="handleImportConfig">导入配置</el-button>
       <el-dropdown split-button type="primary" @click="handleClick">
         生成凭证
         <template #dropdown>
@@ -24,7 +28,7 @@
   <div v-for="(template,index) in lossTemplates" :key="'loss-'+template.id" class="vouchers-card vouchers-card-loss">
     <div class="card-header">
       <el-space>
-        <el-checkbox></el-checkbox>
+        <el-checkbox v-model="template.selected" @change="handleCheckboxChange"></el-checkbox>
         <div class="card-title">{{template.name}}</div>
         <el-button link type="primary">禁用</el-button>
         <el-button link type="primary" @click="handleSettings(template)">设置</el-button>
@@ -56,7 +60,7 @@
   <div v-for="(template,index) in fctTemplates" :key="'fct-'+template.id" class="vouchers-card vouchers-card-loss">
     <div class="card-header">
       <el-space>
-        <el-checkbox></el-checkbox>
+        <el-checkbox v-model="template.selected" @change="handleCheckboxChange"></el-checkbox>
         <div class="card-title">{{template.name}}</div>
         <el-button link type="primary">禁用</el-button>
         <el-button link type="primary" @click="handleSettings(template)">设置</el-button>
@@ -100,7 +104,7 @@
   <div class="vouchers-card" v-for="(template,index) in normalTemplates" :key="'normal-'+template.id">
     <div class="card-header">
       <el-space>
-        <el-checkbox></el-checkbox>
+        <el-checkbox v-model="template.selected" @change="handleCheckboxChange"></el-checkbox>
         <div class="card-title">{{template.name}}</div>
         <el-button link type="primary">禁用</el-button>
         <el-button link type="primary" @click="handleSettings(template)">设置</el-button>
@@ -154,7 +158,7 @@
   </el-space>
   <Template ref="templateRef" @change="load"></Template>
   <VoucherLogDialog ref="voucherLogRef" />
-  
+
   <!-- 金额计算逻辑弹窗 -->
   <el-dialog v-model="calcDialogVisible" :title="calcDialogTitle" width="800px" destroy-on-close>
     <div v-loading="calcLoading" element-loading-text="正在计算金额逻辑..." style="min-height: 100px;">
@@ -296,16 +300,63 @@
       <el-button @click="calcDialogVisible = false">关闭</el-button>
     </template>
   </el-dialog>
+
+  <!-- 导入配置弹框 -->
+  <el-dialog v-model="importDialogVisible" title="导入配置" width="500px">
+    <div style="margin-bottom: 16px;">
+      <el-alert title="导入说明" type="info" :closable="false">
+        <template #default>
+          <p>1. 请使用导出的Excel模板进行导入</p>
+          <p>2. 不同类型和名称的配置通过页签分开</p>
+          <p>3. 会计科目使用编码，其他字段使用名称</p>
+        </template>
+      </el-alert>
+    </div>
+    <el-upload
+      :drag="true"
+      action
+      ref="uploadRef"
+      :http-request="handleUploadFile"
+      :limit="1"
+      :on-exceed="handleExceed"
+      :before-upload="beforeUpload"
+      :show-file-list="true"
+      accept=".xls,.xlsx"
+    >
+      <el-icon class="font-large"><upload-filled /></el-icon>
+      <div class="el-upload__text">
+        拖拽文件到此处或 <em>点击上传</em>
+      </div>
+      <template #tip>
+        <div class="el-upload__tip">仅支持 .xls、.xlsx 格式文件</div>
+      </template>
+    </el-upload>
+    <template #footer>
+      <span class="dialog-footer">
+        <div class="flex-center-between">
+          <el-button type="success" @click.stop="downloadImportTemplate" plain>下载导入模板</el-button>
+          <div>
+            <el-button @click="importDialogVisible = false">取消</el-button>
+            <el-button type="primary" v-loading="importLoading" @click.stop="handleImportExcel">
+              开始导入
+            </el-button>
+          </div>
+        </div>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
 import Template from './template.vue';
 import VoucherLogDialog from './voucher_log_dialog.vue';
 import { ref ,onMounted, computed} from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox, ElLoading, genFileId } from 'element-plus';
+import { UploadFilled } from '@element-plus/icons-vue';
 import {listFinClosingTemplate,voucher,templateVouchers,getCalculationDetail} from "@/api/finance/closing_template.js";
 import {closing} from "@/api/finance/periods.js";
 import finStore from "@/hooks/store/useFinanceStore.js";
+import request from '@/utils/request';
 
 const emit = defineEmits(['switch-tab']);
 const templateRef = ref();
@@ -322,6 +373,24 @@ const calcDialogVisible = ref(false);
 const calcDialogTitle = ref('');
 const calcLoading = ref(false);
 const calcDetail = ref(null);
+
+// 导入相关变量
+const importDialogVisible = ref(false);
+const importLoading = ref(false);
+const uploadRef = ref(null);
+const importFile = ref(null);
+
+// 全选相关计算属性
+const isAllSelected = computed(() => {
+  const allTemplates = enabledTemplates.value;
+  return allTemplates.length > 0 && allTemplates.every(t => t.selected);
+});
+
+const isIndeterminate = computed(() => {
+  const allTemplates = enabledTemplates.value;
+  const selectedCount = allTemplates.filter(t => t.selected).length;
+  return selectedCount > 0 && selectedCount < allTemplates.length;
+});
 
 // 计算属性：结转损益模板（独立处理逻辑）
 const lossTemplates = computed(() => {
@@ -357,7 +426,7 @@ const isCurrentPeriod = computed(() => {
 function generateRecentPeriods() {
   const now = new Date();
   const recentPeriods = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 8; i++) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -371,6 +440,177 @@ function generateRecentPeriods() {
   }
   
   periods.value = recentPeriods;
+}
+
+// 全选处理
+function handleSelectAll(val) {
+  enabledTemplates.value.forEach(t => {
+    t.selected = val;
+  });
+}
+
+// 单个checkbox变化时更新全选状态
+function handleCheckboxChange() {
+  // 触发计算属性重新计算
+}
+
+// 获取选中的模板
+function getSelectedTemplates() {
+  return enabledTemplates.value.filter(t => t.selected);
+}
+
+// 导出配置
+async function handleExportConfig() {
+  const selectedTemplates = getSelectedTemplates();
+  if (selectedTemplates.length === 0) {
+    ElMessage.warning('请先选择要导出的配置');
+    return;
+  }
+
+  const loading = ElLoading.service({
+    lock: true,
+    text: '正在导出配置...',
+    background: 'rgba(0, 0, 0, 0.7)'
+  });
+
+  try {
+    const groupid = await finStore.getCurrentTenantId();
+    const templateIds = selectedTemplates.map(t => t.id);
+    
+    console.log('导出配置 - groupid:', groupid, 'templateIds:', templateIds);
+    
+    // 使用fetch发送请求
+    const response = await fetch('/api/finance/closing_template/exportConfig', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'jsessionid': localStorage.getItem('jsessionid') || ''
+      },
+      body: JSON.stringify({
+        templateIds: templateIds,
+        groupid: groupid
+      })
+    });
+
+    console.log('响应状态:', response.status, response.statusText);
+    
+    // 检查响应类型
+    const contentType = response.headers.get('content-type');
+    console.log('响应类型:', contentType);
+    
+    if (contentType && contentType.includes('application/json')) {
+      // 如果是JSON响应，说明是错误信息
+      const errorData = await response.json();
+      console.error('导出失败:', errorData);
+      ElMessage.error(errorData.msg || '导出失败');
+      return;
+    }
+
+    // 下载文件
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `结账配置_${new Date().getTime()}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    ElMessage.success('导出成功');
+  } catch (error) {
+    console.error('导出失败:', error);
+    ElMessage.error('导出失败: ' + error.message);
+  } finally {
+    loading.close();
+  }
+}
+
+// 导入配置
+function handleImportConfig() {
+  importDialogVisible.value = true;
+  importFile.value = null;
+}
+
+// 下载导入模板
+async function downloadImportTemplate() {
+  try {
+    const groupid = await finStore.getCurrentTenantId();
+    
+    // 使用proxy.download下载文件
+    proxy.download('finance/closing_template/importTemplate', {
+      groupid: groupid
+    }, `结账配置导入模板.xlsx`);
+    
+    ElMessage.success('模板下载成功');
+  } catch (error) {
+    console.error('模板下载失败:', error);
+    ElMessage.error('模板下载失败');
+  }
+}
+
+// 上传文件前校验
+function beforeUpload(file) {
+  const FileExt = file.name.replace(/.+\./, "").toLowerCase();
+  const isLt5M = file.size / 1024 < 50000;
+  if (!isLt5M) {
+    ElMessage.error('上传文件大小不能超过 50MB');
+    return false;
+  }
+  return true;
+}
+
+// 处理文件上传
+function handleUploadFile(item) {
+  importFile.value = item.file;
+}
+
+// 处理文件超出限制
+function handleExceed(files) {
+  uploadRef.value.clearFiles();
+  const file = files[0];
+  file.uid = genFileId();
+  uploadRef.value.handleStart(file);
+}
+
+// 导入Excel
+async function handleImportExcel() {
+  if (!importFile.value) {
+    ElMessage.warning('请先选择要导入的文件');
+    return;
+  }
+
+  importLoading.value = true;
+  const formData = new FormData();
+  formData.append('file', importFile.value);
+
+  try {
+    const groupid = await finStore.getCurrentTenantId();
+    formData.append('groupid', groupid);
+
+    // 使用request上传文件
+    const response = await request({
+      url: '/api/finance/closing_template/importConfig',
+      method: 'post',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+
+    if (response && response.code === 200) {
+      ElMessage.success(response.msg || '导入成功');
+      importDialogVisible.value = false;
+      load(); // 刷新列表
+    } else {
+      ElMessage.error(response.msg || '导入失败');
+    }
+  } catch (error) {
+    console.error('导入失败:', error);
+    ElMessage.error('导入失败');
+  } finally {
+    importLoading.value = false;
+  }
 }
 
 function handleAdd(){

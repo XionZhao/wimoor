@@ -1,22 +1,15 @@
 package com.wimoor.amazon.inventory.controller;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import cn.hutool.core.util.StrUtil;
 import com.amazon.spapi.model.fbainventory.InventorySummary;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.wimoor.amazon.auth.pojo.entity.AmazonAuthority;
+import com.wimoor.amazon.auth.pojo.entity.AmzAuthApiTimelimit;
 import com.wimoor.amazon.auth.pojo.entity.Marketplace;
 import com.wimoor.amazon.auth.service.IAmazonAuthorityService;
+import com.wimoor.amazon.auth.service.IAmazonGroupService;
+import com.wimoor.amazon.auth.service.IAmzAuthApiTimelimitService;
 import com.wimoor.amazon.auth.service.IMarketplaceService;
 import com.wimoor.amazon.feed.mapper.AmzSubmitFeedQueueMapper;
 import com.wimoor.amazon.feed.pojo.entity.AmzSubmitFeedQueue;
@@ -34,11 +27,19 @@ import com.wimoor.common.result.Result;
 import com.wimoor.common.user.UserInfo;
 import com.wimoor.common.user.UserInfoContext;
 import com.wimoor.common.user.UserLimitDataType;
-
-import cn.hutool.core.util.StrUtil;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Api(tags = "库存接口")
+@Slf4j
 @RestController
 @RequestMapping("/api/v0/inventry")
 public class InventoryController {
@@ -56,6 +57,13 @@ public class InventoryController {
 	AmzSubmitFeedQueueMapper amzSubmitFeedQueueMapper;
 	@Autowired
 	IAmzInventoryPlanningService iAmzInventoryPlanningService;
+	@Autowired
+	IAmzAuthApiTimelimitService amzAuthApiTimelimitService;
+	@Autowired
+	IAmazonGroupService amazonGroupService;
+	
+	private volatile boolean inventorySyncRunning = false;
+	private final Map<String, Map<String, Object>> inventorySyncTiming = new ConcurrentHashMap<>();
 	@GetMapping("/getInventorySupply")
 	public Result<Map<String, InventorySummary>> getInventorySupplyAction(String  groupid,String marketplaceid ,String skuStr) {
 		 
@@ -76,6 +84,66 @@ public class InventoryController {
 		return Result.success(result);
 	}
 	
+	@GetMapping("/taskInventoryData")
+	public Result<?> taskInventoryDataAction() {
+		amazonAuthorityService.executTask(inventorySupplyService);
+		return Result.success();
+	}
+	
+
+	
+	@GetMapping("/taskInventoryDataByAuth")
+	public Result<?> taskInventoryDataByAuthAction(String authid) {
+		if (StrUtil.isBlank(authid)) {
+			throw new BizException("authid不能为空！");
+		}
+		AmazonAuthority auth = amazonAuthorityService.getById(authid);
+		if (auth == null) {
+			throw new BizException("店铺授权不存在！");
+		}
+		inventorySupplyService.runApi(auth);
+		return Result.success();
+	}
+	
+	@GetMapping("/inventorySyncStatus")
+	public Result<Map<String, Object>> inventorySyncStatusAction(String authid) {
+		if (StrUtil.isBlank(authid)) {
+			throw new BizException("authid不能为空！");
+		}
+		Map<String, Object> result = new HashMap<>();
+		AmzAuthApiTimelimit limit = amzAuthApiTimelimitService.getApiLimit(authid, "getInventorySummaries");
+		if (limit != null) {
+			result.put("nextToken", limit.getNexttoken());
+			result.put("pages", limit.getPages());
+			result.put("startTime", limit.getStartTime());
+			result.put("endTime", limit.getEndTime());
+			result.put("lastuptime", limit.getLastuptime());
+			result.put("log", limit.getLog());
+			result.put("hasPendingSync", StrUtil.isNotBlank(limit.getNexttoken()));
+		} else {
+			result.put("nextToken", null);
+			result.put("pages", 0);
+			result.put("hasPendingSync", false);
+		}
+		return Result.success(result);
+	}
+	
+	@GetMapping("/resetInventorySync")
+	public Result<?> resetInventorySyncAction(String authid) {
+		if (StrUtil.isBlank(authid)) {
+			throw new BizException("authid不能为空！");
+		}
+		AmzAuthApiTimelimit limit = amzAuthApiTimelimitService.getApiLimit(authid, "getInventorySummaries");
+		if (limit != null) {
+			limit.setNexttoken(null);
+			limit.setPages(0);
+			limit.setStartTime(null);
+			limit.setEndTime(null);
+			amzAuthApiTimelimitService.update(limit);
+		}
+		return Result.success();
+	}
+
 	@GetMapping("/syncInventorySupply")
 	public Result<InventoryReport> syncInventorySupplyAction(String  groupid,String marketplaceid ,String skus) {
 		List<String> list = null;

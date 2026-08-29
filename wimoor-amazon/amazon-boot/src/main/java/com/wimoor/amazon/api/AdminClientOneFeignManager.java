@@ -73,9 +73,15 @@ public class AdminClientOneFeignManager {
     }
 
 
+	@SuppressWarnings("unchecked")
 	public String uploadFile(String type, MultipartFile file) {
 		Result<?> result= adminClientOneFeign.uploadFile(type, file);
-		return result.getData().toString();
+		Object data = result.getData();
+		if(data instanceof Map){
+			Map<String, Object> map = (Map<String, Object>) data;
+			return map.get("url").toString();
+		}
+		return data.toString();
 	}
 
 	public void deleteFile( String type,String path){

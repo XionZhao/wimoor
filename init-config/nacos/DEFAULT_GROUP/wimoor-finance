@@ -35,6 +35,14 @@ feign:
       default:
         connectTimeout: 10000
         readTimeout: 600000
+db:
+  otherTables:
+    - db_erp.t_erp_purchase_form
+    - db_erp.t_erp_purchase_form_entry
+    - db_erp.t_erp_purchase_form_payment
+    - db_erp.t_erp_fin_account
+    - db_erp.t_erp_fin_project
+    - db_erp.t_erp_customer
 # springdoc配置
 springdoc:
   gatewayUrl: http://localhost:8080/${spring.application.name}

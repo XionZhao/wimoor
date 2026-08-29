@@ -16,6 +16,7 @@
     "core-js": "^3.45.1",
     "echarts": "^6.0.0",
     "element-plus": "^2.11.1",
+    "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "highlight.js": "^11.11.1",
     "jquery": "^3.7.1",
@@ -33,13 +34,13 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.7",
+    "@vitejs/plugin-vue": "^6.0.1",
     "fast-glob": "^3.3.3",
     "sass-embedded": "^1.93.3",
     "terser": "^5.44.0",
     "unplugin-auto-import": "^20.2.0",
     "unplugin-vue-setup-extend-plus": "^1.0.1",
-    "vite": "^8.0.16",
+    "vite": "^7.0.14",
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-svg-icons": "^2.0.0"
   }

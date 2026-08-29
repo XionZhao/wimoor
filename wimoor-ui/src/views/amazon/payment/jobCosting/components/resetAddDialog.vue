@@ -4,7 +4,7 @@
 			<el-row>
 		<el-space>
 		<WarehouseFba />
-		<el-input  v-model="searchKeywords" @input="searchConfirm" placeholder="请输入" class="input-with-select" >
+		<el-input  v-model="searchKeywords" v-debounce-input="handleQuery" placeholder="请输入" class="input-with-select" >
 		  <template #prepend>
 		    <el-select v-model="selectlabel" @change='searchTypeChange' style="width: 110px">
 		      <el-option label="MSKU" value="sku"></el-option>

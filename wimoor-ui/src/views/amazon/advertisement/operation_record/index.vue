@@ -5,7 +5,7 @@
 		    <el-space >
 	          <AdGroup :border="true"  @change="changeGroup" :isAll="true"/>
 			  <Datepicker ref="datepickers" @changedate="changedate" />
-			  <el-input  v-model="queryParams.search" clearable @input="handleQuery" placeholder="搜索广告活动/广告组/商品" class="input-with-select" > </el-input>
+			  <el-input  v-model="queryParams.search" clearable @clear="handleQuery" v-debounce-input="handleQuery" placeholder="搜索广告活动/广告组/商品" class="input-with-select" > </el-input>
 			</el-space >
 		  </el-row>
 		</div>

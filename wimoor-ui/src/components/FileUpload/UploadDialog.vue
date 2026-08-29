@@ -63,6 +63,7 @@ function handleAdd() {
     file.fileName=item.name;
     file.filePath=item.url;
     file.fileType=item.type;
+    file.fileId=item.fileId;
     files.push(file)
   })
   emit("change", files)

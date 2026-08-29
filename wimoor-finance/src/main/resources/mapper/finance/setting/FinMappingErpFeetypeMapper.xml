@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.setting.mapper.FinMappingErpFeetypeMapper">
+<!--    CREATE TABLE `fin_mapping_erp_feetype` (-->
+<!--    `id` BIGINT(20) UNSIGNED NOT NULL,-->
+<!--    `groupid` BIGINT(20) UNSIGNED NULL DEFAULT NULL,-->
+<!--    `account_id` BIGINT(20) UNSIGNED NULL DEFAULT NULL,-->
+<!--    `subject_id` BIGINT(20) UNSIGNED NULL DEFAULT NULL,-->
+<!--    PRIMARY KEY (`id`) USING BTREE,-->
+<!--    INDEX `groupid` (`groupid`) USING BTREE-->
+<!--    )-->
+<!--    COLLATE='utf8mb4_bin'-->
+<!--    ENGINE=InnoDB-->
+<!--    ROW_FORMAT=DYNAMIC-->
+<!--    ;-->
+
+    <resultMap type="com.wimoor.finance.setting.domain.FinMappingErpFeetype" id="FinMappingErpFeetypeResult">
+        <result property="id"    column="id"    />
+        <result property="groupid"    column="groupid"    />
+        <result property="accountId"    column="account_id"    />
+        <result property="subjectId"    column="subject_id"    />
+        <result property="accountName"    column="account_name"    />
+        <result property="subjectName"    column="subject_name"    />
+    </resultMap>
+
+    <sql id="selectFinMappingErpFeetypeVo">
+        select r.id, r.groupid, r.account_id, r.subject_id,
+               concat(s.subject_code, ' ', s.subject_name) as subject_name
+        from fin_mapping_erp_feetype r
+        left join fin_accounting_subjects s on r.subject_id = s.subject_id
+    </sql>
+
+    <select id="selectFinMappingErpFeetypeList" parameterType="com.wimoor.finance.setting.domain.FinMappingErpFeetype" resultMap="FinMappingErpFeetypeResult">
+        <include refid="selectFinMappingErpFeetypeVo"/>
+        <where>
+            and r.groupid = #{groupid}
+            <if test="accountId != null"> and r.account_id = #{accountId}</if>
+            <if test="subjectId != null"> and r.subject_id = #{subjectId}</if>
+        </where>
+        order by r.id desc
+    </select>
+
+    <select id="selectFinMappingErpFeetypeById" parameterType="Long" resultMap="FinMappingErpFeetypeResult">
+        <include refid="selectFinMappingErpFeetypeVo"/>
+        where r.id = #{id}
+    </select>
+
+    <insert id="insertFinMappingErpFeetype" parameterType="com.wimoor.finance.setting.domain.FinMappingErpFeetype">
+        insert into fin_mapping_erp_feetype
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="groupid != null">groupid,</if>
+            <if test="accountId != null">account_id,</if>
+            <if test="subjectId != null">subject_id,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="groupid != null">#{groupid},</if>
+            <if test="accountId != null">#{accountId},</if>
+            <if test="subjectId != null">#{subjectId},</if>
+        </trim>
+    </insert>
+
+    <update id="updateFinMappingErpFeetype" parameterType="com.wimoor.finance.setting.domain.FinMappingErpFeetype">
+        update fin_mapping_erp_feetype
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="accountId != null">account_id = #{accountId},</if>
+            <if test="subjectId != null">subject_id = #{subjectId},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinMappingErpFeetypeById" parameterType="Long">
+        delete from fin_mapping_erp_feetype where id = #{id}
+    </delete>
+
+    <delete id="deleteFinMappingErpFeetypeByIds" parameterType="String">
+        delete from fin_mapping_erp_feetype where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

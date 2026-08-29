@@ -129,8 +129,10 @@
 			ifnull(i.outbound,0) outbound,
 			m.price,
 			ifnull(p.location,p.url) image,
-			m.issfg
+			m.issfg,
+			ifnull(c.name,'-') supplier
 		from  t_erp_material m
+		left join t_erp_customer c on c.id=m.supplier
 		left join (
 			select iv.shopid,iv.warehouseid,iv.materialid,max(w.name) name,
 				sum( case when substring_index(iv.status,'_',1)='inbound' then iv.quantity else 0 end ) inbound,

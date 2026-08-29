@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.setting.mapper.FinAccountingSubjectsMapper">
+<!--    CREATE TABLE `fin_accounting_subjects` (-->
+<!--    `subject_id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,-->
+<!--    `subject_code` VARCHAR(50) NULL DEFAULT NULL COMMENT '科目编码，如1001、1002等' COLLATE 'utf8mb4_bin',-->
+<!--    `groupid` BIGINT(20) UNSIGNED NOT NULL COMMENT '租户ID',-->
+<!--    `subject_name` VARCHAR(100) NOT NULL COMMENT '科目名称' COLLATE 'utf8mb4_bin',-->
+<!--    `subject_level` TINYINT(3) NOT NULL COMMENT '科目级别：1-一级科目，2-二级科目，3-三级科目',-->
+<!--    `direction` TINYINT(3) NOT NULL COMMENT '余额方向：1-借方，2-贷方',-->
+<!--    `parent_code` VARCHAR(50) NULL DEFAULT NULL COMMENT '父级科目编码，用于构建科目树形结构' COLLATE 'utf8mb4_bin',-->
+<!--    `subject_type` TINYINT(3) NOT NULL COMMENT '科目类型：1-资产，2-负债，3-所有者权益，4-成本，5-损益',-->
+<!--    `auxiliary_type` VARCHAR(100) NULL DEFAULT NULL COMMENT '辅助核算 空或者有数组值' COLLATE 'utf8mb4_bin',-->
+<!--    `is_foreign_currency` BIT(1) NOT NULL DEFAULT 'b\'0\'' COMMENT '是否外币核算',-->
+<!--    `is_quantity` BIT(1) NOT NULL DEFAULT 'b\'0\'' COMMENT '是否数量核算',-->
+<!--    `is_cash` BIT(1) NOT NULL DEFAULT 'b\'0\'' COMMENT '是否现金科目',-->
+<!--    `unit_of_measure` VARCHAR(10) NULL DEFAULT NULL COMMENT '计量单位' COLLATE 'utf8mb4_bin',-->
+<!--    `is_leaf` TINYINT(3) NULL DEFAULT '1' COMMENT '是否末级科目：0-否，1-是',-->
+<!--    `status` TINYINT(3) NULL DEFAULT '1' COMMENT '状态：0-停用，1-启用',-->
+<!--    `created_time` DATETIME NULL DEFAULT NULL COMMENT '创建时间',-->
+<!--    `updated_time` DATETIME NULL DEFAULT NULL COMMENT '更新时间',-->
+<!--    PRIMARY KEY (`subject_id`) USING BTREE,-->
+<!--    UNIQUE INDEX `tenant_id` (`groupid`, `subject_code`) USING BTREE,-->
+<!--    INDEX `parent_id` (`parent_code`) USING BTREE-->
+<!--    )-->
+<!--    COMMENT='会计科目表，存储企业所有会计科目信息'-->
+<!--    COLLATE='utf8mb4_bin'-->
+<!--    ENGINE=InnoDB-->
+<!--    AUTO_INCREMENT=14474-->
+<!--    ;-->
+
+    <resultMap type="com.wimoor.finance.setting.domain.FinAccountingSubjects" id="FinAccountingSubjectsResult">
+        <result property="subjectId"    column="subject_id"    />
+        <result property="subjectCode"    column="subject_code"    />
+        <result property="groupid"    column="groupid"    />
+        <result property="subjectName"    column="subject_name"    />
+        <result property="subjectLevel"    column="subject_level"    />
+        <result property="parentCode"    column="parent_code"    />
+        <result property="subjectType"    column="subject_type"    />
+        <result property="auxiliaryType"    column="auxiliary_type"    />
+        <result property="direction"    column="direction"    />
+        <result property="isLeaf"    column="is_leaf"    />
+        <result property="status"    column="status"    />
+        <result property="isForeignCurrency"    column="is_foreign_currency"    />
+        <result property="isQuantity"    column="is_quantity"    />
+        <result property="isCash"    column="is_cash"    />
+        <result property="unitOfMeasure"    column="unit_of_measure"    />
+        <result property="isExchange"    column="is_exchange"    />
+        <result property="foreignCurrencys"    column="foreign_currencys"    />
+        <result property="isParallel"    column="is_parallel"    />
+        <result property="isInventoryDetailEnabled"    column="is_inventory_detail_enabled"    />
+        <result property="isAuxiliary"    column="is_auxiliary"    />
+        <result property="createdTime"    column="created_time"    />
+        <result property="updatedTime"    column="updated_time"    />
+    </resultMap>
+
+    <sql id="selectFinAccountingSubjectsVo">
+        select t.subject_id, t.subject_code, t.groupid, t.subject_name, t.subject_level,
+               t.parent_code, t.subject_type, t.direction, t.is_leaf, t.status, t.created_time,
+               t.is_foreign_currency, t.is_quantity, t.is_cash, t.unit_of_measure, t.auxiliary_type,ty.name subjectTypeName,
+               t.is_exchange, t.foreign_currencys, t.is_parallel, t.is_inventory_detail_enabled, t.is_auxiliary, t.updated_time from fin_accounting_subjects t
+               left join fin_subject_type ty on t.subject_type = ty.id
+    </sql>
+
+    <select id="selectFinAccountingSubjectsList" parameterType="com.wimoor.finance.setting.domain.FinAccountingSubjects" resultMap="FinAccountingSubjectsResult">
+        <include refid="selectFinAccountingSubjectsVo"/>
+        <where>
+            and groupid = #{groupid}
+            <if test="subjectCode != null  and subjectCode != ''"> and subject_code = #{subjectCode}</if>
+            <if test="subjectName != null  and subjectName != ''"> and subject_name like concat('%', #{subjectName}, '%')</if>
+            <if test="subjectLevel != null "> and subject_level = #{subjectLevel}</if>
+            <if test="parentCode != null  and parentCode != ''"> and parent_code = #{parentCode}</if>
+            <if test="subjectTypeCode != null "> and ty.parent_code = #{subjectTypeCode}</if>
+            <if test="direction != null "> and direction = #{direction}</if>
+            <if test="isLeaf != null "> and is_leaf = #{isLeaf}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="isForeignCurrency != null "> and is_foreign_currency = #{isForeignCurrency}</if>
+            <if test="isQuantity != null "> and is_quantity = #{isQuantity}</if>
+            <if test="isCash != null "> and is_cash = #{isCash}</if>
+            <if test="unitOfMeasure != null "> and unit_of_measure = #{unitOfMeasure}</if>
+            <if test="auxiliaryType != null "> and auxiliary_type = #{auxiliaryType}</if>
+            <if test="isExchange != null "> and is_exchange = #{isExchange}</if>
+            <if test="foreignCurrencys != null "> and foreign_currencys = #{foreignCurrencys}</if>
+            <if test="isParallel != null "> and is_parallel = #{isParallel}</if>
+            <if test="createdTime != null "> and created_time = #{createdTime}</if>
+            <if test="updatedTime != null "> and updated_time = #{updatedTime}</if>
+        </where>
+    </select>
+
+    <!-- 自定义COUNT查询，避免PageHelper自动生成时LEFT JOIN导致的NPE -->
+    <select id="selectFinAccountingSubjectsList_COUNT" parameterType="com.wimoor.finance.setting.domain.FinAccountingSubjects" resultType="long">
+        SELECT count(0) FROM fin_accounting_subjects t
+        LEFT JOIN fin_subject_type ty ON t.subject_type = ty.id
+        <where>
+            and t.groupid = #{groupid}
+            <if test="subjectCode != null  and subjectCode != ''"> and t.subject_code = #{subjectCode}</if>
+            <if test="subjectName != null  and subjectName != ''"> and t.subject_name like concat('%', #{subjectName}, '%')</if>
+            <if test="subjectLevel != null "> and t.subject_level = #{subjectLevel}</if>
+            <if test="parentCode != null  and parentCode != ''"> and t.parent_code = #{parentCode}</if>
+            <if test="subjectTypeCode != null "> and ty.parent_code = #{subjectTypeCode}</if>
+            <if test="direction != null "> and t.direction = #{direction}</if>
+            <if test="isLeaf != null "> and t.is_leaf = #{isLeaf}</if>
+            <if test="status != null "> and t.status = #{status}</if>
+            <if test="isForeignCurrency != null "> and t.is_foreign_currency = #{isForeignCurrency}</if>
+            <if test="isQuantity != null "> and t.is_quantity = #{isQuantity}</if>
+            <if test="isCash != null "> and t.is_cash = #{isCash}</if>
+            <if test="unitOfMeasure != null "> and t.unit_of_measure = #{unitOfMeasure}</if>
+            <if test="auxiliaryType != null "> and t.auxiliary_type = #{auxiliaryType}</if>
+            <if test="isExchange != null "> and t.is_exchange = #{isExchange}</if>
+            <if test="foreignCurrencys != null "> and t.foreign_currencys = #{foreignCurrencys}</if>
+            <if test="isParallel != null "> and t.is_parallel = #{isParallel}</if>
+            <if test="createdTime != null "> and t.created_time = #{createdTime}</if>
+            <if test="updatedTime != null "> and t.updated_time = #{updatedTime}</if>
+        </where>
+    </select>
+
+    <select id="selectFinAccountingSubjectsBySubjectId" parameterType="String" resultMap="FinAccountingSubjectsResult">
+        <include refid="selectFinAccountingSubjectsVo"/>
+        where subject_id = #{subjectId}
+    </select>
+
+
+    <insert id="insertFinAccountingSubjects" parameterType="com.wimoor.finance.setting.domain.FinAccountingSubjects">
+        insert into fin_accounting_subjects
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="subjectId != null">subject_id,</if>
+            <if test="subjectCode != null">subject_code,</if>
+            <if test="groupid != null">groupid,</if>
+            <if test="subjectName != null and subjectName != ''">subject_name,</if>
+            <if test="subjectLevel != null">subject_level,</if>
+            <if test="parentCode != null">parent_code,</if>
+            <if test="subjectType != null">subject_type,</if>
+            <if test="direction != null">direction,</if>
+            <if test="isLeaf != null">is_leaf,</if>
+            <if test="isForeignCurrency != null">is_foreign_currency,</if>
+            <if test="isQuantity != null">is_quantity,</if>
+            <if test="isCash != null">is_cash,</if>
+            <if test="unitOfMeasure != null">unit_of_measure,</if>
+            <if test="auxiliaryType != null">auxiliary_type,</if>
+            <if test="isExchange != null">is_exchange,</if>
+            <if test="foreignCurrencys != null">foreign_currencys,</if>
+            <if test="isParallel != null">is_parallel,</if>
+            <if test="isInventoryDetailEnabled != null">is_inventory_detail_enabled,</if>
+            <if test="isAuxiliary != null">is_auxiliary,</if>
+            <if test="status != null">status,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="subjectId != null">#{subjectId},</if>
+            <if test="subjectCode != null">#{subjectCode},</if>
+            <if test="groupid != null">#{groupid},</if>
+            <if test="subjectName != null and subjectName != ''">#{subjectName},</if>
+            <if test="subjectLevel != null">#{subjectLevel},</if>
+            <if test="parentCode != null">#{parentCode},</if>
+            <if test="subjectType != null">#{subjectType},</if>
+            <if test="direction != null">#{direction},</if>
+            <if test="isLeaf != null">#{isLeaf},</if>
+            <if test="isForeignCurrency != null">#{isForeignCurrency},</if>
+            <if test="isQuantity != null">#{isQuantity},</if>
+            <if test="isCash != null">#{isCash},</if>
+            <if test="unitOfMeasure != null">#{unitOfMeasure},</if>
+            <if test="auxiliaryType != null">#{auxiliaryType},</if>
+            <if test="isExchange != null">#{isExchange},</if>
+            <if test="foreignCurrencys != null">#{foreignCurrencys},</if>
+            <if test="isParallel != null">#{isParallel},</if>
+            <if test="isInventoryDetailEnabled != null">#{isInventoryDetailEnabled},</if>
+            <if test="isAuxiliary != null">#{isAuxiliary},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+        </trim>
+    </insert>
+
+
+
+    <update id="updateFinAccountingSubjects" parameterType="com.wimoor.finance.setting.domain.FinAccountingSubjects">
+        update fin_accounting_subjects
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="subjectCode != null">subject_code = #{subjectCode},</if>
+            <if test="groupid != null">groupid = #{groupid},</if>
+            <if test="subjectName != null and subjectName != ''">subject_name = #{subjectName},</if>
+            <if test="subjectLevel != null">subject_level = #{subjectLevel},</if>
+            <if test="parentCode != null">parent_code = #{parentCode},</if>
+            <if test="subjectType != null">subject_type = #{subjectType},</if>
+            <if test="direction != null">direction = #{direction},</if>
+            <if test="isLeaf != null">is_leaf = #{isLeaf},</if>
+            <if test="isForeignCurrency != null">is_foreign_currency = #{isForeignCurrency},</if>
+            <if test="isQuantity != null">is_quantity = #{isQuantity},</if>
+            <if test="isCash != null">is_cash = #{isCash},</if>
+            <if test="unitOfMeasure != null">unit_of_measure = #{unitOfMeasure},</if>
+            <if test="auxiliaryType != null">auxiliary_type = #{auxiliaryType},</if>
+            <if test="isExchange != null">is_exchange = #{isExchange},</if>
+            <if test="foreignCurrencys != null">foreign_currencys = #{foreignCurrencys},</if>
+            <if test="isParallel != null">is_parallel = #{isParallel},</if>
+            <if test="isInventoryDetailEnabled != null">is_inventory_detail_enabled = #{isInventoryDetailEnabled},</if>
+            <if test="isAuxiliary != null">is_auxiliary = #{isAuxiliary},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createdTime != null">created_time = #{createdTime},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime},</if>
+        </trim>
+        where subject_id = #{subjectId}
+    </update>
+
+    <delete id="deleteFinAccountingSubjectsBySubjectId" parameterType="String">
+        delete from fin_accounting_subjects where subject_id = #{subjectId}
+    </delete>
+
+    <delete id="deleteFinAccountingSubjectsBySubjectIds" parameterType="String">
+        delete from fin_accounting_subjects where subject_id in
+        <foreach item="subjectId" collection="array" open="(" separator="," close=")">
+            #{subjectId}
+        </foreach>
+    </delete>
+
+    <resultMap id="SubjectBalanceDTOMap" type="com.wimoor.finance.ledger.domain.dto.SubjectBalanceDTO">
+        <result column="subject_code" property="subjectCode" />
+        <result column="subject_name" property="subjectName" />
+        <result column="subject_type" property="subjectType" />
+        <result column="direction" property="direction" />
+        <result column="begin_balance" property="beginBalance" />
+        <result column="begin_direction" property="beginDirection" />
+        <result column="debit_total" property="debitTotal" />
+        <result column="credit_total" property="creditTotal" />
+        <result column="end_balance" property="endBalance" />
+        <result column="end_direction" property="endDirection" />
+    </resultMap>
+
+
+
+    <select id="selectByTenantIdAndSubjectCode" resultMap="FinAccountingSubjectsResult">
+        SELECT subject_id, subject_code, groupid, subject_name, subject_level,
+               parent_code, subject_type, direction, is_leaf, `status`,
+               is_foreign_currency, is_quantity, is_cash, unit_of_measure, auxiliary_type,
+               is_exchange, foreign_currencys, is_parallel, is_inventory_detail_enabled, is_auxiliary, created_time, updated_time,subject_type
+        FROM fin_accounting_subjects
+        WHERE groupid = #{groupid}
+          AND subject_code = #{subjectCode}
+          AND `status` = 1
+    </select>
+
+    <select id="selectByTenantIdAndStatus" resultMap="FinAccountingSubjectsResult">
+        SELECT subject_id, subject_code, groupid, subject_name, subject_level,
+               parent_code, subject_type, direction, is_leaf, `status`,
+               is_foreign_currency, is_quantity, is_cash, unit_of_measure, auxiliary_type,
+               is_exchange, foreign_currencys, is_parallel, is_inventory_detail_enabled, is_auxiliary, created_time, updated_time,subject_type
+        FROM fin_accounting_subjects
+        WHERE groupid = #{groupid}
+          AND `status` = 1
+        ORDER BY subject_code
+    </select>
+
+    <select id="selectByTenantIdAndSubjectCodes" resultMap="FinAccountingSubjectsResult">
+        SELECT subject_id, subject_code, groupid, subject_name, subject_level,
+               parent_code, subject_type, direction, is_leaf, `status`,
+        is_foreign_currency, is_quantity, is_cash, unit_of_measure, auxiliary_type,
+        is_exchange, foreign_currencys, is_parallel, is_inventory_detail_enabled, is_auxiliary, created_time, updated_time,subject_type
+        FROM fin_accounting_subjects
+        WHERE groupid = #{groupid}
+        AND subject_code IN
+        <foreach collection="subjectCodes" item="code" open="(" close=")" separator=",">
+            #{code}
+        </foreach>
+        AND `status` = 1
+        ORDER BY subject_code
+    </select>
+
+    <select id="selectByTenantIdAndSubjectCodeLike" resultMap="FinAccountingSubjectsResult">
+        SELECT subject_id, subject_code, groupid, subject_name, subject_level,
+               parent_code, subject_type, direction, is_leaf, `status`,
+               is_foreign_currency, is_quantity, is_cash, unit_of_measure, auxiliary_type,
+               is_exchange, foreign_currencys, is_parallel, is_inventory_detail_enabled, is_auxiliary, created_time, updated_time,subject_type
+        FROM fin_accounting_subjects
+        WHERE groupid = #{groupid}
+          AND subject_code LIKE #{subjectCodePattern}
+          AND `status` = 1
+        ORDER BY subject_code
+    </select>
+
+    <select id="selectByTenantIdAndParentCode" resultMap="FinAccountingSubjectsResult">
+        SELECT subject_id, subject_code, groupid, subject_name, subject_level,
+               parent_code, subject_type, direction, is_leaf, `status`,
+               is_foreign_currency, is_quantity, is_cash, unit_of_measure, auxiliary_type,
+               is_exchange, foreign_currencys, is_parallel, is_inventory_detail_enabled, is_auxiliary, created_time, updated_time,subject_type
+        FROM fin_accounting_subjects
+        WHERE groupid = #{groupid}
+          AND parent_code = #{parentCode}
+          AND `status` = 1
+        ORDER BY subject_code
+    </select>
+    <select id="selectByGroupCode" resultMap="FinAccountingSubjectsResult" parameterType="java.lang.String">
+        SELECT subject_id, subject_code, groupid, subject_name, subject_level,
+               parent_code, subject_type, direction, is_leaf, `status`,
+               is_foreign_currency, is_quantity, is_cash, unit_of_measure, auxiliary_type,
+               is_exchange, foreign_currencys, is_parallel, is_inventory_detail_enabled, is_auxiliary, created_time, updated_time,subject_type
+        FROM fin_accounting_subjects
+        WHERE groupid = #{groupid}
+          AND subject_code = #{subjectCode}
+          AND `status` = 1
+    </select>
+
+    <select id="selectByGroupCodeAnyStatus" resultMap="FinAccountingSubjectsResult" parameterType="java.lang.String">
+        SELECT subject_id, subject_code, groupid, subject_name, subject_level,
+               parent_code, subject_type, direction, is_leaf, `status`,
+               is_foreign_currency, is_quantity, is_cash, unit_of_measure, auxiliary_type,
+               is_exchange, foreign_currencys, is_parallel, is_inventory_detail_enabled, is_auxiliary, created_time, updated_time,subject_type
+        FROM fin_accounting_subjects
+        WHERE groupid = #{groupid}
+          AND subject_code = #{subjectCode}
+    </select>
+
+    <select id="selectAllActiveSubjectCodes" resultMap="FinAccountingSubjectsResult" parameterType="java.lang.String">
+        SELECT subject_id, subject_code
+        FROM fin_accounting_subjects
+        WHERE groupid = #{groupid}
+          AND `status` = 1
+    </select>
+
+    <update id="batchDisableSubjects">
+        UPDATE fin_accounting_subjects
+        SET `status` = 0, updated_time = NOW()
+        WHERE groupid = #{groupid}
+          AND `status` = 1
+          <if test="excludeSubjectCodes != null and excludeSubjectCodes.size() > 0">
+              AND subject_code NOT IN
+              <foreach collection="excludeSubjectCodes" item="code" open="(" separator="," close=")">
+                  #{code}
+              </foreach>
+          </if>
+    </update>
+
+
+    <insert id="initFin" parameterType="java.lang.String">
+        <include refid="com.wimoor.finance.setting.mapper.FinInitAccountingSubjectsData.initSql"/>
+        <include refid="com.wimoor.finance.setting.mapper.FinInitDataMapper.initFinAuxiliaryTypes"/>
+        <include refid="com.wimoor.finance.setting.mapper.FinInitDataMapper.initCurrency"/>
+    </insert>
+</mapper>

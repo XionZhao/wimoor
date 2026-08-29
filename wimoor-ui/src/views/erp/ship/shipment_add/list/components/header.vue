@@ -5,7 +5,7 @@
 	 <Group @change="getData" defaultValue="all" />
 	 <Warehouse @changeware="getWarehouse" />
 	 <Datepicker @changedate="changedate" />
-	   <el-input  v-model="searchKeywords" placeholder="请输入" @input="searchConfirm" class="input-with-select" >
+	   <el-input  v-model="searchKeywords" placeholder="请输入" v-debounce-input="searchConfirm" class="input-with-select" >
 	      <template #prepend>
 	        <el-select v-model="selectlabel" @change='searchTypeChange' placeholder="SKU" style="width: 110px">
 	          <el-option label="SKU" value="sku"></el-option>
@@ -55,6 +55,8 @@
 	 import Group from '@/components/header/group.vue';
 	 import Warehouse from '@/components/header/warehouse.vue';
 	 import Datepicker from '@/components/header/datepicker.vue';
+
+
 	export default{
 		name:"Header",
 		components:{MenuUnfold,Search,ArrowDown,Plus,SettingTwo,Help,Copy,MoreOne,Group,Warehouse,Datepicker},
@@ -104,11 +106,11 @@
 				}
 			}
 			function searchConfirm(){
-				queryParam.searchwords=searchKeywords.value;
-				if(isload==false){
-					context.emit("getdata",queryParam)
-				}
+			queryParam.searchwords=searchKeywords.value;
+			if(isload==false){
+				context.emit("getdata",queryParam)
 			}
+		}
 			function submitForm(){
 				queryParam.color=color.value;
 				if(isload==false){

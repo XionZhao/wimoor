@@ -192,7 +192,7 @@
 		) p on p.sku=item.sku and p.marketplaceid=plan.marketplaceid and p.amazonauthid=plan.amazonauthid
 		left join t_erp_material m on m.sku = item.msku and plan.shopid=m.shopid and m.isDelete = 0
 		left join t_erp_material_custom mc on mc.materialid=m.id
-		left join t_erp_material_brand b on b.id=m.brand
+		left join t_erp_material_brand b on b.id=m.brandid
 		left join t_dimensions d on d.id=m.boxDimensions
 		left join t_dimensions dim on dim.id=m.pkgDimensions
 		left join t_picture pt2 on pt2.id=p.image

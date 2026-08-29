@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.setting.mapper.FinMappingErpInventoryMapper">
+
+    <resultMap type="com.wimoor.finance.setting.domain.FinMappingErpInventory" id="FinMappingErpInventoryResult">
+        <result property="id"    column="id"    />
+        <result property="groupid"    column="groupid"    />
+        <result property="warehouseType"    column="warehouse_type"    />
+        <result property="stage"    column="stage"    />
+        <result property="debitSubjectId"    column="debit_subject_id"    />
+        <result property="creditSubjectId"    column="credit_subject_id"    />
+        <result property="debitAuxiliaryType"    column="debit_auxiliary_type"    />
+        <result property="creditAuxiliaryType"    column="credit_auxiliary_type"    />
+        <result property="isEnabled"    column="is_enabled"    />
+        <result property="priority"    column="priority"    />
+        <result property="createdTime"    column="created_time"    />
+        <result property="updatedTime"    column="updated_time"    />
+        <result property="debitSubjectName"    column="debit_subject_name"    />
+        <result property="creditSubjectName"    column="credit_subject_name"    />
+    </resultMap>
+
+    <sql id="selectFinMappingErpInventoryVo">
+        select r.id, r.groupid, r.warehouse_type,
+               r.stage, r.debit_subject_id, r.credit_subject_id,
+               r.debit_auxiliary_type, r.credit_auxiliary_type,
+               r.is_enabled, r.priority, r.created_time, r.updated_time,
+               concat(ds.subject_code, ' ', ds.subject_name) as debit_subject_name,
+               concat(cs.subject_code, ' ', cs.subject_name) as credit_subject_name
+        from fin_mapping_erp_inventory r
+        left join fin_accounting_subjects ds on r.debit_subject_id = ds.subject_id
+        left join fin_accounting_subjects cs on r.credit_subject_id = cs.subject_id
+    </sql>
+
+    <select id="selectFinMappingErpInventoryList" parameterType="com.wimoor.finance.setting.domain.FinMappingErpInventory" resultMap="FinMappingErpInventoryResult">
+        <include refid="selectFinMappingErpInventoryVo"/>
+        <where>
+            and r.groupid = #{groupid}
+            <if test="warehouseType != null"> and r.warehouse_type = #{warehouseType}</if>
+            <if test="stage != null"> and r.stage = #{stage}</if>
+            <if test="debitSubjectId != null"> and r.debit_subject_id = #{debitSubjectId}</if>
+            <if test="creditSubjectId != null"> and r.credit_subject_id = #{creditSubjectId}</if>
+            <if test="isEnabled != null"> and r.is_enabled = #{isEnabled}</if>
+        </where>
+        order by r.priority asc, r.created_time desc
+    </select>
+
+    <select id="selectFinMappingErpInventoryById" parameterType="Long" resultMap="FinMappingErpInventoryResult">
+        <include refid="selectFinMappingErpInventoryVo"/>
+        where r.id = #{id}
+    </select>
+
+    <insert id="insertFinMappingErpInventory" parameterType="com.wimoor.finance.setting.domain.FinMappingErpInventory">
+        insert into fin_mapping_erp_inventory
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="groupid != null">groupid,</if>
+            <if test="warehouseType != null">warehouse_type,</if>
+            <if test="stage != null">stage,</if>
+            <if test="debitSubjectId != null">debit_subject_id,</if>
+            <if test="creditSubjectId != null">credit_subject_id,</if>
+            <if test="debitAuxiliaryType != null">debit_auxiliary_type,</if>
+            <if test="creditAuxiliaryType != null">credit_auxiliary_type,</if>
+            <if test="isEnabled != null">is_enabled,</if>
+            <if test="priority != null">priority,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="groupid != null">#{groupid},</if>
+            <if test="warehouseType != null">#{warehouseType},</if>
+            <if test="stage != null">#{stage},</if>
+            <if test="debitSubjectId != null">#{debitSubjectId},</if>
+            <if test="creditSubjectId != null">#{creditSubjectId},</if>
+            <if test="debitAuxiliaryType != null">#{debitAuxiliaryType},</if>
+            <if test="creditAuxiliaryType != null">#{creditAuxiliaryType},</if>
+            <if test="isEnabled != null">#{isEnabled},</if>
+            <if test="priority != null">#{priority},</if>
+        </trim>
+    </insert>
+
+    <update id="updateFinMappingErpInventory" parameterType="com.wimoor.finance.setting.domain.FinMappingErpInventory">
+        update fin_mapping_erp_inventory
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="warehouseType != null">warehouse_type = #{warehouseType},</if>
+            <if test="stage != null">stage = #{stage},</if>
+            <if test="debitSubjectId != null">debit_subject_id = #{debitSubjectId},</if>
+            <if test="creditSubjectId != null">credit_subject_id = #{creditSubjectId},</if>
+            <if test="debitAuxiliaryType != null">debit_auxiliary_type = #{debitAuxiliaryType},</if>
+            <if test="creditAuxiliaryType != null">credit_auxiliary_type = #{creditAuxiliaryType},</if>
+            <if test="isEnabled != null">is_enabled = #{isEnabled},</if>
+            <if test="priority != null">priority = #{priority},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinMappingErpInventoryById" parameterType="Long">
+        delete from fin_mapping_erp_inventory where id = #{id}
+    </delete>
+
+    <delete id="deleteFinMappingErpInventoryByIds" parameterType="String">
+        delete from fin_mapping_erp_inventory where id in
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

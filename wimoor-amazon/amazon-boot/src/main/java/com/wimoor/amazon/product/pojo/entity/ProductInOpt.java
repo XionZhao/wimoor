@@ -1,16 +1,16 @@
 package com.wimoor.amazon.product.pojo.entity;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.util.Date;
-import java.io.Serializable;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Date;
 
 /**
  * <p>
@@ -87,4 +87,13 @@ public class ProductInOpt implements Serializable {
     private BigInteger operator;
 
     String merchantShippingGroup;
+
+    @ApiModelProperty(value = "佣金")
+    private BigDecimal referralFee;
+
+    @ApiModelProperty(value = "FBA预估费用")
+    private BigDecimal fbaFees;
+
+    @ApiModelProperty(value = "预估费用总额")
+    private BigDecimal estimatedFeeTotal;
 }

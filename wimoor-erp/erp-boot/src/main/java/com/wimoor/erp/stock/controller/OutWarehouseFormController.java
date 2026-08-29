@@ -390,6 +390,9 @@ public class OutWarehouseFormController {
 	@GetMapping("getData")
 	public Result<Map<String, Object>> getData(String id) {
 		Map<String, Object> data = outWarehouseFormService.findById(id);
+		if(data == null) {
+			return Result.failed("未找到对应的出库单记录");
+		}
 		List<Map<String, Object>> outFormEntryList = outWarehouseFormEntryService.findFormDetailByFormid(data.get("id").toString());
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("warehouseform", data);

@@ -1,0 +1,713 @@
+﻿{
+    "module":  "Amazon Listing管理",
+    "description":  "Amazon Listing查询、预售数据、销售状态、评论分析、商品类型、A+内容、浏览节点等Listing全生命周期管理",
+    "tools":  [
+                  {
+                      "name":  "amz_query_listing",
+                      "description":  "查询Amazon商品Listing列表，支持按SKU、搜索关键词、店铺分组、站点等条件筛选商品信息",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/productInfo/getProductInfoList",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码，模糊搜索"
+                                             },
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                },
+                                     "searchType":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型"
+                                                    },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认1000"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "商品内部ID",
+                                              "sku":  "SKU编码",
+                                              "asin":  "ASIN编码",
+                                              "msku":  "主SKU",
+                                              "name":  "商品名称",
+                                              "image":  "商品图片URL",
+                                              "brand":  "品牌",
+                                              "price":  "采购价格",
+                                              "itemprice":  "销售价格",
+                                              "color":  "颜色状态",
+                                              "fulfillable":  "可用库存",
+                                              "marketplaceid":  "站点ID",
+                                              "records":  "数据列表",
+                                              "total":  "总记录数",
+                                              "current":  "当前页码",
+                                              "size":  "每页数量"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_listing_sale_status",
+                      "description":  "查询当前店铺下的商品销售状态定义列表，获取所有可用的状态分类及统计",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/productInfo/getProStatusList",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "状态ID",
+                                              "name":  "状态名称",
+                                              "issystem":  "是否系统预设",
+                                              "color":  "状态颜色",
+                                              "opttime":  "操作时间",
+                                              "remark":  "备注说明"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_listing_detail",
+                      "description":  "查询ASIN的Amazon目录商品详情，获取指定ASIN的完整商品信息",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/listing/findAsinInfo",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "asins":  {
+                                                   "type":  "array",
+                                                   "description":  "ASIN编码列表"
+                                               },
+                                     "marketplaceids":  {
+                                                            "type":  "array",
+                                                            "description":  "站点ID列表，可通过amz_query_market_list获取"
+                                                        },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 }
+                                 },
+                      "required":  [
+                                       "asins",
+                                       "marketplaceids"
+                                   ],
+                      "response_fields":  {
+                                              "items":  "商品目录信息列表",
+                                              "items.identifiers":  "商品标识信息(ASIN等)",
+                                              "items.summaries":  "商品摘要信息",
+                                              "items.attributes":  "商品属性信息",
+                                              "items.salesRanks":  "销售排名信息"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_listing_review_topics",
+                      "description":  "查询单个Listing的评论主题分析，查看买家评论的关键词和主题分布及对星级评分的影响",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/review/getItemReviewTopics",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "amazonauthid":  {
+                                                          "type":  "string",
+                                                          "description":  "Amazon授权ID"
+                                                      },
+                                     "asin":  {
+                                                  "type":  "string",
+                                                  "description":  "ASIN编码"
+                                              },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "sortby":  {
+                                                    "type":  "string",
+                                                    "description":  "排序方式"
+                                                }
+                                 },
+                      "required":  [
+                                       "amazonauthid",
+                                       "asin",
+                                       "marketplaceid"
+                                   ],
+                      "response_fields":  {
+                                              "asin":  "ASIN编码",
+                                              "itemName":  "商品标题",
+                                              "marketplaceId":  "站点ID",
+                                              "countryCode":  "国家代码",
+                                              "dateRange":  "数据日期范围",
+                                              "topics":  "评论主题列表",
+                                              "topics.topic":  "主题名称",
+                                              "topics.asinMetrics.numberOfMentions":  "提及次数",
+                                              "topics.asinMetrics.occurrencePercentage":  "提及占比百分比",
+                                              "topics.asinMetrics.starRatingImpact":  "对星级评分的影响",
+                                              "topics.subtopics":  "子主题列表",
+                                              "topics.reviewSnippets":  "评论摘要片段"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_listing_review_trends",
+                      "description":  "查询单个Listing的评论趋势数据，按月维度查看各主题的评论数量变化",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/review/getItemReviewTrends",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "amazonauthid":  {
+                                                          "type":  "string",
+                                                          "description":  "Amazon授权ID"
+                                                      },
+                                     "asin":  {
+                                                  "type":  "string",
+                                                  "description":  "ASIN编码"
+                                              },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       }
+                                 },
+                      "required":  [
+                                       "amazonauthid",
+                                       "asin",
+                                       "marketplaceid"
+                                   ],
+                      "response_fields":  {
+                                              "asin":  "ASIN编码",
+                                              "itemName":  "商品标题",
+                                              "marketplaceId":  "站点ID",
+                                              "countryCode":  "国家代码",
+                                              "dateRange":  "数据日期范围",
+                                              "reviewTrends":  "评论趋势列表",
+                                              "reviewTrends.topic":  "主题名称",
+                                              "reviewTrends.trendMetrics":  "趋势指标数据点列表",
+                                              "reviewTrends.trendMetrics.dateRange":  "时间范围",
+                                              "reviewTrends.trendMetrics.numberOfMentions":  "提及次数",
+                                              "reviewTrends.trendMetrics.occurrencePercentage":  "提及占比百分比"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_type_search",
+                      "description":  "搜索Amazon商品类型定义，查找可用的商品类型分类",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/product/amzProductType/searchDefinitionsProductTypes",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "keywords":  {
+                                                      "type":  "array",
+                                                      "description":  "商品类型关键词列表"
+                                                  },
+                                     "itemName":  {
+                                                      "type":  "string",
+                                                      "description":  "商品名称"
+                                                  },
+                                     "locale":  {
+                                                    "type":  "string",
+                                                    "description":  "语言区域"
+                                                },
+                                     "searchLocale":  {
+                                                          "type":  "string",
+                                                          "description":  "搜索语言区域"
+                                                      }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "marketplaceid"
+                                   ],
+                      "response_fields":  {
+                                              "productType":  "商品类型标识",
+                                              "displayName":  "商品类型显示名称",
+                                              "marketplaceId":  "站点ID",
+                                              "brandNameIncluded":  "是否包含品牌名"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_product_definition",
+                      "description":  "查询Amazon商品类型定义详情，获取指定商品类型的属性要求和约束",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/product/amzProductType/getProductDefinition",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "itemName":  {
+                                                      "type":  "string",
+                                                      "description":  "商品类型名称，用于匹配商品类型定义"
+                                                  }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "marketplaceid",
+                                       "itemName"
+                                   ],
+                      "response_fields":  {
+                                              "productType":  "商品类型标识",
+                                              "displayName":  "商品类型显示名称",
+                                              "marketplaceId":  "站点ID",
+                                              "requirements":  "属性要求",
+                                              "requirements.enforced":  "强制要求的属性列表",
+                                              "requirements.notEnforced":  "非强制要求的属性列表",
+                                              "schema":  "属性Schema定义",
+                                              "labels":  "属性标签映射",
+                                              "localizedEnums":  "本地化枚举值"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_presale_list",
+                      "description":  "查询预售商品列表，查看指定SKU在特定月份的预售数据",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/presale/getProductPreSales",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             },
+                                     "month":  {
+                                                   "type":  "string",
+                                                   "description":  "月份，格式：yyyy-MM"
+                                               }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "marketplaceid",
+                                       "sku"
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "SKU编码",
+                                              "marketplaceid":  "站点ID",
+                                              "groupid":  "店铺分组ID",
+                                              "month":  "月份",
+                                              "quantity":  "预售数量",
+                                              "day":  "日期",
+                                              "amazonauthid":  "Amazon授权ID"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_presale_monthly",
+                      "description":  "查询预售商品月度汇总数据，按月查看预售销量趋势",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/presale/getProductPreSalesByMonth",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "marketplaceid",
+                                       "sku"
+                                   ],
+                      "response_fields":  {
+                                              "date":  "月份（格式yy-MM）",
+                                              "value":  "月度预售数量",
+                                              "oldvalue":  "去年同期实际销量",
+                                              "holiday":  "节假日影响系数（如有）"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_month_sales",
+                      "description":  "查询商品月度销售数据，查看按月汇总的销量信息，支持分页",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/presale/getProductMonthSales",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             },
+                                     "msku":  {
+                                                  "type":  "string",
+                                                  "description":  "主SKU编码"
+                                              },
+                                     "asin":  {
+                                                  "type":  "string",
+                                                  "description":  "ASIN编码"
+                                              },
+                                     "needplan":  {
+                                                      "type":  "boolean",
+                                                      "description":  "是否需要计划数据"
+                                                  },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认1000"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "records":  "数据列表",
+                                              "total":  "总记录数",
+                                              "current":  "当前页码",
+                                              "size":  "每页数量"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_sales",
+                      "description":  "查询商品自定义销售数据图表，获取指定SKU的销量趋势",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/presale/getSales",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "amazonauthid":  {
+                                                          "type":  "string",
+                                                          "description":  "Amazon授权ID"
+                                                      },
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "SKU编码"
+                                             }
+                                 },
+                      "required":  [
+                                       "marketplaceid",
+                                       "sku"
+                                   ],
+                      "response_fields":  {
+                                              "legends":  "图例列表（SKU列表）",
+                                              "labels":  "X轴标签列表（日期列表）",
+                                              "lines":  "数据线列表",
+                                              "lines.name":  "数据线名称",
+                                              "lines.data":  "主数据列表（对应labels的Y轴值）",
+                                              "lines.data2":  "次数据列表（如有）",
+                                              "lines.summary":  "数据汇总"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_ship_group",
+                      "description":  "查询Amazon商家配送分组列表，获取商品的配送模板分组信息",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/product/merchantShippingGroup/list",
+                      "service":  "wimoor-amazon",
+                      "method":  "POST",
+                      "params":  {
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID，可通过amz_query_amazon_group获取"
+                                                 },
+                                     "marketplaceids":  {
+                                                            "type":  "array",
+                                                            "description":  "站点ID列表，可通过amz_query_market_list获取"
+                                                        }
+                                 },
+                      "required":  [
+                                       "groupid",
+                                       "marketplaceids"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "配送分组记录ID",
+                                              "amazonauthid":  "Amazon授权ID",
+                                              "marketplaceid":  "站点ID",
+                                              "name":  "配送分组名称",
+                                              "refreshtime":  "刷新时间"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_aplus_records",
+                      "description":  "查询A+内容发布记录，查看商品的A+页面内容状态和发布历史",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/product/aplus/searchContentPublishRecords",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "amazonAuthId":  {
+                                                          "type":  "string",
+                                                          "description":  "Amazon授权ID"
+                                                      },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "asin":  {
+                                                  "type":  "string",
+                                                  "description":  "ASIN编码"
+                                              },
+                                     "token":  {
+                                                   "type":  "string",
+                                                   "description":  "分页Token，用于获取下一页数据"
+                                               }
+                                 },
+                      "required":  [
+                                       "amazonAuthId",
+                                       "marketplaceid",
+                                       "asin"
+                                   ],
+                      "response_fields":  {
+                                              "nextPageToken":  "下一页分页Token",
+                                              "publishRecordList":  "发布记录列表",
+                                              "publishRecordList.contentReferenceKey":  "内容引用Key",
+                                              "publishRecordList.asin":  "ASIN编码",
+                                              "publishRecordList.contentType":  "内容类型",
+                                              "publishRecordList.contentSubType":  "内容子类型",
+                                              "publishRecordList.marketplaceId":  "站点ID",
+                                              "publishRecordList.locale":  "语言区域",
+                                              "warnings":  "警告信息"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_browse_node",
+                      "description":  "查询商品的浏览节点信息，获取商品在Amazon分类树中的位置",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/review/getItemBrowseNode",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "amazonauthid":  {
+                                                          "type":  "string",
+                                                          "description":  "Amazon授权ID"
+                                                      },
+                                     "asin":  {
+                                                  "type":  "string",
+                                                  "description":  "ASIN编码"
+                                              },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       }
+                                 },
+                      "required":  [
+                                       "amazonauthid",
+                                       "asin",
+                                       "marketplaceid"
+                                   ],
+                      "response_fields":  {
+                                              "browseNodeId":  "浏览节点ID",
+                                              "displayName":  "浏览节点显示名称"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_browse_review_topics",
+                      "description":  "查询浏览节点下商品的评论主题分析，查看同类商品买家评论的主题分布",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/review/getBrowseNodeReviewTopics",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "amazonauthid":  {
+                                                          "type":  "string",
+                                                          "description":  "Amazon授权ID"
+                                                      },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "browsenode":  {
+                                                        "type":  "string",
+                                                        "description":  "浏览节点ID，可通过amz_query_browse_node获取"
+                                                    },
+                                     "sortby":  {
+                                                    "type":  "string",
+                                                    "description":  "排序方式"
+                                                }
+                                 },
+                      "required":  [
+                                       "amazonauthid",
+                                       "marketplaceid",
+                                       "browsenode"
+                                   ],
+                      "response_fields":  {
+                                              "browseNodeId":  "浏览节点ID",
+                                              "displayName":  "浏览节点显示名称",
+                                              "marketplaceId":  "站点ID",
+                                              "countryCode":  "国家代码",
+                                              "dateRange":  "数据日期范围",
+                                              "topics":  "评论主题列表",
+                                              "topics.topic":  "主题名称",
+                                              "topics.occurrence":  "出现占比",
+                                              "topics.occurrence.allProducts":  "所有产品中提及该主题的评论占比",
+                                              "topics.starRatingImpact":  "星级评分影响",
+                                              "topics.starRatingImpact.allProducts":  "该主题对所有产品星级评分的影响",
+                                              "topics.subtopics":  "子主题列表"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_browse_review_trends",
+                      "description":  "查询浏览节点下商品的评论趋势，按月查看同类商品评论数量和评分变化",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/review/getBrowseNodeReviewTrends",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "amazonauthid":  {
+                                                          "type":  "string",
+                                                          "description":  "Amazon授权ID"
+                                                      },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "browsenode":  {
+                                                        "type":  "string",
+                                                        "description":  "浏览节点ID，可通过amz_query_browse_node获取"
+                                                    }
+                                 },
+                      "required":  [
+                                       "amazonauthid",
+                                       "marketplaceid",
+                                       "browsenode"
+                                   ],
+                      "response_fields":  {
+                                              "browseNodeId":  "浏览节点ID",
+                                              "displayName":  "浏览节点显示名称",
+                                              "marketplaceId":  "站点ID",
+                                              "countryCode":  "国家代码",
+                                              "dateRange":  "数据日期范围",
+                                              "reviewTrends":  "评论趋势列表",
+                                              "reviewTrends.topic":  "主题名称",
+                                              "reviewTrends.trendMetrics":  "趋势指标数据点列表",
+                                              "reviewTrends.trendMetrics.dateRange":  "时间范围",
+                                              "reviewTrends.trendMetrics.browseNodeMetrics":  "浏览节点指标",
+                                              "reviewTrends.trendMetrics.browseNodeMetrics.occurrencePercentage":  "提及占比百分比",
+                                              "reviewTrends.trendMetrics.browseNodeMetrics.starRatingImpact":  "星级评分影响"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_browse_return_topics",
+                      "description":  "查询浏览节点下商品的退货主题分析，查看同类商品退货原因的主题分布",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/review/getBrowseNodeReturnTopics",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "amazonauthid":  {
+                                                          "type":  "string",
+                                                          "description":  "Amazon授权ID"
+                                                      },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "browsenode":  {
+                                                        "type":  "string",
+                                                        "description":  "浏览节点ID，可通过amz_query_browse_node获取"
+                                                    }
+                                 },
+                      "required":  [
+                                       "amazonauthid",
+                                       "marketplaceid",
+                                       "browsenode"
+                                   ],
+                      "response_fields":  {
+                                              "browseNodeId":  "浏览节点ID",
+                                              "displayName":  "浏览节点显示名称",
+                                              "marketplaceId":  "站点ID",
+                                              "countryCode":  "国家代码",
+                                              "dateRange":  "数据日期范围",
+                                              "topics":  "退货主题列表",
+                                              "topics.topic":  "退货主题名称",
+                                              "topics.occurrence":  "出现占比",
+                                              "topics.occurrence.allProducts":  "所有产品中该退货原因的占比"
+                                          }
+                  },
+                  {
+                      "name":  "amz_query_browse_return_trends",
+                      "description":  "查询浏览节点下商品的退货趋势，按月查看同类商品退货数量变化",
+                      "menu_id":  2,
+                      "endpoint":  "/amazon/api/v1/report/product/review/getBrowseNodeReturnTrends",
+                      "service":  "wimoor-amazon",
+                      "method":  "GET",
+                      "params":  {
+                                     "amazonauthid":  {
+                                                          "type":  "string",
+                                                          "description":  "Amazon授权ID"
+                                                      },
+                                     "marketplaceid":  {
+                                                           "type":  "string",
+                                                           "description":  "站点ID，可通过amz_query_market_list获取"
+                                                       },
+                                     "browsenode":  {
+                                                        "type":  "string",
+                                                        "description":  "浏览节点ID，可通过amz_query_browse_node获取"
+                                                    }
+                                 },
+                      "required":  [
+                                       "amazonauthid",
+                                       "marketplaceid",
+                                       "browsenode"
+                                   ],
+                      "response_fields":  {
+                                              "browseNodeId":  "浏览节点ID",
+                                              "displayName":  "浏览节点显示名称",
+                                              "marketplaceId":  "站点ID",
+                                              "countryCode":  "国家代码",
+                                              "dateRange":  "数据日期范围",
+                                              "returnTrends":  "退货趋势列表",
+                                              "returnTrends.topic":  "退货主题名称",
+                                              "returnTrends.trendMetrics":  "趋势指标数据点列表",
+                                              "returnTrends.trendMetrics.dateRange":  "时间范围",
+                                              "returnTrends.trendMetrics.browseNodeMetrics":  "浏览节点退货指标",
+                                              "returnTrends.trendMetrics.browseNodeMetrics.returnRate":  "退货率",
+                                              "returnTrends.trendMetrics.browseNodeMetrics.numberOfReturns":  "退货数量"
+                                          }
+                  }
+              ]
+}

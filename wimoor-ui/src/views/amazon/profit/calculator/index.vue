@@ -88,8 +88,7 @@
 							   <span class="font-extraSmall">{{formData.height2}}</span>
 							</el-col>
 						 <el-col :span="24">
-               <span style="padding-right: 15px" class="font-extraSmall">lb体积重:{{formData.lbVolume}}</span>
-               <span class="font-extraSmall">kg体积重:{{formData.kgVolume}}</span>
+               <span class="font-extraSmall" >体积重：<span style="color:#67C23A"><b>{{formData.ozVolume}}</b> oz</span>&emsp;<span style="color:#E6A23C"><b>{{formData.lbVolume}}</b> lb</span>&emsp;<span style="color:#409EFF"><b>{{formData.kgVolume}}</b> kg</span></span>
              </el-col>
 					</el-form-item>
 					<el-form-item label="产品品类">
@@ -259,6 +258,9 @@
 				   sellingGSTRate:'',//印度销售GST税率
 				   referralrate:'',//印度佣金比率
 				   isSmlAndLightStr:'false',//是否轻小
+				   lbVolume:'',// 体积重
+				   kgVolume:'',// 体积重
+				   ozVolume:'',// 体积重
 				   sipp:null,
 	},
 	rules:{
@@ -318,6 +320,13 @@ function getLbVolume(length,width,height){
       return '--';
     }
   }
+  function getOzVolume(kgVolume){
+    if(kgVolume && kgVolume !== '--'){
+      return (parseFloat(kgVolume) * 35.274).toFixed(2);
+    }else{
+      return '--';
+    }
+  }
 function changeLength() {//改变尺寸
 	var length =state.formData.length;
 	var l =state.formData.lunit;
@@ -334,6 +343,7 @@ function changeLength() {//改变尺寸
 		state.formData.height2="高："+(height * 0.3937).toFixed(2) + "in";
     state.formData.kgVolume=getKgVolume(length,width,height);
     state.formData.lbVolume=getLbVolume(length * 0.3937,width * 0.3937,height * 0.3937);
+    state.formData.ozVolume=getOzVolume(state.formData.kgVolume);
 	}
 	if (l == i) {
 		state.formData.length2 ="长："+(length * 2.54).toFixed(2) + "cm";
@@ -341,6 +351,7 @@ function changeLength() {//改变尺寸
 		state.formData.height2 ="高："+(height * 2.54).toFixed(2) + "cm";
     state.formData.kgVolume=getKgVolume(length * 2.54,width * 2.54,height * 2.54);
     state.formData.lbVolume=getLbVolume(length,width,height);
+    state.formData.ozVolume=getOzVolume(state.formData.kgVolume);
 	}
 
 }

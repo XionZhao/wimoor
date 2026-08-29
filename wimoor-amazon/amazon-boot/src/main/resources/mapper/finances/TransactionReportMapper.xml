@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.amazon.finances.mapper.TransactionReportMapper">
+
+    <resultMap id="BaseResultMap" type="com.wimoor.amazon.finances.pojo.entity.TransactionReport">
+            <id property="id" column="id" />
+            <result property="amazonauthid" column="amazonauthid" />
+            <result property="marketplaceid" column="marketplaceid" />
+            <result property="dataHash" column="data_hash" />
+            <result property="dateTime" column="date_time" />
+            <result property="settlementId" column="settlement_id" />
+            <result property="transactionType" column="transaction_type" />
+            <result property="description" column="description" />
+            <result property="orderId" column="order_id" />
+            <result property="sku" column="sku" />
+            <result property="quantity" column="quantity" />
+            <result property="marketplace" column="marketplace" />
+            <result property="fulfillment" column="fulfillment" />
+            <result property="orderCity" column="order_city" />
+            <result property="orderState" column="order_state" />
+            <result property="orderPostCode" column="order_post_code" />
+            <result property="taxCollectionModel" column="tax_collection_model" />
+            <result property="productSales" column="product_sales" />
+            <result property="productSalesTax" column="product_sales_tax" />
+            <result property="shippingCredits" column="shipping_credits" />
+            <result property="shippingCreditsTax" column="shipping_credits_tax" />
+            <result property="giftwrapCredits" column="giftwrap_credits" />
+            <result property="giftwrapCreditsTax" column="giftwrap_credits_tax" />
+            <result property="promotionalRebates" column="promotional_rebates" />
+            <result property="promotionalRebatesTax" column="promotional_rebates_tax" />
+            <result property="marketplaceWithheldTax" column="marketplace_withheld_tax" />
+            <result property="sellingFees" column="selling_fees" />
+            <result property="fbaFees" column="fba_fees" />
+            <result property="otherTransactionFees" column="other_transaction_fees" />
+            <result property="other" column="other" />
+            <result property="total" column="total" />
+            <result property="createtime" column="createtime" />
+            <result property="opttime" column="opttime" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,amazonauthid,marketplaceid,data_hash,date_time,settlement_id,transaction_type,description,order_id,
+        sku,quantity,marketplace,fulfillment,
+        order_city,order_state,order_post_code,tax_collection_model,product_sales,
+        product_sales_tax,shipping_credits,shipping_credits_tax,giftwrap_credits,giftwrap_credits_tax,
+        promotional_rebates,promotional_rebates_tax,marketplace_withheld_tax,selling_fees,fba_fees,
+        other_transaction_fees,other,total,createtime,opttime
+    </sql>
+
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT IGNORE INTO t_amz_transaction_report (
+            id, amazonauthid, marketplaceid, date_time, settlement_id, transaction_type, description, order_id,
+            sku, quantity, marketplace, fulfillment,
+            order_city, order_state, order_post_code, tax_collection_model, product_sales,
+            product_sales_tax, shipping_credits, shipping_credits_tax, giftwrap_credits, giftwrap_credits_tax,
+            promotional_rebates, promotional_rebates_tax, marketplace_withheld_tax, selling_fees, fba_fees,
+            other_transaction_fees, other, total, createtime, opttime
+        ) values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+                UUID_SHORT(),
+                #{item.amazonauthid,jdbcType=VARCHAR},
+                #{item.marketplaceid,jdbcType=VARCHAR},
+                #{item.dateTime,jdbcType=TIMESTAMP},
+                #{item.settlementId,jdbcType=VARCHAR},
+                #{item.transactionType,jdbcType=VARCHAR},
+                #{item.description,jdbcType=VARCHAR},
+                #{item.orderId,jdbcType=VARCHAR},
+                #{item.sku,jdbcType=VARCHAR},
+                #{item.quantity,jdbcType=INTEGER},
+                #{item.marketplace,jdbcType=VARCHAR},
+                #{item.fulfillment,jdbcType=VARCHAR},
+                #{item.orderCity,jdbcType=VARCHAR},
+                #{item.orderState,jdbcType=VARCHAR},
+                #{item.orderPostCode,jdbcType=VARCHAR},
+                #{item.taxCollectionModel,jdbcType=VARCHAR},
+                #{item.productSales,jdbcType=DECIMAL},
+                #{item.productSalesTax,jdbcType=DECIMAL},
+                #{item.shippingCredits,jdbcType=DECIMAL},
+                #{item.shippingCreditsTax,jdbcType=DECIMAL},
+                #{item.giftwrapCredits,jdbcType=DECIMAL},
+                #{item.giftwrapCreditsTax,jdbcType=DECIMAL},
+                #{item.promotionalRebates,jdbcType=DECIMAL},
+                #{item.promotionalRebatesTax,jdbcType=DECIMAL},
+                #{item.marketplaceWithheldTax,jdbcType=DECIMAL},
+                #{item.sellingFees,jdbcType=DECIMAL},
+                #{item.fbaFees,jdbcType=DECIMAL},
+                #{item.otherTransactionFees,jdbcType=DECIMAL},
+                #{item.other,jdbcType=DECIMAL},
+                #{item.total,jdbcType=DECIMAL},
+                #{item.createtime,jdbcType=TIMESTAMP},
+                #{item.opttime,jdbcType=TIMESTAMP}
+            )
+        </foreach>
+    </insert>
+    
+    <!-- 按日期汇总统计各项费用 -->
+    <select id="selectDailyFeeSummary" resultType="java.util.Map">
+        SELECT 
+            DATE(date_time) as date_key,
+            COUNT(*) as record_count,
+            IFNULL(SUM(product_sales), 0) as product_sales,
+            IFNULL(SUM(product_sales_tax), 0) as product_sales_tax,
+            IFNULL(SUM(shipping_credits), 0) as shipping_credits,
+            IFNULL(SUM(shipping_credits_tax), 0) as shipping_credits_tax,
+            IFNULL(SUM(giftwrap_credits), 0) as giftwrap_credits,
+            IFNULL(SUM(giftwrap_credits_tax), 0) as giftwrap_credits_tax,
+            IFNULL(SUM(promotional_rebates), 0) as promotional_rebates,
+            IFNULL(SUM(promotional_rebates_tax), 0) as promotional_rebates_tax,
+            IFNULL(SUM(marketplace_withheld_tax), 0) as marketplace_withheld_tax,
+            IFNULL(SUM(selling_fees), 0) as selling_fees,
+            IFNULL(SUM(fba_fees), 0) as fba_fees,
+            IFNULL(SUM(other_transaction_fees), 0) as other_transaction_fees,
+            IFNULL(SUM(other), 0) as other,
+            IFNULL(SUM(total), 0) as total
+        FROM t_amz_transaction_report
+        WHERE amazonauthid = #{amazonauthid}
+        AND marketplaceid = #{marketplaceid}
+        AND DATE(date_time) >= #{startDate}
+        AND DATE(date_time) &lt;= #{endDate}
+        GROUP BY DATE(date_time)
+        ORDER BY DATE(date_time)
+    </select>
+    
+    <!-- 获取指定时间范围内的最小和最大日期时间 -->
+    <select id="selectMinMaxDateTime" resultType="java.util.Map">
+        SELECT 
+            MIN(date_time) as min_datetime,
+            MAX(date_time) as max_datetime
+        FROM t_amz_transaction_report
+        WHERE amazonauthid = #{amazonauthid}
+        AND marketplaceid = #{marketplaceid}
+        AND DATE(date_time) >= #{startDate}
+        AND DATE(date_time) &lt;= #{endDate}
+    </select>
+    
+    <!-- 获取指定时间范围内的总记录数 -->
+    <select id="selectCountByDateRange" resultType="long">
+        SELECT COUNT(*)
+        FROM t_amz_transaction_report
+        WHERE amazonauthid = #{amazonauthid}
+        AND marketplaceid = #{marketplaceid}
+        AND DATE(date_time) >= #{startDate}
+        AND DATE(date_time) &lt;= #{endDate}
+    </select>
+    
+    <!-- 统计页签：按交易类型汇总各项费用（排除订单SKU明细，只保留汇总类型） -->
+    <select id="selectFeeSummaryByType" resultType="java.util.Map">
+        SELECT 
+            transaction_type,
+            COUNT(*) as record_count,
+            IFNULL(SUM(product_sales), 0) as product_sales,
+            IFNULL(SUM(product_sales_tax), 0) as product_sales_tax,
+            IFNULL(SUM(shipping_credits), 0) as shipping_credits,
+            IFNULL(SUM(shipping_credits_tax), 0) as shipping_credits_tax,
+            IFNULL(SUM(giftwrap_credits), 0) as giftwrap_credits,
+            IFNULL(SUM(giftwrap_credits_tax), 0) as giftwrap_credits_tax,
+            IFNULL(SUM(promotional_rebates), 0) as promotional_rebates,
+            IFNULL(SUM(promotional_rebates_tax), 0) as promotional_rebates_tax,
+            IFNULL(SUM(marketplace_withheld_tax), 0) as marketplace_withheld_tax,
+            IFNULL(SUM(selling_fees), 0) as selling_fees,
+            IFNULL(SUM(fba_fees), 0) as fba_fees,
+            IFNULL(SUM(other_transaction_fees), 0) as other_transaction_fees,
+            IFNULL(SUM(other), 0) as other,
+            IFNULL(SUM(total), 0) as total
+        FROM t_amz_transaction_report
+        WHERE amazonauthid = #{amazonauthid}
+        AND DATE(date_time) >= #{startDate}
+        AND DATE(date_time) &lt;= #{endDate}
+        GROUP BY transaction_type
+        ORDER BY ABS(SUM(total)) DESC
+    </select>
+    
+    <!-- 统计页签：按日期和交易类型汇总各项费用 -->
+    <select id="selectDailyFeeByType" resultType="java.util.Map">
+        SELECT 
+            DATE(date_time) as date_key,
+            transaction_type,
+            COUNT(*) as record_count,
+            IFNULL(SUM(product_sales), 0) as product_sales,
+            IFNULL(SUM(product_sales_tax), 0) as product_sales_tax,
+            IFNULL(SUM(shipping_credits), 0) as shipping_credits,
+            IFNULL(SUM(shipping_credits_tax), 0) as shipping_credits_tax,
+            IFNULL(SUM(giftwrap_credits), 0) as giftwrap_credits,
+            IFNULL(SUM(giftwrap_credits_tax), 0) as giftwrap_credits_tax,
+            IFNULL(SUM(promotional_rebates), 0) as promotional_rebates,
+            IFNULL(SUM(promotional_rebates_tax), 0) as promotional_rebates_tax,
+            IFNULL(SUM(marketplace_withheld_tax), 0) as marketplace_withheld_tax,
+            IFNULL(SUM(selling_fees), 0) as selling_fees,
+            IFNULL(SUM(fba_fees), 0) as fba_fees,
+            IFNULL(SUM(other_transaction_fees), 0) as other_transaction_fees,
+            IFNULL(SUM(other), 0) as other,
+            IFNULL(SUM(total), 0) as total
+        FROM t_amz_transaction_report
+        WHERE amazonauthid = #{amazonauthid}
+        AND DATE(date_time) >= #{startDate}
+        AND DATE(date_time) &lt;= #{endDate}
+        GROUP BY DATE(date_time), transaction_type
+        ORDER BY DATE(date_time), transaction_type
+    </select>
+    
+    <!-- 图表页签：交易报告 LEFT JOIN 结算报告，按日期统计Order类型销量比对 -->
+    <!-- transaction_report 提供销售额，settlement_report 提供结算状态和结算日期 -->
+    <select id="selectSalesCompareByDate" resultType="java.util.Map">
+        <choose>
+            <when test="groupType == 'week'">
+                SELECT 
+                    DATE_FORMAT(t.date_time, '%x-W%v') as date_key,
+                    MIN(DATE(t.date_time)) as date_label,
+                    'week' as group_type,
+                    COUNT(DISTINCT t.order_id) as order_count,
+                    IFNULL(SUM(t.quantity), 0) as quantity,
+                    IFNULL(SUM(t.product_sales), 0) as product_sales,
+                    IFNULL(SUM(t.product_sales_tax), 0) as product_sales_tax,
+                    IFNULL(SUM(t.shipping_credits), 0) as shipping_credits,
+                    IFNULL(SUM(t.giftwrap_credits), 0) as giftwrap_credits,
+                    IFNULL(SUM(t.promotional_rebates), 0) as promotional_rebates,
+                    IFNULL(SUM(t.selling_fees), 0) as selling_fees,
+                    IFNULL(SUM(t.fba_fees), 0) as fba_fees,
+                    IFNULL(SUM(t.other_transaction_fees), 0) as other_transaction_fees,
+                    IFNULL(SUM(t.total), 0) as total,
+                    COUNT(DISTINCT s.settlement_id) as settlement_count
+                FROM t_amz_transaction_report t
+                LEFT JOIN t_amz_settlement_report s 
+                    ON t.order_id = s.order_id AND t.amazonauthid = s.amazon_auth_id AND s.amount_type = 'ItemPrice'
+                WHERE t.amazonauthid = #{amazonauthid}
+                AND t.transaction_type = 'Order'
+                AND DATE(t.date_time) >= #{startDate}
+                AND DATE(t.date_time) &lt;= #{endDate}
+                GROUP BY DATE_FORMAT(t.date_time, '%x-W%v')
+                ORDER BY DATE_FORMAT(t.date_time, '%x-W%v')
+            </when>
+            <when test="groupType == 'month'">
+                SELECT 
+                    DATE_FORMAT(t.date_time, '%Y-%m') as date_key,
+                    DATE_FORMAT(t.date_time, '%Y-%m') as date_label,
+                    'month' as group_type,
+                    COUNT(DISTINCT t.order_id) as order_count,
+                    IFNULL(SUM(t.quantity), 0) as quantity,
+                    IFNULL(SUM(t.product_sales), 0) as product_sales,
+                    IFNULL(SUM(t.product_sales_tax), 0) as product_sales_tax,
+                    IFNULL(SUM(t.shipping_credits), 0) as shipping_credits,
+                    IFNULL(SUM(t.giftwrap_credits), 0) as giftwrap_credits,
+                    IFNULL(SUM(t.promotional_rebates), 0) as promotional_rebates,
+                    IFNULL(SUM(t.selling_fees), 0) as selling_fees,
+                    IFNULL(SUM(t.fba_fees), 0) as fba_fees,
+                    IFNULL(SUM(t.other_transaction_fees), 0) as other_transaction_fees,
+                    IFNULL(SUM(t.total), 0) as total,
+                    COUNT(DISTINCT s.settlement_id) as settlement_count
+                FROM t_amz_transaction_report t
+                LEFT JOIN t_amz_settlement_report s 
+                    ON t.order_id = s.order_id AND t.amazonauthid = s.amazon_auth_id AND s.amount_type = 'ItemPrice'
+                WHERE t.amazonauthid = #{amazonauthid}
+                AND t.transaction_type = 'Order'
+                AND DATE(t.date_time) >= #{startDate}
+                AND DATE(t.date_time) &lt;= #{endDate}
+                GROUP BY DATE_FORMAT(t.date_time, '%Y-%m')
+                ORDER BY DATE_FORMAT(t.date_time, '%Y-%m')
+            </when>
+            <otherwise>
+                SELECT 
+                    DATE(t.date_time) as date_key,
+                    DATE(t.date_time) as date_label,
+                    'day' as group_type,
+                    COUNT(DISTINCT t.order_id) as order_count,
+                    IFNULL(SUM(t.quantity), 0) as quantity,
+                    IFNULL(SUM(t.product_sales), 0) as product_sales,
+                    IFNULL(SUM(t.product_sales_tax), 0) as product_sales_tax,
+                    IFNULL(SUM(t.shipping_credits), 0) as shipping_credits,
+                    IFNULL(SUM(t.giftwrap_credits), 0) as giftwrap_credits,
+                    IFNULL(SUM(t.promotional_rebates), 0) as promotional_rebates,
+                    IFNULL(SUM(t.selling_fees), 0) as selling_fees,
+                    IFNULL(SUM(t.fba_fees), 0) as fba_fees,
+                    IFNULL(SUM(t.other_transaction_fees), 0) as other_transaction_fees,
+                    IFNULL(SUM(t.total), 0) as total,
+                    COUNT(DISTINCT s.settlement_id) as settlement_count
+                FROM t_amz_transaction_report t
+                LEFT JOIN t_amz_settlement_report s 
+                    ON t.order_id = s.order_id AND t.amazonauthid = s.amazon_auth_id AND s.amount_type = 'ItemPrice'
+                WHERE t.amazonauthid = #{amazonauthid}
+                AND t.transaction_type = 'Order'
+                AND DATE(t.date_time) >= #{startDate}
+                AND DATE(t.date_time) &lt;= #{endDate}
+                GROUP BY DATE(t.date_time)
+                ORDER BY DATE(t.date_time)
+            </otherwise>
+        </choose>
+    </select>
+    
+    <!-- 详情页签：分页查询交易报告详情 -->
+    <sql id="detailWhere">
+        WHERE amazonauthid = #{amazonauthid}
+        AND DATE(date_time) >= #{startDate}
+        AND DATE(date_time) &lt;= #{endDate}
+        <if test="searchType == 'orderId' and searchValue != null and searchValue != ''">
+            AND order_id LIKE CONCAT('%', #{searchValue}, '%')
+        </if>
+        <if test="searchType == 'sku' and searchValue != null and searchValue != ''">
+            AND sku LIKE CONCAT('%', #{searchValue}, '%')
+        </if>
+    </sql>
+    
+    <select id="selectDetailPage" resultType="java.util.Map">
+        SELECT id, date_time, transaction_type, description, order_id, sku, quantity, marketplace, fulfillment,
+            product_sales, product_sales_tax, shipping_credits, shipping_credits_tax,
+            giftwrap_credits, giftwrap_credits_tax, promotional_rebates, promotional_rebates_tax,
+            marketplace_withheld_tax, selling_fees, fba_fees, other_transaction_fees, other, total,
+            settlement_id
+        FROM t_amz_transaction_report
+        <include refid="detailWhere"/>
+        ORDER BY date_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+    
+    <select id="selectDetailCount" resultType="long">
+        SELECT COUNT(*)
+        FROM t_amz_transaction_report
+        <include refid="detailWhere"/>
+    </select>
+    
+    <select id="selectDetailForExport" resultType="java.util.Map">
+        SELECT date_time, transaction_type, description, order_id, settlement_id, sku, quantity, marketplace, fulfillment,
+            order_city, order_state, order_post_code, tax_collection_model,
+            product_sales, product_sales_tax, shipping_credits, shipping_credits_tax,
+            giftwrap_credits, giftwrap_credits_tax, promotional_rebates, promotional_rebates_tax,
+            marketplace_withheld_tax, selling_fees, fba_fees, other_transaction_fees, other, total
+        FROM t_amz_transaction_report
+        <include refid="detailWhere"/>
+        ORDER BY date_time DESC
+    </select>
+</mapper>

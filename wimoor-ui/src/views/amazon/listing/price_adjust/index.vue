@@ -6,7 +6,7 @@
 					<Group ref="groups" @change="changeGroup" />
 					 <Datepicker ref="datepickers" @changedate="changedate" />
 					<Owner   @owner="ownerchange" />
-					<el-input v-model="searchKeywords" clearable @input="searchConfirm" placeholder="请输入" class="input-with-select">
+					<el-input v-model="searchKeywords" clearable @clear="searchConfirm" v-debounce-input="searchConfirm" placeholder="请输入" class="input-with-select">
 						<template #prepend>
 							<el-select v-model="selectlabel" @change='searchTypeChange' placeholder="SKU"
 								style="width: 110px">
@@ -45,6 +45,8 @@
 	import Group from '@/components/header/group.vue';
 	import Datepicker from '@/components/header/datepicker.vue';
 	import Owner from '@/components/header/owner.vue';
+
+
 	import Table from"./components/table.vue";
 	export default {
 		name:'调价队列',
@@ -89,11 +91,11 @@
 				}
 			}
 			function searchConfirm(){
-				queryParam.search=searchKeywords.value;
-				if(isload==false){
-					tableRef.value.loadData(queryParam);
-				}
+			queryParam.search=searchKeywords.value;
+			if(isload==false){
+				tableRef.value.loadData(queryParam);
 			}
+		}
 			function stausChange(val){
 				
 			}

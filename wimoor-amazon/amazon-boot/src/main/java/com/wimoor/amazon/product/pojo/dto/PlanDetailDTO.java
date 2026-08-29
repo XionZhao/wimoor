@@ -21,4 +21,5 @@ public class PlanDetailDTO {
 	Boolean iseu;
 	Integer amount;
 	String shopid;
+	Boolean skipPrelist;
 }

@@ -228,7 +228,17 @@
 			${param.entryorders}
 		</if>
 		<if test="param.entryorders ==null">
-			order by  m.sku desc
+			<choose>
+				<when test="param.sortOrder != null and param.sortOrder == 'asc'">
+					order by form.createdate asc
+				</when>
+				<when test="param.sortOrder != null and param.sortOrder == 'desc'">
+					order by form.createdate desc
+				</when>
+				<otherwise>
+					order by m.sku desc
+				</otherwise>
+			</choose>
 		</if>
 	</select>
 	
@@ -1038,7 +1048,17 @@
 		<if test="param.supplierid!=null and param.supplierid!=''">
 			and p.hassupplierid>0
 		</if>
-		order by p.createdate desc
+		<choose>
+			<when test="param.sortOrder != null and param.sortOrder == 'asc'">
+				order by p.createdate asc
+			</when>
+			<when test="param.sortOrder != null and param.sortOrder == 'desc'">
+				order by p.createdate desc
+			</when>
+			<otherwise>
+				order by p.createdate desc
+			</otherwise>
+		</choose>
 	</select>
 	
 	<select id="selectSummarytByCondition" resultType="java.util.Map" parameterType="java.util.Map">
@@ -1173,6 +1193,322 @@
 		</if>
 	</select>
 
+	<!-- ==================== 台账Feign接口 ==================== -->
+	
+	<!-- 供应商台账汇总（参照采购统计补全付款/入库信息） -->
+	<select id="getSupplierLedgerSummary" resultType="java.util.Map">
+		SELECT
+			entry.supplier AS supplierId,
+			c.name AS supplierName,
+			c.fullname AS supplierFullname,
+			c.contacts AS contactPerson,
+			c.phone_num AS phone,
+			COUNT(DISTINCT pf.id) AS orderCount,
+			IFNULL(SUM(entry.orderprice), 0) AS totalorderprice,
+			IFNULL(SUM(entry.totalin), 0) AS totalin,
+			IFNULL(SUM(v2.entrycostfee), 0) AS totalcostfee,
+			IFNULL(SUM(entry.orderprice) - SUM(IFNULL(v2.entrycostfee, 0)), 0) AS waitPay
+		FROM t_erp_purchase_form_entry entry
+		INNER JOIN t_erp_purchase_form pf ON pf.id = entry.formid
+		INNER JOIN t_erp_customer c ON c.id = entry.supplier
+		LEFT JOIN (
+			SELECT pay.formentryid,
+				SUM(CASE WHEN pay.auditstatus = 1 AND pay.projectid = '26138972997300240' THEN pay.payprice ELSE 0 END) AS entrycostfee
+			FROM t_erp_purchase_form_payment pay
+			INNER JOIN t_erp_purchase_form_entry pe ON pe.id = pay.formentryid
+			INNER JOIN t_erp_purchase_form ppf ON ppf.id = pe.formid
+			WHERE ppf.shopid = #{param.shopid}
+			<if test="param.groupid != null and param.groupid != ''">
+				AND ppf.groupid = #{param.groupid}
+			</if>
+			GROUP BY pay.formentryid
+		) v2 ON v2.formentryid = entry.id
+		<where>
+			entry.auditstatus &gt; 1
+			AND pf.shopid = #{param.shopid}
+			<if test="param.groupid != null and param.groupid != ''">
+				AND pf.groupid = #{param.groupid}
+			</if>
+			<if test="param.supplierId != null and param.supplierId != ''">
+				AND entry.supplier = #{param.supplierId}
+			</if>
+			<if test="param.supplierName != null and param.supplierName != ''">
+				AND (c.name LIKE CONCAT('%', #{param.supplierName}, '%')
+					OR c.fullname LIKE CONCAT('%', #{param.supplierName}, '%'))
+			</if>
+			<if test="param.warehouseid != null and param.warehouseid != ''">
+				AND pf.warehouseid = #{param.warehouseid}
+			</if>
+			<if test="param.search != null and param.search != ''">
+				AND entry.materialid IN (SELECT id FROM t_erp_material WHERE sku LIKE CONCAT('%', #{param.search}, '%'))
+			</if>
+			<if test="param.contactPerson != null and param.contactPerson != ''">
+				AND c.contacts LIKE CONCAT('%', #{param.contactPerson}, '%')
+			</if>
+			<if test="param.startDate != null">
+				AND pf.createdate &gt;= #{param.startDate}
+			</if>
+			<if test="param.endDate != null">
+				AND pf.createdate &lt;= #{param.endDate}
+			</if>
+			<if test="param.fromDate != null">
+				AND pf.createdate &gt;= #{param.fromDate}
+			</if>
+			<if test="param.toDate != null">
+				AND pf.createdate &lt;= #{param.toDate}
+			</if>
+		</where>
+		GROUP BY entry.supplier, c.name, c.fullname, c.contacts, c.phone_num
+		ORDER BY totalorderprice DESC
+	</select>
+
+	<!-- 供应商台账汇总合计行 -->
+	<select id="getSupplierLedgerSummaryTotal" resultType="java.util.Map">
+		SELECT
+			COUNT(DISTINCT pf.id) AS orderCount,
+			IFNULL(SUM(entry.orderprice), 0) AS totalorderprice,
+			IFNULL(SUM(entry.totalin), 0) AS totalin,
+			IFNULL(SUM(v2.entrycostfee), 0) AS totalcostfee,
+			IFNULL(SUM(entry.orderprice) - SUM(IFNULL(v2.entrycostfee, 0)), 0) AS waitPay
+		FROM t_erp_purchase_form_entry entry
+		INNER JOIN t_erp_purchase_form pf ON pf.id = entry.formid
+		INNER JOIN t_erp_customer c ON c.id = entry.supplier
+		LEFT JOIN (
+			SELECT pay.formentryid,
+				SUM(CASE WHEN pay.auditstatus = 1 AND pay.projectid = '26138972997300240' THEN pay.payprice ELSE 0 END) AS entrycostfee
+			FROM t_erp_purchase_form_payment pay
+			INNER JOIN t_erp_purchase_form_entry pe ON pe.id = pay.formentryid
+			INNER JOIN t_erp_purchase_form ppf ON ppf.id = pe.formid
+			WHERE ppf.shopid = #{param.shopid}
+			<if test="param.groupid != null and param.groupid != ''">
+				AND ppf.groupid = #{param.groupid}
+			</if>
+			GROUP BY pay.formentryid
+		) v2 ON v2.formentryid = entry.id
+		<where>
+			entry.auditstatus &gt; 1
+			AND pf.shopid = #{param.shopid}
+			<if test="param.groupid != null and param.groupid != ''">
+				AND pf.groupid = #{param.groupid}
+			</if>
+			<if test="param.supplierId != null and param.supplierId != ''">
+				AND entry.supplier = #{param.supplierId}
+			</if>
+			<if test="param.supplierName != null and param.supplierName != ''">
+				AND (c.name LIKE CONCAT('%', #{param.supplierName}, '%')
+					OR c.fullname LIKE CONCAT('%', #{param.supplierName}, '%'))
+			</if>
+			<if test="param.warehouseid != null and param.warehouseid != ''">
+				AND pf.warehouseid = #{param.warehouseid}
+			</if>
+			<if test="param.search != null and param.search != ''">
+				AND entry.materialid IN (SELECT id FROM t_erp_material WHERE sku LIKE CONCAT('%', #{param.search}, '%'))
+			</if>
+			<if test="param.contactPerson != null and param.contactPerson != ''">
+				AND c.contacts LIKE CONCAT('%', #{param.contactPerson}, '%')
+			</if>
+			<if test="param.startDate != null">
+				AND pf.createdate &gt;= #{param.startDate}
+			</if>
+			<if test="param.endDate != null">
+				AND pf.createdate &lt;= #{param.endDate}
+			</if>
+			<if test="param.fromDate != null">
+				AND pf.createdate &gt;= #{param.fromDate}
+			</if>
+			<if test="param.toDate != null">
+				AND pf.createdate &lt;= #{param.toDate}
+			</if>
+		</where>
+	</select>
+
+	<!-- 供应商台账统计 -->
+	<select id="getSupplierLedgerStatistics" resultType="java.util.Map">
+		SELECT
+			COUNT(DISTINCT entry.supplier) AS totalSuppliers,
+			IFNULL(SUM(entry.orderprice), 0) AS totalorderprice,
+			IFNULL(SUM(v2.entrycostfee), 0) AS totalcostfee,
+			IFNULL(SUM(entry.orderprice) - SUM(IFNULL(v2.entrycostfee, 0)), 0) AS waitPay
+		FROM t_erp_purchase_form_entry entry
+		INNER JOIN t_erp_purchase_form pf ON pf.id = entry.formid
+		INNER JOIN t_erp_customer c ON c.id = entry.supplier
+		LEFT JOIN (
+			SELECT pay.formentryid,
+				SUM(CASE WHEN pay.auditstatus = 1 AND pay.projectid = '26138972997300240' THEN pay.payprice ELSE 0 END) AS entrycostfee
+			FROM t_erp_purchase_form_payment pay
+			INNER JOIN t_erp_purchase_form_entry pe ON pe.id = pay.formentryid
+			INNER JOIN t_erp_purchase_form ppf ON ppf.id = pe.formid
+			WHERE ppf.shopid = #{param.shopid}
+			<if test="param.groupid != null and param.groupid != ''">
+				AND ppf.groupid = #{param.groupid}
+			</if>
+			GROUP BY pay.formentryid
+		) v2 ON v2.formentryid = entry.id
+		<where>
+			entry.auditstatus &gt; 1
+			AND pf.shopid = #{param.shopid}
+			<if test="param.groupid != null and param.groupid != ''">
+				AND pf.groupid = #{param.groupid}
+			</if>
+			<if test="param.supplierId != null and param.supplierId != ''">
+				AND entry.supplier = #{param.supplierId}
+			</if>
+			<if test="param.supplierName != null and param.supplierName != ''">
+				AND (c.name LIKE CONCAT('%', #{param.supplierName}, '%')
+					OR c.fullname LIKE CONCAT('%', #{param.supplierName}, '%'))
+			</if>
+			<if test="param.startDate != null">
+				AND pf.createdate &gt;= #{param.startDate}
+			</if>
+			<if test="param.endDate != null">
+				AND pf.createdate &lt;= #{param.endDate}
+			</if>
+			<if test="param.fromDate != null">
+				AND pf.createdate &gt;= #{param.fromDate}
+			</if>
+			<if test="param.toDate != null">
+				AND pf.createdate &lt;= #{param.toDate}
+			</if>
+		</where>
+	</select>
+
+	<!-- 供应商订单明细 -->
+	<select id="getSupplierOrders" resultType="java.util.Map">
+		SELECT 
+			entry.id,
+			pf.number AS orderNumber,
+			pf.createdate AS orderDate,
+			m.sku,
+			m.name AS materialName,
+			IFNULL(p.location, p.url) AS image,
+			entry.amount,
+			entry.itemprice,
+			entry.orderprice,
+			entry.totalpay,
+			entry.totalin,
+			entry.auditstatus,
+			entry.paystatus,
+			entry.inwhstatus,
+			entry.deliverydate,
+			entry.remark AS skuRemark
+		FROM t_erp_purchase_form_entry entry
+		INNER JOIN t_erp_purchase_form pf ON pf.id = entry.formid
+		INNER JOIN t_erp_material m ON m.id = entry.materialid
+		LEFT JOIN t_picture p ON p.id = m.image
+		WHERE pf.shopid = #{param.shopid}
+		AND entry.supplier = #{param.supplierId}
+		<if test="param.groupid != null and param.groupid != ''">
+			AND pf.groupid = #{param.groupid}
+		</if>
+		<if test="param.fromDate != null">
+			AND pf.createdate &gt;= #{param.fromDate}
+		</if>
+		<if test="param.toDate != null">
+			AND pf.createdate &lt;= #{param.toDate}
+		</if>
+		ORDER BY pf.createdate DESC
+		<if test="param.pageSize != null">
+			LIMIT #{param.pageSize} OFFSET #{param.offset}
+		</if>
+	</select>
+
+	<!-- 供应商付款明细 -->
+	<select id="getSupplierPayments" resultType="java.util.Map">
+		SELECT 
+			pay.id,
+			pay.formentryid AS entryId,
+			pay.payprice,
+			pay.opttime AS payTime,
+			pay.remark,
+			pay.auditstatus,
+			pf.number AS orderNumber,
+			m.sku,
+			m.name AS materialName,
+			p.location AS image,
+			entry.amount,
+			entry.orderprice,
+			entry.totalpay,
+			entry.paystatus,
+			entry.totalin,
+			tp.name AS projectName,
+			u.name AS operator
+		FROM t_erp_purchase_form_payment pay
+		INNER JOIN t_erp_purchase_form_entry entry ON entry.id = pay.formentryid
+		INNER JOIN t_erp_purchase_form pf ON pf.id = entry.formid
+		INNER JOIN t_erp_material m ON m.id = entry.materialid
+		LEFT JOIN t_erp_fin_project tp ON tp.id = pay.projectid
+		LEFT JOIN t_userinfo u ON u.id = pay.operator
+		LEFT JOIN t_picture p ON p.id = m.image
+		WHERE pf.shopid = #{param.shopid}
+		AND entry.supplier = #{param.supplierId}
+		<if test="param.groupid != null and param.groupid != ''">
+			AND pf.groupid = #{param.groupid}
+		</if>
+		<if test="param.fromDate != null">
+			AND pay.opttime &gt;= #{param.fromDate}
+		</if>
+		<if test="param.toDate != null">
+			AND pay.opttime &lt;= #{param.toDate}
+		</if>
+		ORDER BY pay.opttime DESC
+		<if test="param.pageSize != null">
+			LIMIT #{param.pageSize} OFFSET #{param.offset}
+		</if>
+	</select>
+
+	<!-- 供应商订单总数 -->
+	<select id="getSupplierOrdersCount" resultType="int">
+		SELECT COUNT(*)
+		FROM t_erp_purchase_form_entry entry
+		INNER JOIN t_erp_purchase_form pf ON pf.id = entry.formid
+		WHERE pf.shopid = #{param.shopid}
+		AND entry.supplier = #{param.supplierId}
+		<if test="param.groupid != null and param.groupid != ''">
+			AND pf.groupid = #{param.groupid}
+		</if>
+		<if test="param.fromDate != null">
+			AND pf.createdate &gt;= #{param.fromDate}
+		</if>
+		<if test="param.toDate != null">
+			AND pf.createdate &lt;= #{param.toDate}
+		</if>
+	</select>
+
+	<!-- 供应商付款总数 -->
+	<select id="getSupplierPaymentsCount" resultType="int">
+		SELECT COUNT(*)
+		FROM t_erp_purchase_form_payment pay
+		INNER JOIN t_erp_purchase_form_entry entry ON entry.id = pay.formentryid
+		INNER JOIN t_erp_purchase_form pf ON pf.id = entry.formid
+		WHERE pf.shopid = #{param.shopid}
+		AND entry.supplier = #{param.supplierId}
+		<if test="param.groupid != null and param.groupid != ''">
+			AND pf.groupid = #{param.groupid}
+		</if>
+		<if test="param.fromDate != null">
+			AND pay.opttime &gt;= #{param.fromDate}
+		</if>
+		<if test="param.toDate != null">
+			AND pay.opttime &lt;= #{param.toDate}
+		</if>
+	</select>
+
+	<!-- 获取供应商列表（包含供应账户名称） -->
+	<select id="selectSupplierList" resultType="java.util.Map">
+		SELECT 
+			c.id,
+			c.name,
+			c.fullname,
+			c.contacts,
+			c.phone_num AS phone,
+			(SELECT GROUP_CONCAT(DISTINCT ca.company_name SEPARATOR ',') 
+			 FROM t_erp_customer_account ca 
+			 WHERE ca.customer_id = c.id AND ca.status = 1) AS accountNames
+		FROM t_erp_customer c
+		WHERE c.shopid = #{shopid}
+		ORDER BY c.name
+	</select>
+
 	<select id="getPurchaseSumReportNew" resultType="java.util.Map">
 		select
 		<if test="bytime =='Daily'">
@@ -1297,4 +1633,99 @@
          AND (en.auditstatus=1 OR en.auditstatus=2)
 		</if>
 	</select>
+
+	<!-- ==================== 财务模块凭证生成专用接口 ==================== -->
+
+	<!--
+		查询已完成的采购订单（用于凭证生成）
+		条件：
+		1. 至少有一个分录的 closepaydate 在变更日期发生变更
+		2. 所有分录的 closepaydate 均不为空（全部完成付款）
+		3. 所有分录的 closepaydate < 今天（未到未来的付款日期）
+	-->
+	<select id="getCompletedOrdersForVoucher" resultType="java.util.Map" parameterType="java.util.Map">
+		SELECT
+			pay.id AS paymentId,
+			pay.formentryid,
+			pay.payprice,
+			pay.createdate AS paymentCreatedate,
+			pay.projectid,
+			pay.acct,
+			pay.auditstatus,
+			pay.remark AS paymentRemark,
+			f.id AS formid,
+			f.number,
+			f.warehouseid,
+			f.shopid,
+			f.groupid,
+			e.id AS entryid,
+			e.materialid,
+			e.supplier,
+			e.amount,
+			e.itemprice,
+			e.totalpay,
+			e.closepaydate,
+			e.paystatus,
+			e.orderprice,
+			m.sku,
+			m.name AS materialName,
+			c.name AS supplierName,
+			w.name AS warehouseName
+		FROM t_erp_purchase_form_payment pay
+		INNER JOIN t_erp_purchase_form_entry e ON e.id = pay.formentryid
+		INNER JOIN t_erp_purchase_form f ON f.id = e.formid
+		LEFT JOIN t_erp_material m ON m.id = e.materialid
+		LEFT JOIN t_erp_customer c ON c.id = e.supplier
+		LEFT JOIN t_erp_warehouse w ON w.id = f.warehouseid
+		WHERE f.groupid = #{param.groupid,jdbcType=CHAR}
+		  AND pay.createdate &gt;= #{param.changedDate,jdbcType=DATE}
+		  AND pay.createdate &lt; DATE_ADD(#{param.changedDate,jdbcType=DATE}, INTERVAL 1 DAY)
+		  AND pay.auditstatus = 1
+		ORDER BY pay.id, f.id, e.id
+	</select>
+
+	<!-- 查询已入库的采购订单（用于库存凭证生成-入库验收） -->
+	<select id="getCompletedOrdersForInventory" resultType="java.util.Map" parameterType="java.util.Map">
+		SELECT
+			f.id AS formid,
+			f.number,
+			f.warehouseid,
+			f.shopid,
+			f.groupid,
+			e.id AS entryid,
+			e.materialid,
+			e.supplier,
+			e.amount,
+			e.itemprice,
+			e.totalpay,
+			e.totalin,
+			e.closepaydate,
+			e.closerecdate,
+			e.inwhstatus,
+			m.sku,
+			m.name AS materialName,
+			c.name AS supplierName,
+			w.name AS warehouseName
+		FROM t_erp_purchase_form f
+		INNER JOIN t_erp_purchase_form_entry e ON e.formid = f.id
+		LEFT JOIN t_erp_material m ON m.id = e.materialid
+		LEFT JOIN t_erp_customer c ON c.id = e.supplier
+		LEFT JOIN t_erp_warehouse w ON w.id = f.warehouseid
+		WHERE f.groupid = #{param.groupid,jdbcType=CHAR}
+		  AND f.id IN (
+			SELECT formid FROM t_erp_purchase_form_entry
+			WHERE closerecdate &gt;= #{param.changedDate,jdbcType=DATE}
+			  AND closerecdate &lt; DATE_ADD(#{param.changedDate,jdbcType=DATE}, INTERVAL 1 DAY)
+		  )
+		  AND f.id NOT IN (
+			SELECT formid FROM t_erp_purchase_form_entry
+			WHERE closerecdate IS NULL
+		  )
+		  AND f.id NOT IN (
+			SELECT formid FROM t_erp_purchase_form_entry
+			WHERE closerecdate &gt;= DATE_ADD(#{param.changedDate,jdbcType=DATE}, INTERVAL 1 DAY)
+		  )
+		ORDER BY f.id, e.id
+	</select>
+
 </mapper>

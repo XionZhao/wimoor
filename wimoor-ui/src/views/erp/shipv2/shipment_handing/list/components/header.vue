@@ -25,7 +25,7 @@
 			<Group ref="groups" @change="getData" defaultValue="all"/>
 			<Warehouse ref="warehouses" @changeware="getWarehouse" />
 			<Datepicker ref="datepickers" @changedate="changedate" :shortIndex="1" />
-	        <el-input  clearable v-model="searchKeywords" @input="searchConfirm" placeholder="请输入" class="input-with-select" >
+	        <el-input  clearable @clear="searchConfirm" v-model="searchKeywords" v-debounce-input="searchConfirm" placeholder="请输入" class="input-with-select" >
 	      <template #prepend>
 	        <el-select v-model="selectlabel" @change='searchTypeChange' placeholder="SKU" style="width: 110px">
 	          <el-option label="SKU" value="sku"></el-option>
@@ -147,10 +147,10 @@
          </el-button>
          <template #dropdown>
            <el-dropdown-menu>
-             <el-dropdown-item @click="handleXml('CEB303')">电商订单</el-dropdown-item>
-             <el-dropdown-item @click="handleXml('CEB603')">出口清单</el-dropdown-item>
-             <el-dropdown-item @click="handleXml('DEC001')">报关单</el-dropdown-item>
-           </el-dropdown-menu>
+           <el-dropdown-item @click="handleXml('CEB303')">新生成电商订单</el-dropdown-item>
+           <el-dropdown-item @click="handleXml('CEB603')">新生成出口订单</el-dropdown-item>
+           <el-dropdown-item @click="handleXml('DEC001')">新生成报关单</el-dropdown-item>
+         </el-dropdown-menu>
          </template>
        </el-dropdown>
 		<el-button  @click="showQuoteDialog"  type="success" v-if="printButtonShow">物流报价</el-button>
@@ -167,9 +167,9 @@
 	   </div>
 	</el-row>
 	</div>
-	<TransNumber ref="transNumberRef"></TransNumber>
-	<AsyncPlan ref="asyncPlanRef"></AsyncPlan>
-	<QuoteDialog ref="quoteRef" @change="searchConfirm"></QuoteDialog>
+  <TransNumber ref="transNumberRef"></TransNumber>
+  <AsyncPlan ref="asyncPlanRef"></AsyncPlan>
+  <QuoteDialog ref="quoteRef" @change="searchConfirm"></QuoteDialog>
   <CustomsOrderXml ref="customsOrderXmlRef" />
   <Customs_inventory_xml ref="customsInventoryXmlRef" />
   <CustomsDec_xml ref="customsDecXmlRef" />
@@ -189,6 +189,8 @@
 	import {ElMessage } from 'element-plus';
 	import Warehouse from '@/components/header/warehouse.vue';
 	import Datepicker from '@/components/header/datepicker.vue';
+
+
 	import TransNumber from './transnumber.vue';
 	import QuoteDialog from './quoteDialog.vue';
 	import AsyncPlan from '@/views/erp/shipv2/shipment_add/list/components/async.vue';
@@ -386,8 +388,9 @@
       let decguids="";
       let invguids="";
       let groupid=null;
+      let groupids=[];
       let country=null;
-      let different=false;
+      let differentCountry=false;
       if(!selectrows||selectrows.length===0){
         ElMessage.error("请在勾选货件后提交！");
         return ;
@@ -406,35 +409,40 @@
           groupid=item.groupid;
           country=item.countryCode;
         }else{
-          if(item.groupid!=groupid||item.countryCode!=country){
-            different=true;
+          // 只检查国家是否相同，允许不同店铺
+          if(item.countryCode!=country){
+            differentCountry=true;
           }
         }
+        // 收集所有选中的店铺ID（去重）
+        if(!groupids.includes(item.groupid)){
+          groupids.push(item.groupid);
+        }
       })
-    if(!different){
+    if(!differentCountry){
         if(ftype=="CEB303"){
           if(ordguids){
             ElMessage.error(ordguids+":已经提交请移除后再提交！");
           }else{
-            customsOrderXmlRef.value.show(groupid,selects.toString(),null);
+            customsOrderXmlRef.value.show(groupid,selects.toString(),null,groupids,selectrows);
           }
         }
         if(ftype=="CEB603"){
           if(invguids){
             ElMessage.error(invguids+":已经提交请移除后再提交！");
           }else{
-            customsInventoryXmlRef.value.show(groupid,selects.toString(),null);
+            customsInventoryXmlRef.value.show(groupid,selects.toString(),null,groupids);
           }
         }
         if(ftype=="DEC001"){
           if(decguids){
             ElMessage.error(decguids+":已经提交请移除后再提交！");
           }else{
-            customsDecXmlRef.value.show(groupid,selects.toString(),null);
+            customsDecXmlRef.value.show(groupid,selects.toString(),null,groupids);
           }
         }
     }else{
-      ElMessage.error("请选择想通的店铺和站点才能下载！")
+      ElMessage.error("请选择相同国家的货件才能下载！")
     }
   }
 	function showQuoteDialog(){

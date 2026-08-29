@@ -1,0 +1,418 @@
+﻿{
+    "module":  "ERP商品与物料管理",
+    "description":  "ERP产品物料查询、分类管理、品牌管理、客户/供应商管理、耗材、报关信息、标签、采购价格",
+    "service":  "wimoor-erp",
+    "tools":  [
+                  {
+                      "name":  "material_list",
+                      "description":  "查询ERP产品/物料列表（注意：这是ERP域工具，不是Amazon商品查询！查询ERP物料必须使用此工具，不要使用amz_开头的工具）。支持按SKU、名称、分类、品牌、标签等条件筛选，返回产品基本信息。重要：查询正常物料时必须传isDelete=0，否则可能返回空数据。当用户提到SKU时，必须同时传search和searchtype=\u0027sku\u0027，只传search不传searchtype会导致搜索条件被忽略，返回全部数据。",
+                      "endpoint":  "/erp/api/v1/material/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，配合searchtype使用。按SKU搜索时填SKU值，按名称搜索时填名称"
+                                                },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型，决定search字段按哪个字段匹配：\u0027sku\u0027=按SKU搜索，\u0027name\u0027=按名称搜索，\u0027remark\u0027=按备注搜索，\u0027supplier\u0027=按供应商搜索。当用户按SKU查询时必须传\u0027sku\u0027"
+                                                    },
+                                     "searchlist":  {
+                                                        "type":  "string",
+                                                        "description":  "SKU批量查询，多个SKU用逗号分隔，如\u0027sku1,sku2,sku3\u0027"
+                                                    },
+                                     "categoryid":  {
+                                                        "type":  "string",
+                                                        "description":  "产品分类ID"
+                                                    },
+                                     "supplier":  {
+                                                      "type":  "string",
+                                                      "description":  "供应商ID"
+                                                  },
+                                     "ftype":  {
+                                                   "type":  "string",
+                                                   "description":  "产品类型：shipment(只查库存\u003e0)"
+                                               },
+                                     "issfg":  {
+                                                   "type":  "string",
+                                                   "description":  "组装类型：true(组装产品)"
+                                               },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "owner":  {
+                                                   "type":  "string",
+                                                   "description":  "产品负责人ID"
+                                               },
+                                     "name":  {
+                                                  "type":  "string",
+                                                  "description":  "产品名称"
+                                              },
+                                     "color":  {
+                                                   "type":  "string",
+                                                   "description":  "颜色标签"
+                                               },
+                                     "isDelete":  {
+                                                      "type":  "string",
+                                                      "description":  "是否逻辑删除，查询正常物料必须传0，查询归档物料传1"
+                                                  },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "default_params":  {
+                                             "isDelete":  "0"
+                                         },
+                      "response_fields":  {
+                                              "id":  "产品ID",
+                                              "sku":  "产品SKU编码",
+                                              "name":  "产品名称",
+                                              "color":  "颜色标签",
+                                              "shopid":  "公司ID",
+                                              "boxnum":  "单箱数量",
+                                              "catecolor":  "分类颜色",
+                                              "upc":  "UPC编码",
+                                              "category":  "产品分类名称",
+                                              "image":  "产品图片URL",
+                                              "brand":  "品牌名称",
+                                              "price":  "采购成本价格",
+                                              "fulfillable":  "可用库存数量",
+                                              "isDelete":  "是否归档(0正常/1归档)",
+                                              "supplier":  "默认供应商名称",
+                                              "issfg":  "组装类型(0普通/1主产品/2子产品)",
+                                              "remark":  "产品备注",
+                                              "operator":  "操作人",
+                                              "supplierid":  "默认供应商ID",
+                                              "opttime":  "操作时间",
+                                              "MOQ":  "最小起订量",
+                                              "delivery_cycle":  "供货周期(天)",
+                                              "createdate":  "生效日期",
+                                              "other_cost":  "其它费用",
+                                              "purchaseUrl":  "采购链接",
+                                              "length":  "包装长度",
+                                              "width":  "包装宽度",
+                                              "height":  "包装高度",
+                                              "weight":  "包装重量",
+                                              "ownername":  "产品负责人姓名",
+                                              "unit":  "报关单位",
+                                              "tagids":  "标签ID列表(逗号分隔)",
+                                              "specification":  "产品规格",
+                                              "is_ass_price":  "是否使用子SKU成本",
+                                              "deliverycycledate":  "预计交货日期(服务端计算)"
+                                          }
+                  },
+                  {
+                      "name":  "material_detail",
+                      "description":  "查询单个产品的详细信息，包括基本信息、库存信息、供应商信息、尺寸重量等",
+                      "endpoint":  "/erp/api/v1/material/getMaterialInfo",
+                      "method":  "GET",
+                      "params":  {
+                                     "id":  {
+                                                "type":  "string",
+                                                "description":  "产品ID"
+                                            }
+                                 },
+                      "required":  [
+                                       "id"
+                                   ],
+                      "response_fields":  {
+                                              "material":  "产品基本信息MaterialVO对象(id, sku, name, issfg, price, unit, weight, length, width, height, image, remark, operator, creator等)",
+                                              "supplierList":  "供应商列表List\u003cMaterialSupplierVO\u003e",
+                                              "assemblyList":  "组装关系列表List\u003cAssemblyVO\u003e(含inbound/outbound/fulfillable库存)",
+                                              "consumableList":  "被当前产品使用的耗材列表List\u003cMaterialConsumableVO\u003e",
+                                              "consumablePList":  "使用当前产品作为耗材的主产品列表List\u003cMaterialConsumableVO\u003e",
+                                              "stepWisePrice":  "阶梯价格列表List\u003cStepWisePrice\u003e(含material/amount/price)",
+                                              "itemDim":  "产品净尺寸DimensionsInfo对象(length/width/height/weight)",
+                                              "pkgDim":  "包装尺寸DimensionsInfo对象(length/width/height/weight)",
+                                              "boxDim":  "箱规尺寸DimensionsInfo对象(length/width/height/weight)",
+                                              "custom":  "海关基础报关信息MaterialCustom对象",
+                                              "customs":  "各国报关信息列表List\u003cMaterialCustoms\u003e(含country/code/material/price/rate/elements等)",
+                                              "taglist":  "标签ID字符串(逗号分隔)",
+                                              "tagNameList":  "标签名称列表List\u003cMap\u003e(含id和name)",
+                                              "parentList":  "使用当前子产品的父产品列表List\u003cMap\u003e(含mainmid/inbound/outbound/fulfillable)",
+                                              "fulfillable":  "可用库存Inventory对象(仅传warehouseid时返回)",
+                                              "canAssembly":  "可组装数量(仅传warehouseid时返回)"
+                                          }
+                  },
+                  {
+                      "name":  "category_list",
+                      "description":  "查询产品分类列表，支持按分类名称和类型筛选，返回实体对象",
+                      "endpoint":  "/erp/api/v1/materialCategory/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，分类名称或颜色"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "分类ID",
+                                              "name":  "分类名称",
+                                              "number":  "分类编码",
+                                              "color":  "分类颜色",
+                                              "shopid":  "公司ID",
+                                              "remark":  "备注",
+                                              "operator":  "操作人ID",
+                                              "opttime":  "操作时间"
+                                          }
+                  },
+                  {
+                      "name":  "brand_list",
+                      "description":  "查询产品品牌列表，支持按品牌名称筛选，返回实体对象",
+                      "endpoint":  "/erp/api/v1/materialBrand/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，品牌名称"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "品牌ID",
+                                              "name":  "品牌名称",
+                                              "shopid":  "公司ID",
+                                              "remark":  "备注",
+                                              "operator":  "操作人ID",
+                                              "opttime":  "操作时间"
+                                          }
+                  },
+                  {
+                      "name":  "customer_list",
+                      "description":  "查询供应商列表，支持按名称等条件筛选",
+                      "endpoint":  "/erp/api/v1/customer/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，供应商名称/编号/全称/联系人/电话/地址"
+                                                },
+                                     "materialid":  {
+                                                        "type":  "string",
+                                                        "description":  "产品ID，用于查询该产品的备选供应商"
+                                                    },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "供应商ID",
+                                              "name":  "供应商名称",
+                                              "number":  "供应商编号",
+                                              "fullname":  "供应商全称",
+                                              "ftype":  "类型(供应商/采购商，来自参数配置翻译)",
+                                              "goodtype":  "商品类型",
+                                              "contacts":  "联系人",
+                                              "phone_num":  "联系电话",
+                                              "contact_info":  "联系方式(邮箱等)",
+                                              "address":  "地址",
+                                              "shopid":  "公司ID",
+                                              "operator2":  "操作人姓名",
+                                              "opttime":  "操作时间",
+                                              "ordernum":  "采购订单数(服务端汇总)",
+                                              "totalin":  "总入库数量(服务端汇总)",
+                                              "totalpay":  "总付款金额(服务端汇总)"
+                                          }
+                  },
+                  {
+                      "name":  "consumables_list",
+                      "description":  "查询耗材列表，支持按SKU、名称等条件筛选，仅查询mtype=1的辅料产品。当用户提到SKU时，必须同时传search和searchtype=\u0027sku\u0027，否则搜索条件被忽略。",
+                      "endpoint":  "/erp/api/v1/material/consumableList",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，配合searchtype使用"
+                                                },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型：\u0027sku\u0027=按SKU搜索，\u0027name\u0027=按名称搜索，\u0027remark\u0027=按备注搜索，\u0027supplier\u0027=按供应商搜索。按SKU查询时必须传\u0027sku\u0027"
+                                                    },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID(必传，用于计算需求建议)"
+                                                     },
+                                     "categoryid":  {
+                                                        "type":  "string",
+                                                        "description":  "分类ID"
+                                                    },
+                                     "supplier":  {
+                                                      "type":  "string",
+                                                      "description":  "供应商ID"
+                                                  },
+                                     "owner":  {
+                                                   "type":  "string",
+                                                   "description":  "负责人ID"
+                                               },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "耗材ID",
+                                              "sku":  "耗材SKU",
+                                              "name":  "耗材名称",
+                                              "color":  "颜色标签",
+                                              "shopid":  "公司ID",
+                                              "boxnum":  "单箱数量",
+                                              "catecolor":  "分类颜色",
+                                              "upc":  "UPC编码",
+                                              "category":  "分类名称",
+                                              "image":  "产品图片URL",
+                                              "brand":  "品牌名称",
+                                              "price":  "采购成本",
+                                              "fulfillable":  "可用库存(指定仓库)",
+                                              "inbound":  "待入库数量(指定仓库)",
+                                              "outbound":  "待出库数量(指定仓库)",
+                                              "isDelete":  "是否归档",
+                                              "supplier":  "默认供应商名称",
+                                              "issfg":  "组装类型",
+                                              "remark":  "备注",
+                                              "operator":  "操作人",
+                                              "supplierid":  "供应商ID",
+                                              "opttime":  "操作时间",
+                                              "MOQ":  "最小起订量",
+                                              "delivery_cycle":  "供货周期(天)",
+                                              "createdate":  "生效日期",
+                                              "purchaseUrl":  "采购链接",
+                                              "length":  "包装长度",
+                                              "width":  "包装宽度",
+                                              "height":  "包装高度",
+                                              "weight":  "包装重量",
+                                              "needamount":  "需求量(在途+可用库存的主产品对耗材需求)",
+                                              "needinboundamount":  "待入库需求量",
+                                              "mainsubnum":  "使用该耗材的主产品数量",
+                                              "stockingCycle":  "备货周期",
+                                              "planamount":  "计划采购数量",
+                                              "isplan":  "是否有采购计划(0/1)",
+                                              "warehouseid":  "仓库ID",
+                                              "warehousename":  "仓库名称",
+                                              "needsuggest":  "需求建议(需求-入库-可用)",
+                                              "suggest":  "最终建议采购数量(含备货周期计算)"
+                                          }
+                  },
+                  {
+                      "name":  "customs_list",
+                      "description":  "查询产品报关信息，根据主SKU和国家获取海关编码、申报要素等。返回单个MaterialCustoms对象(非列表)",
+                      "endpoint":  "/erp/api/v1/material/getCustoms",
+                      "method":  "GET",
+                      "params":  {
+                                     "msku":  {
+                                                  "type":  "string",
+                                                  "description":  "主SKU"
+                                              },
+                                     "country":  {
+                                                     "type":  "string",
+                                                     "description":  "国家编码(如CN/US/DE等)"
+                                                 }
+                                 },
+                      "required":  [
+                                       "msku"
+                                   ],
+                      "response_fields":  {
+                                              "materialid":  "产品ID",
+                                              "country":  "国家编码",
+                                              "price":  "报关申报价格",
+                                              "rate":  "税率",
+                                              "code":  "海关编码",
+                                              "material":  "产品材质(英文)",
+                                              "materialcn":  "产品材质(中文)",
+                                              "unit":  "申报单位",
+                                              "unit2":  "子单位",
+                                              "unitrate":  "子单位比例",
+                                              "application":  "产品用途",
+                                              "url":  "产品链接",
+                                              "ename":  "产品报关英文名",
+                                              "elements":  "海关申报要素",
+                                              "cname":  "产品报关中文名"
+                                          }
+                  },
+                  {
+                      "name":  "mark_list",
+                      "description":  "查询产品标签信息，根据产品ID获取关联的标签ID列表。返回类型为String，内容为逗号分隔的标签ID",
+                      "endpoint":  "/erp/api/v1/material/findMaterialTags",
+                      "method":  "GET",
+                      "params":  {
+                                     "mid":  {
+                                                 "type":  "string",
+                                                 "description":  "产品物料ID"
+                                             }
+                                 },
+                      "required":  [
+                                       "mid"
+                                   ],
+                      "response_fields":  {
+                                              "_type":  "String(直接返回逗号分隔的标签ID字符串，如\u0027tag1,tag2,tag3\u0027)"
+                                          }
+                  },
+                  {
+                      "name":  "purchase_info_list",
+                      "description":  "查询产品阶梯价格列表，展示不同采购量对应的价格",
+                      "endpoint":  "/erp/api/v1/material/getWisePriceList",
+                      "method":  "GET",
+                      "params":  {
+                                     "mid":  {
+                                                 "type":  "string",
+                                                 "description":  "产品物料ID"
+                                             }
+                                 },
+                      "required":  [
+                                       "mid"
+                                   ],
+                      "response_fields":  {
+                                              "id":  "价格记录ID",
+                                              "material":  "产品物料ID",
+                                              "amount":  "采购数量",
+                                              "price":  "对应单价",
+                                              "operator":  "操作人ID",
+                                              "opttime":  "操作时间"
+                                          }
+                  }
+              ]
+}

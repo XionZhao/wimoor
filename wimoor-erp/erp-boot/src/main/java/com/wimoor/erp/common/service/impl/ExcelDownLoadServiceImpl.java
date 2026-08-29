@@ -20,6 +20,7 @@ import com.wimoor.erp.material.service.IMaterialCategoryService;
 import com.wimoor.erp.material.service.IMaterialService;
 import com.wimoor.erp.warehouse.service.IWarehouseService;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -63,40 +64,51 @@ public class ExcelDownLoadServiceImpl implements IExcelDownLoadService{
 
 	@Override
 	public void uploadCustomerFile(UserInfo user, Row info) {
+			// 列顺序：客户名称、客户全称、客户编码、客户分类、货物类型、联系人、联系电话、其它联系信息、地址、操作人、修改时间
 			String name = null;
 			if (info.getCell(0) != null) {
+				info.getCell(0).setCellType(CellType.STRING);
 				name = info.getCell(0).getStringCellValue();
 			}
-			String ftype = null;
+			String fullname = null;
 			if (info.getCell(1) != null) {
-				ftype = info.getCell(1).getStringCellValue();
+				info.getCell(1).setCellType(CellType.STRING);
+				fullname = info.getCell(1).getStringCellValue();
 			}
-			String contacts = null;
-			if (info.getCell(2) != null) {
-				contacts = info.getCell(2).getStringCellValue();
-			}
-			String address = null;
+			// Cell 2 是客户编码，跳过（系统自动生成）
+			String ftype = null;
 			if (info.getCell(3) != null) {
-				address = info.getCell(3).getStringCellValue();
-			}
-			String phone = null;
-			if (info.getCell(4) != null) {
-				info.getCell(4).setCellType(CellType.STRING);
-				phone = info.getCell(4).getStringCellValue();
-			}
-			String otherContact = null;
-			if (info.getCell(5) != null) {
-				info.getCell(5).setCellType(CellType.STRING);
-				otherContact = info.getCell(5).getStringCellValue();
+				info.getCell(3).setCellType(CellType.STRING);
+				ftype = info.getCell(3).getStringCellValue();
 			}
 			String goodtype = null;
+			if (info.getCell(4) != null) {
+				info.getCell(4).setCellType(CellType.STRING);
+				goodtype = info.getCell(4).getStringCellValue();
+			}
+			String contacts = null;
+			if (info.getCell(5) != null) {
+				info.getCell(5).setCellType(CellType.STRING);
+				contacts = info.getCell(5).getStringCellValue();
+			}
+			String phone = null;
 			if (info.getCell(6) != null) {
 				info.getCell(6).setCellType(CellType.STRING);
-				goodtype = info.getCell(6).getStringCellValue();
+				phone = info.getCell(6).getStringCellValue();
+			}
+			String otherContact = null;
+			if (info.getCell(7) != null) {
+				info.getCell(7).setCellType(CellType.STRING);
+				otherContact = info.getCell(7).getStringCellValue();
+			}
+			String address = null;
+			if (info.getCell(8) != null) {
+				info.getCell(8).setCellType(CellType.STRING);
+				address = info.getCell(8).getStringCellValue();
 			}
 
-			if (StrUtil.isEmpty(name) || StrUtil.isEmpty(contacts)
-					|| StrUtil.isEmpty(address)) {
+		if (StrUtil.isEmpty(name) || StrUtil.isEmpty(contacts)
+				|| StrUtil.isEmpty(address)) {
 				throw new BizException("Excel文件中必填字段为空！");
 			}
 			if ("供应商".equals(ftype)) {
@@ -131,6 +143,7 @@ public class ExcelDownLoadServiceImpl implements IExcelDownLoadService{
 				}
 				customer.setContactInfo(otherContact);
 				customer.setAddress(address);
+				customer.setFullname(fullname);
 				customer.setOperator(user.getId());
 				customer.setShopid(user.getCompanyid());
 				customer.setOpttime(new Date());
@@ -145,6 +158,7 @@ public class ExcelDownLoadServiceImpl implements IExcelDownLoadService{
 				}
 				customer.setContactInfo(otherContact);
 				customer.setAddress(address);
+				customer.setFullname(fullname);
 				customer.setOperator(user.getId());
 				customer.setShopid(user.getCompanyid());
 				customer.setOpttime(new Date());
@@ -327,8 +341,15 @@ public class ExcelDownLoadServiceImpl implements IExcelDownLoadService{
 		}
 		String effectivedate = null;
 		if (info.getCell(21) != null) {
-			info.getCell(21).setCellType(CellType.STRING);
-			effectivedate = info.getCell(21).getStringCellValue();
+			Cell effectivedateCell = info.getCell(21);
+			if (effectivedateCell.getCellType() == CellType.NUMERIC && org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(effectivedateCell)) {
+				// 如果是日期格式的单元格，直接获取Date对象
+				Date date = effectivedateCell.getDateCellValue();
+				effectivedate = GeneralUtil.formatDate(date);
+			} else {
+				effectivedateCell.setCellType(CellType.STRING);
+				effectivedate = effectivedateCell.getStringCellValue();
+			}
 		}
 		String owner = null;
 		if (info.getCell(22) != null) {
@@ -504,6 +525,9 @@ public class ExcelDownLoadServiceImpl implements IExcelDownLoadService{
 		 try {
 				//同步修改产品的负责人
 				 if(material.getOwner()!=null) {
+					 if(material.getOwner().equals(oldowner)) {
+						 return ;
+					 }
 					 amazonClientOneFeign.updateProductOwner(material.getSku(),material.getOwner(),oldowner);
 				 }
 			 }catch(Exception e) {

@@ -36,6 +36,9 @@ function recoverAccountDelete(data){
 function savePaymethodIndex(data){
 	return request.post('/erp/api/v1/faccount/savePaymethodIndex',data);
 }
+function saveAccountIndex(data){
+	return request.post('/erp/api/v1/faccount/saveAccountIndex',data);
+}
 
 
 
@@ -43,5 +46,5 @@ function savePaymethodIndex(data){
 
  export default{
  	getProject,getPaymentMethod,getPaymentAccount,getAccountAll,updateAccountDefault,updateAccountName,saveAccount,updateAccountDelete,
-	findAccountArchiveAll,recoverAccountDelete,cancelAccountDefault,savePaymethodIndex,
+	findAccountArchiveAll,recoverAccountDelete,cancelAccountDefault,savePaymethodIndex,saveAccountIndex,
  }

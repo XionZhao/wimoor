@@ -3,16 +3,17 @@
 	 <Header ref="myHeaderRef" @change = "handleQuery" @expend="handlerExpend"/>
 	 <div class=" ship-expand-table"  style="padding-bottom:16px;">
 		 <GlobalTable ref="globalTableRef"
-		 :tableData="tableData"  
-		 :size="50"
-		 @loadTable="loadTableData" 
-		 :defaultSort="{ prop: 'marketneedship', order: 'descending' }"  
-		 rowKey="id"
-		 :defaultExpandAll="expendall"
-		 @row-click="tableRowClick"
-		 :rowClassName="handleRowClassName"
-		 @expandChange="handleExpandChange"
-		 >
+	 :tableData="tableData"  
+	 :size="50"
+	 @loadTable="loadTableData" 
+	 :defaultSort="{ prop: 'marketneedship', order: 'descending' }"  
+	 rowKey="id"
+	 :defaultExpandAll="expendall"
+	 :callbackLoading="true"
+	 @row-click="tableRowClick"
+	 :rowClassName="handleRowClassName"
+	 @expandChange="handleExpandChange"
+	 >
 		<template #field>
 		<el-table-column type="expand" width="48">
 			 <template #header>
@@ -27,9 +28,11 @@
 				             :row="props.row"
 							  ref = "expendTableRef"
 							 :isOversea="queryParams.isOversea"
+							 :isExpandAll="queryParams.expendall||isExpendAll"
 							 :transtypeOptions="transtypeOptions"
 							 :overseaOptions="overseaOptions"
 							 :allOverseaOptions="allOverseaOptions"
+							 :invLoadingMap="invLoadingMap"
 							 @reload="loadDetail"
 							 @show-sales-adjust="handleShowSalesAdjust"
 							 @show-product-detail="handleShowProductDetail"
@@ -40,6 +43,7 @@
 							 @show-inventory-details = "handleShowInventory"
 							 @show-invplan-details = "handleShowInvPlan"
 							 @show-fba-warning="handleShowFBAWarning"
+							 @refresh-inventory="handleRefreshInventory"
 							 @edit-row="handleAdd"
 							 @save-row="submitForm"
 							 @add-sub="handlAddSub"
@@ -455,6 +459,7 @@ const notepadDialogRef = ref();
 	 editRow:{},
 	 expendall:false,
 	 expenditem:{stockVisible:false},
+	 invLoadingMap:{},
      // 表格树数据
      tableData: {records:[],total:0}  ,
      // 弹窗属性
@@ -486,6 +491,7 @@ const notepadDialogRef = ref();
      formData,
 	 expenditem,
 	 editRow,
+	 invLoadingMap,
    } = toRefs(state);
   function FBAinventoryChart(row){
 	 var myChart = echarts.init(document.getElementById('invenchart'));
@@ -790,6 +796,23 @@ function showNotepad(id){
 	   arrivalchartRef.value.show(groupid,marketplaceid,amazonAuthId,sku,msku)
    }
  
+   // 分批处理展开数据，避免一次性处理大量数据导致卡顿
+   function processExpandDataInBatches(records, batchSize = 10) {
+   	let index = 0;
+   	function processBatch() {
+   		const end = Math.min(index + batchSize, records.length);
+   		for (let i = index; i < end; i++) {
+   			const item = records[i];
+   			handleDetail(item, item.expendData);
+   			state.expendRows.push(item.id);
+   		}
+   		index = end;
+   		if (index < records.length) {
+   			requestAnimationFrame(processBatch);
+   		}
+   	}
+   	requestAnimationFrame(processBatch);
+   }
    function loadTableData(params,callback){
 	if(!state.expendall&&state.isExpendAll==true){
 	      expendAll();
@@ -797,42 +820,46 @@ function showNotepad(id){
 	   state.expendRows=[];
 	   state.closeloading=false;
 	   params.plantype="ship";
+	   	   // 默认展开时，告诉后端跳过查询预估销量数据
+	   params.skipPrelist=!!state.queryParams.expendall;
 	   planApi.getPlanList(params).then(res=>{
-		   state.tableData.records=res.data.records;
-		   state.tableData.total=res.data.total;
-		   if(state.tableData.records){
-		   			   state.tableData.records.forEach(item=>{
-		   				   if(item.notice){
-		   					   item.htmlnotice=decodeText(item.notice);
-		   				   }
-						  
-		   				   item.rowstatue={
-		   					   isplan:false,
-		   					   isexpends:false,
-		   					   isEdit:false,
-		   					   loading:false,
-		   					   showeu:false,
-							   subPlanEdit:null,
-		   				   };
-		   				   if(item.amount&&parseInt(item.amount)){
-		   						item.rowstatue.isplan=true;
-		   				   }
-						   if(item.subList&&item.subList.length>0){
-							   item.rowstatus.subPlanEdit=true;
-						   }
-		   				   if(state.queryParams.expendall){
-		   						handleDetail(item,item.expendData);
-								state.expendRows.push(item.id);
-		   				   }else{
-							    item.expendData=null;
-						   }
-		   			   });
-		   			    if(state.queryParams.expendall){
-		   			 		 state.isExpendAll=true
-		   			    }
+		   // 默认展开时，先设置isExpendAll标志，避免触发展开事件时执行refreshExpandInventory
+		   if(state.queryParams.expendall){
+		   		 state.isExpendAll=true
+		   }else{
+		   		 state.isExpendAll=false
 		   }
-		 
-		 
+		   var records = res.data.records || [];
+		   // 先初始化渲染所需的基础属性，再通过callback清除loading
+		   if(records.length > 0){
+		   	records.forEach(item=>{
+		   		if(item.notice){
+		   			item.htmlnotice=decodeText(item.notice);
+		   		}
+		   		item.rowstatue={
+		   			isplan:!!(item.amount&&parseInt(item.amount)),
+		   			isexpends:false,
+		   			isEdit:false,
+		   			loading:false,
+		   			showeu:false,
+		   			subPlanEdit:item.subList&&item.subList.length>0?true:null,
+		   		};
+		   	});
+		   }
+		   if(callback){
+		   	callback({records:records, total:res.data.total});
+		   }else{
+		   	state.tableData.records=records;
+		   	state.tableData.total=res.data.total;
+		   }
+		   // 默认展开时，分批处理展开数据，避免一次性处理导致卡顿
+		   if(records.length > 0 && state.queryParams.expendall){
+		   	processExpandDataInBatches(records, 10);
+		   }else if(records.length > 0){
+		   	records.forEach(item=>{
+		   		item.expendData=null;
+		   	});
+		   }
 	   }); 
    }
    function expendRow(row){
@@ -1043,7 +1070,7 @@ function showNotepad(id){
 		if(row.expendData&&row.expendData.length>0){
 			row.expendData.forEach(item=>{
 				if(item.subList&&item.subList.length>0){
-					row.rowstatus.subPlanEdit=true;
+					row.rowstatue.subPlanEdit=true;
 					item.key=item.groupid+item.marketplaceid;
 				}
 			})
@@ -1109,7 +1136,6 @@ function showNotepad(id){
 	   Object.freeze(item.groupname);
 	   Object.freeze(item.groupid);
 	   Object.freeze(item.statuscolor);
-	   Object.freeze(item.salesday);
 	   Object.freeze(item.sum15);
 	   Object.freeze(item.shipday);
 	   Object.freeze(item.summonth);
@@ -1172,11 +1198,32 @@ function showNotepad(id){
 		   	item.setstockingcycles=item.cycle.stockingCycle;
 		   	item.iseu=false;
 		   	item.visible=false;
-		   	if(item.marketplaceid=='EU'&&item.subnum>1){
-		   		handleShowEUData(item,row);
+		   	// 默认展开或全部展开时不设置invLoadingMap，避免显示FBA库存刷新图标
+		   	if(item.sku && item.groupid && item.marketplaceid && !state.queryParams.expendall && !state.isExpendAll){
+		   		state.invLoadingMap[item.groupid+item.marketplaceid+item.sku]=true;
 		   	}
-		   		freezeItem(item);
-		   	subrow.push(item);
+		   	if(item.marketplaceid=='EU'&&item.subnum>1){
+	   		handleShowEUData(item,row);
+	   	}
+	   		// 当有配货/发货在途记录时，前端重新计算可销售天数和发货后可销售天数
+	   		if(item.formqty>0 || item.reallyamount>0){
+	   			var dailySales=parseInt(item.avgsales)||parseInt(item.sysavgsales)||0;
+	   			if(dailySales>0){
+	   				var realQty=parseInt(item.quantity)||0;
+	   				var formQty=parseInt(item.formqty)||0;
+	   				var newSalesday=Math.floor((realQty+formQty)/dailySales);
+	   				if(newSalesday<0) newSalesday=0;
+	   				if(newSalesday>=180) newSalesday=180;
+	   				item.salesday=newSalesday;
+	   				var shipQty=parseInt(item.reallyamount)||0;
+	   				var newAftersalesday=Math.floor((realQty+formQty+shipQty)/dailySales);
+	   				if(newAftersalesday<0) newAftersalesday=0;
+	   				if(newAftersalesday>=180) newAftersalesday=180;
+	   				item.aftersalesday=newAftersalesday;
+	   			}
+	   		}
+	   		freezeItem(item);
+	   	subrow.push(item);
 		   });
 		   row.amount=reallyamount;
 		   row.needship=needship;
@@ -1193,15 +1240,90 @@ function showNotepad(id){
 			   							"plansimple":state.queryParams.plansimple,
 			   							"marketplaceids":state.queryParams.marketplaceids,
 			   							"iseu":false,
-			   							"amount":0};
+		   							"amount":0,
+		   							"skipPrelist":!!state.queryParams.expendall};
+			  
 			   planApi.getExpandCountryData(param).then(res=>{
 			      row.rowstatue.loading=false;
 			   			 		if(res.data){
 										handleDetail(row,res.data);
+										// 默认展开或展开所有行时，不执行refreshExpandInventory
+										if(!state.queryParams.expendall && !state.isExpendAll){
+											refreshExpandInventory(row);
+										}
 			   			 		}
 			   })
 			  
 	    }
+	async function refreshExpandInventory(row){
+		// 默认展开或展开所有行时，不执行syncInventorySupply
+		if(state.queryParams.expendall || state.isExpendAll){
+			return;
+		}
+		if(row.expendData && row.expendData.length > 0){
+			const tasks = row.expendData.map(item => {
+				if(item.sku && item.groupid && item.marketplaceid){
+					const itemKey = item.groupid+item.marketplaceid+item.sku;
+					return inventoryRptApi.syncInventorySupply({
+						"skus": item.sku,
+						"groupid": item.groupid,
+						"marketplaceid": item.marketplaceid,
+						"ignoreRepeat": true
+					}).then(res => {
+						state.invLoadingMap[itemKey] = false;
+						if(res.data){
+							let quantity = 0;
+							const afnFulfillableQuantity = res.data.afnFulfillableQuantity ? parseInt(res.data.afnFulfillableQuantity) : 0;
+							quantity += afnFulfillableQuantity;
+							if(res.data.resdetail){
+								if(res.data.resdetail.reservedFcTransfers) quantity += parseInt(res.data.resdetail.reservedFcTransfers);
+								if(res.data.resdetail.reservedFcProcessing) quantity += parseInt(res.data.resdetail.reservedFcProcessing);
+							}
+							if(res.data.afnInboundWorkingQuantity) quantity += parseInt(res.data.afnInboundWorkingQuantity);
+							if(res.data.afnInboundShippedQuantity) quantity += parseInt(res.data.afnInboundShippedQuantity);
+							if(res.data.afnInboundReceivingQuantity) quantity += parseInt(res.data.afnInboundReceivingQuantity);
+							Object.assign(item, {quantity: quantity});
+						}
+					}).catch(e => {
+						state.invLoadingMap[itemKey] = false;
+					});
+				}
+				return Promise.resolve();
+			});
+			await Promise.all(tasks);
+		}
+	}
+	async function handleRefreshInventory(item){
+		if(item.sku && item.groupid && item.marketplaceid){
+			var itemKey = item.groupid+item.marketplaceid+item.sku;
+			state.invLoadingMap[itemKey] = true;
+			try {
+				var res = await inventoryRptApi.syncInventorySupply({
+					"skus": item.sku,
+					"groupid": item.groupid,
+					"marketplaceid": item.marketplaceid,
+					"ignoreRepeat": true
+				});
+				state.invLoadingMap[itemKey] = false;
+				if(res.data){
+					var quantity = 0;
+					var afnFulfillableQuantity = res.data.afnFulfillableQuantity ? parseInt(res.data.afnFulfillableQuantity) : 0;
+					quantity += afnFulfillableQuantity;
+					if(res.data.resdetail){
+						if(res.data.resdetail.reservedFcTransfers) quantity += parseInt(res.data.resdetail.reservedFcTransfers);
+						if(res.data.resdetail.reservedFcProcessing) quantity += parseInt(res.data.resdetail.reservedFcProcessing);
+					}
+					if(res.data.afnInboundWorkingQuantity) quantity += parseInt(res.data.afnInboundWorkingQuantity);
+					if(res.data.afnInboundShippedQuantity) quantity += parseInt(res.data.afnInboundShippedQuantity);
+					if(res.data.afnInboundReceivingQuantity) quantity += parseInt(res.data.afnInboundReceivingQuantity);
+					Object.assign(item, {quantity: quantity});
+					ElMessage.success('库存已更新');
+				}
+			} catch(e) {
+				state.invLoadingMap[itemKey] = false;
+			}
+		}
+	}
    function handleExpandChange(row,expandedRows){
 		 expandedRows.forEach(item=>{
 			 state.expendRows.push(item.id);
@@ -1211,10 +1333,17 @@ function showNotepad(id){
 		if(expandedRows.length==0){
 			state.closeloading=false;
 		}
-		if(state.expendRows.includes(row.id)){
+		// 只在行展开时加载数据，折叠时不触发请求
+		const isExpanding = expandedRows.some(r => r.id === row.id);
+		if(isExpanding && state.expendRows.includes(row.id)){
 			if(row.expendData==null||row.expendData.length==0){
 			    loadDetail(row);
-		     }
+			}else{
+				// 默认展开或全部展开时，不刷新FBA库存
+				if(!state.queryParams.expendall && !state.isExpendAll){
+					refreshExpandInventory(row);
+				}
+			}
 		}
 		
    }
@@ -1339,6 +1468,10 @@ function showNotepad(id){
 			  background-size: 42px 42px;
 	 }
 	 .waring-bg{background-color: var(--el-color-primary-light-9)!important;}
+	 /* 默认展开时表格行背景色继承 */
+	 .ship-expand-table .el-table tr { 
+	     background-color: inherit; 
+	 }
 </style>
 <style scoped="scoped">
 	.font-sku{
@@ -1346,6 +1479,6 @@ function showNotepad(id){
 		font-size: 16px;
 	}
 	.font-name{
-		color:#999;
+		color: var(--el-text-color-secondary);
 	}
 </style>

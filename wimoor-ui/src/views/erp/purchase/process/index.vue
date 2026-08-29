@@ -91,15 +91,20 @@
 						<span>{{dateFormat(scope.row.opttime)}}</span>
 					</template>
 				</el-table-column>
-				<el-table-column label="关联货件" prop="shipment">
-				<template #default="scope">
-					<span>{{scope.row.shipmentids}}</span>
-					<div v-if="scope.row.shipmentids">
-						<el-tag type="danger" size="small" effect="dark">优先组装</el-tag>
-					</div>
-				</template>
-				</el-table-column>
-				<el-table-column label="备注" prop="remark"/>
+			<el-table-column label="关联货件" prop="shipment">
+			<template #default="scope">
+				<span>{{scope.row.shipmentids}}</span>
+				<div v-if="scope.row.shipmentids">
+					<el-tag type="danger" size="small" effect="dark">优先组装</el-tag>
+				</div>
+			</template>
+			</el-table-column>
+			<el-table-column label="关联采购单" prop="purchaseNumbers" width="150">
+			<template #default="scope">
+				<span>{{scope.row.purchaseNumbers}}</span>
+			</template>
+			</el-table-column>
+			<el-table-column label="备注" prop="remark"/>
 				<el-table-column  fixed="right"  label="操作" width="120">
 					<template #default='scope'>
 					<el-space>

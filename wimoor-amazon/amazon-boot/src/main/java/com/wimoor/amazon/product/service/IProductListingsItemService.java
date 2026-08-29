@@ -11,7 +11,7 @@ import com.wimoor.amazon.auth.service.IRunAmazonService;
 import com.wimoor.amazon.product.pojo.dto.ProductAsyncInitDTO;
 import com.wimoor.amazon.product.pojo.dto.ProductListingItemDTO;
 import com.wimoor.amazon.product.pojo.dto.ProductListingPushDTO;
-import com.wimoor.amazon.product.pojo.entity.AmzProductRefresh;
+import com.wimoor.amazon.product.pojo.entity.AmzProductRefreshType;
 import com.wimoor.amazon.product.pojo.entity.ProductInfo;
 import okhttp3.Call;
 
@@ -19,11 +19,11 @@ public interface IProductListingsItemService extends IRunAmazonService{
 
 	Item captureListMatchingProduct(AmazonAuthority amazonAuthority, String sku, List<String> marketplaces,String issueLocale, List<String> includedData );
 
-	Call captureListMatchingProductSync(AmazonAuthority amazonAuthority, AmzProductRefresh amzProductRefresh, List<String> marketList);
+	Call captureListMatchingProductSync(AmazonAuthority amazonAuthority, AmzProductRefreshType amzProductRefresh, List<String> marketList);
 
-	public void handlerResult(Item result, AmazonAuthority amazonAuthority,AmzProductRefresh mrefresh) ;
+	public void handlerResult(Item result, AmazonAuthority amazonAuthority,AmzProductRefreshType mrefresh) ;
 
-	void handlerFailure(AmazonAuthority amazonAuthority, AmzProductRefresh amzProductRefresh, ApiException e);
+	void handlerFailure(AmazonAuthority amazonAuthority, AmzProductRefreshType amzProductRefresh, ApiException e);
 	
 	void stopTask();
 

@@ -172,6 +172,28 @@ function getPurchaseFormReport(data){
   function downloadTimeList(data,callback){
   	  return request.get("/erp/api/v1/purchase_form/downloadTimeList" ,{params:data});
   }
+  function uploadPaymentImportFile(FormData){
+  	return request({'method':'POST',
+  	                 'url':"/erp/api/v1/purchase_form/uploadPaymentImportFile",
+  				    'data':FormData,
+  					'responseType':"blob",
+  					'headers':{'Content-Type':"multipart/form-data"},
+  	}).then(function(res){
+  		  	  uploadhandler.uploadResult(res,(response)=>{
+  				 if(response){
+  					 return response;
+  				 }
+  		  	  });
+  		  	 
+  		  }).catch(e=>{
+  		  	  uploadhandler.uploadResult(e,(response)=>{
+  				  if(response){
+  					  return response;
+  				  }
+  			  });
+  			   
+  	  });
+  }
  
 
 
@@ -181,6 +203,6 @@ export default{
 	 recallEntry,deleteEntry,getEntryData,downloadPurchaseInfo,autopay,autorec,updateWarehouse, uploadPaymentFile,changeDeliveryDate,
 	 updateCycle,reviewPruchaseStockPage,getPaymentReport,getPaymentReportExcel,getPayRecSumReport,getPurchaseFormReport,
 	 downExcelPurchaseFormReport,cancelPayment,getPurchaseTimeList,downloadTimeList,setPrintIp,getPrintIp,getPrintIpByWarehouse,getPrintIpByAddress,
-	 reSubmit,updateNoticeAll,updateNoticeForm,downloadPurchaseInfoData
+	 reSubmit,updateNoticeAll,updateNoticeForm,downloadPurchaseInfoData,uploadPaymentImportFile
 	 
 }

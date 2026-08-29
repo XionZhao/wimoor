@@ -27,6 +27,20 @@
 		</el-form-item>  
 		</el-col>
 		</el-row>
+		<el-row v-if="country=='AU'">
+			<el-col :span="12">
+		<el-form-item label="销售GST税率" >
+		     <template #label>
+				 <div class="text-right">
+				  <span class="font-small">销售GST税率</span>
+				  <p>Selling GST Tax</p>
+				 </div>
+			 </template>
+			 <el-input @input="marketData.sellingGSTRate=CheckInputFloat(marketData.sellingGSTRate)" 
+			 v-model="marketData.sellingGSTRate"> <template #append>% </template></el-input>
+		</el-form-item>  
+		</el-col>
+		</el-row>
 	<el-form-item v-if="country=='EU'" label="亚马逊配送方案" >
 	     <template #label>
 			 <div class="text-right">

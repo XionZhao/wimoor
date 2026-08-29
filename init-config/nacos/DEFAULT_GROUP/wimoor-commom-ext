@@ -20,8 +20,8 @@ mybatis-plus.global-config.db-config.field-strategy=ignored
 #ftp.ftpPassword=
 #ftp.ftpHost=
 
-spring.servlet.multipart.max-file-size=50MB
-spring.servlet.multipart.max-request-size=50MB
+spring.servlet.multipart.max-file-size=200MB
+spring.servlet.multipart.max-request-size=200MB
 spring.mvc.pathmatch.matching-strategy= ant_path_matcher
 mybatis-plus.global-config.db-config.field-strategy=ignored
 

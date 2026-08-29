@@ -119,7 +119,7 @@ export default {
 }	
 </script>
 
-<style>
+<style scoped>
 	.card{
 		display: flex;
 		justify-content: center;

@@ -7,17 +7,17 @@ import com.amazon.spapi.client.ApiCallback;
 import com.amazon.spapi.client.ApiException;
 import com.amazon.spapi.model.catalogitems.Item;
 import com.wimoor.amazon.auth.pojo.entity.AmazonAuthority;
-import com.wimoor.amazon.product.pojo.entity.AmzProductRefresh;
+import com.wimoor.amazon.product.pojo.entity.AmzProductRefreshType;
 import com.wimoor.amazon.product.service.IProductCatalogItemService;
 
 public class ApiCallbackGetCatalogItem implements ApiCallback<Item> {
 	
 	IProductCatalogItemService iProductCaptureCatalogItemService;
 	AmazonAuthority auth;
-	AmzProductRefresh skuRefresh;
+	AmzProductRefreshType skuRefresh;
 	 
 	
-	public ApiCallbackGetCatalogItem(IProductCatalogItemService iProductCaptureCatalogItemService, AmazonAuthority auth,AmzProductRefresh skuRefresh) {
+	public ApiCallbackGetCatalogItem(IProductCatalogItemService iProductCaptureCatalogItemService, AmazonAuthority auth,AmzProductRefreshType skuRefresh) {
 		// TODO Auto-generated constructor stub
 		this.iProductCaptureCatalogItemService=iProductCaptureCatalogItemService;
 		this.auth=auth;

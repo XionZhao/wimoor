@@ -10,7 +10,7 @@
 			 <Warehouse  @change="handleWarehouseChange" :isform="true" defaultValue="only"></Warehouse>
 			</div>
 		</el-space>
-		<el-button @click="clearPlan">清空计划</el-button>
+		<el-button @click="clearPlan" style="margin-right: 70px;">清空计划</el-button>
 	</div>
 	<div class="con-header" style="padding: 16px 16px 0px 16px;">
 		<el-row class="no-flex-warp flex-between">
@@ -23,7 +23,7 @@
 					     <el-checkbox-button v-model="queryParams.notag" @change="handleQuery" label="排除" size="large" />
 				   </div>
 				 
-				<el-input  v-model="queryParams.search" clearable @input="handleQuery"  @clear="handleQuery" placeholder="请输入" class="input-with-select" >
+				<el-input  v-model="queryParams.search" clearable v-debounce-input="handleQuery"  @clear="handleQuery" placeholder="请输入" class="input-with-select" >
 				   <template #prepend>
 				     <el-select v-model="queryParams.searchtype" placeholder="请搜索" style="width: 110px">
 				       <el-option label="SKU" value="sku"></el-option>
@@ -546,7 +546,6 @@ onUnmounted(()=>{
 </script>
 <style scoped="scoped">
 .con-header {
-    background-color: #fff;
     border-radius: 8px;
     padding: 20px;
    	box-shadow: 0 0px 0px #0000001a !important;

@@ -95,8 +95,10 @@ public class MaterialController {
 	   
 	   final IPurchaseFormEntryService purchaseFormEntryService;
 
-		@Autowired
-		@Lazy
+	   final IMaterialAttachmentService iMaterialAttachmentService;
+
+	   @Autowired
+	   @Lazy
 	   IExcelDownLoadService excelDownLoadService;
 	   
 	   final IMaterialSupplierService iMaterialSupplierService;
@@ -1704,5 +1706,31 @@ public class MaterialController {
 		UserInfo user = UserInfoContext.get();
 		iMaterialService.saveCustom(user,custom);
 		return Result.success();
+	}
+
+	@ApiOperation("获取物料附件列表")
+	@GetMapping("/getAttachments")
+	public Result<List<MaterialAttachment>> getAttachments(@RequestParam String materialid) {
+		List<MaterialAttachment> list = iMaterialAttachmentService.getByMaterialId(materialid);
+		return Result.success(list);
+	}
+
+	@ApiOperation("保存物料附件")
+	@PostMapping("/saveAttachments")
+	@Transactional
+	public Result<String> saveAttachments(@RequestParam String materialid,
+										  @RequestBody List<MaterialAttachment> attachments) {
+		UserInfo user = UserInfoContext.get();
+		iMaterialAttachmentService.saveAttachments(materialid, attachments, user);
+		return Result.success("操作成功！");
+	}
+
+	@ApiOperation("删除物料附件")
+	@GetMapping("/deleteAttachment")
+	@Transactional
+	public Result<String> deleteAttachment(@RequestParam String id) {
+		UserInfo user = UserInfoContext.get();
+		iMaterialAttachmentService.deleteAttachment(id, user.getCompanyid());
+		return Result.success("删除成功！");
 	}
 }

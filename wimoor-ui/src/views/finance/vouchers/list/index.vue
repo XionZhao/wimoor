@@ -120,9 +120,9 @@
       <el-table-column type="selection" width="40" align="center"  />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <!-- 编辑和删除按钮-->
-          <el-button link type="primary" :icon="Edit" @click="handleEdit(scope.row)"   >编辑</el-button>
-          <el-button link type="danger" style="margin-left: 0px" :icon="Delete" @click="handleDelete(scope.row)"  >删除</el-button>
+          <!-- 编辑和删除按钮，已结账的凭证禁止编辑和删除-->
+          <el-button link type="primary" :icon="Edit" @click="handleEdit(scope.row)" :disabled="scope.row.periodClosed" :title="scope.row.periodClosed ? '已结账，不可编辑' : ''"   >编辑</el-button>
+          <el-button link type="danger" style="margin-left: 0px" :icon="Delete" @click="handleDelete(scope.row)" :disabled="scope.row.periodClosed" :title="scope.row.periodClosed ? '已结账，不可删除' : ''"  >删除</el-button>
         </template>
       </el-table-column>
       <el-table-column label="凭证日期"  prop="voucherDate" width="130">
@@ -156,7 +156,11 @@
       <el-table-column label="借方金额"  prop="debitAmount" width="140"/>
       <el-table-column label="贷方金额"   prop="creditAmount" width="140"/>
 
-      <el-table-column label="附件数量" align="center" prop="attachmentCount" />
+      <el-table-column label="附件数量" align="center">
+        <template #default="scope">
+          {{ scope.row.files ? scope.row.files.length : 0 }}
+        </template>
+      </el-table-column>
       <el-table-column label="附件上传" align="center" prop="attachmentCount"  >
         <template #default="scope">
           <el-button type="primary" link @click="uploadAttachment(scope.row)" size="small">
@@ -177,6 +181,7 @@
           <span v-else-if="scope.row.voucherStatus == 3">已过账</span>
           <span v-else-if="scope.row.voucherStatus == 4">已作废</span>
           <span v-else>未知状态</span>
+          <el-tag v-if="scope.row.periodClosed" type="danger" size="small" style="margin-left: 5px;">已结账</el-tag>
         </template>
       </el-table-column>
 <!--      备注-->

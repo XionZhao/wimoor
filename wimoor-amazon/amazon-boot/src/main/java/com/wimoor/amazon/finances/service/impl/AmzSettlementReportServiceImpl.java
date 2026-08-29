@@ -70,7 +70,9 @@ public class AmzSettlementReportServiceImpl extends ServiceImpl<AmzSettlementRep
  	@Resource
  	AmzSettlementReportSummaryMonthMapper amzSettlementReportSummaryMonthMapper;
  	@Resource
- 	AmzSettlementReportSummaryDayMapper amzSettlementReportSummaryDayMapper;
+	AmzSettlementReportSummaryDayMapper amzSettlementReportSummaryDayMapper;
+	@Resource
+	com.wimoor.amazon.orders.mapper.OrdersSummaryMapper ordersSummaryMapper;
  	
  	@Autowired
  	@Lazy
@@ -2284,14 +2286,11 @@ public class AmzSettlementReportServiceImpl extends ServiceImpl<AmzSettlementRep
 		Map<String,Object> result=new HashMap<String,Object>();
 		String currency=null;
 		BigDecimal totals=new BigDecimal("0");
-		BigDecimal total_other=new BigDecimal("0");
 		BigDecimal totals_rmb=new BigDecimal("0");
-		BigDecimal total_other_rmb=new BigDecimal("0");
 		for(Map<String,Object> map:mapList){
 			if(map==null){continue;}
 			BigDecimal total=map.get("Total Income Expenses Tax")!=null?new BigDecimal(map.get("Total Income Expenses Tax").toString()):null;
 			totals=totals.add(total);
-			BigDecimal others=new BigDecimal("0");
 			Date postdate=map.get("posted_date")!=null?GeneralUtil.getDate(map.get("posted_date")):null;
 			currency=map.get("currency").toString();
 			for(Map.Entry<String, Object> entry:map.entrySet()){
@@ -2306,34 +2305,24 @@ public class AmzSettlementReportServiceImpl extends ServiceImpl<AmzSettlementRep
 						result.put(entry.getKey(),value);
 						result.put(entry.getKey()+"_rmb",rmb);
 					}
-					if(!entry.getKey().equals("Total Income Expenses Tax")){
-						others=others.add(value);
-					}
 				}
 			}
-			//-----------------------------others----------------------------
-            assert total != null;
-            others=total.subtract(others);
-			map.put("Others",others);
-			BigDecimal others_rmb=exchangeRateHandlerService.changeCurrencyByLocal(postdate,currency,"CNY",others);
-			map.put("Others_rmb",others_rmb);
-			total_other=total_other.add(others);
-			total_other_rmb=total_other_rmb.add(others_rmb);
 		}
-		result.put("Others",total_other);
-		result.put("Others_rmb",total_other_rmb);
-		BigDecimal transfer = amzSettlementReportSummaryMonthMapper.TransfersToBankAccount(param);
-		result.put("Transfers to bank account",transfer);
-		if(transfer!=null){
-			BigDecimal rmb=exchangeRateHandlerService.changeCurrencyByLocal(GeneralUtil.getDatez(endDate),currency,"CNY",transfer);
-			result.put("Transfers to bank account_rmb",rmb);
+		// 兜底：如果mapList为空导致currency为null，从marketplace表获取
+		if(currency == null) {
+			String marketplaceid = param.get("marketplaceid") != null ? param.get("marketplaceid").toString() : null;
+			if(marketplaceid != null) {
+				Marketplace mp = marketplaceService.selectByPKey(marketplaceid);
+				if(mp != null) {
+					currency = mp.getCurrency();
+				}
+			}
 		}
-
 		BigDecimal transferFail=amzSettlementReportSummaryMonthMapper.FailedTransfersToBankAccount(param);
 		result.put("Failed transfers to bank account",transferFail);
-		if(transferFail!=null){
+		if(transferFail!=null && currency!=null){
 			BigDecimal rmb=exchangeRateHandlerService.changeCurrencyByLocal(GeneralUtil.getDatez(endDate),currency,"CNY",transferFail);
-			result.put("Transfers to bank account_rmb",rmb);
+			result.put("Failed transfers to bank account_rmb",rmb);
 		}
 		List<String> list = getTransactionTypes();
 		for(String item:list){
@@ -2342,11 +2331,252 @@ public class AmzSettlementReportServiceImpl extends ServiceImpl<AmzSettlementRep
 				result.put(item+"_rmb",new BigDecimal(0));
 			}
 		}
-		BigDecimal total=new BigDecimal("0");
-		for(Map.Entry<String, Object> item:result.entrySet()){
-			if(!item.getKey().contains("_rmb")){continue;}
-		    System.out.println(item.getKey()+" "+item.getValue());
+		// 计算Others = Total Income Expenses Tax - 所有已分类项之和
+		// Total Income Expenses Tax = Income + Expenses + Tax + Transfers
+		BigDecimal totalAmount = result.get("Total Income Expenses Tax") != null ? new BigDecimal(result.get("Total Income Expenses Tax").toString()) : BigDecimal.ZERO;
+		BigDecimal sumOthers = BigDecimal.ZERO;
+		for(String key : list){
+			if(key.equals("Total Income Expenses Tax") || key.equals("Others")){
+				continue;
+			}
+			Object value = result.get(key);
+			if(value instanceof BigDecimal){
+				sumOthers = sumOthers.add((BigDecimal) value);
+			}
 		}
+		BigDecimal others = totalAmount.subtract(sumOthers);
+		result.put("Others", others);
+		// Others_rmb = Total_rmb - sum(各分类字段_rmb)，用差值法确保人民币借贷平衡
+		BigDecimal totalAmountRmb = result.get("Total Income Expenses Tax_rmb") != null ? new BigDecimal(result.get("Total Income Expenses Tax_rmb").toString()) : BigDecimal.ZERO;
+		BigDecimal sumOthersRmb = BigDecimal.ZERO;
+		for(String key : list){
+			if(key.equals("Total Income Expenses Tax") || key.equals("Others")){
+				continue;
+			}
+			Object rmbValue = result.get(key + "_rmb");
+			if(rmbValue instanceof BigDecimal){
+				sumOthersRmb = sumOthersRmb.add((BigDecimal) rmbValue);
+			}
+		}
+		BigDecimal othersRmb = totalAmountRmb.subtract(sumOthersRmb);
+		result.put("Others_rmb", othersRmb);
+		return result;
+	}
+
+	@Override
+	public Map<String, Object> quantityByDay(Map<String, Object> param) {
+		List<Map<String, Object>> settlementList = amzSettlementReportSummaryMonthMapper.quantityByDay(param);
+		List<Map<String, Object>> orderList = ordersSummaryMapper.quantityByDay(param);
+		String groupType = param.get("groupType") != null ? param.get("groupType").toString() : "day";
+		// 收集所有label
+		Set<String> labelSet = new LinkedHashSet<String>();
+		Map<String, Object> settlementMap = new HashMap<String, Object>();
+		Map<String, Object> amountMap = new HashMap<String, Object>();
+		Map<String, Object> fbafeeMap = new HashMap<String, Object>();
+		Map<String, Object> commissionMap = new HashMap<String, Object>();
+		Map<String, Object> orderMap = new HashMap<String, Object>();
+		for (Map<String, Object> item : settlementList) {
+			String key = item.get("postdate").toString();
+			labelSet.add(key);
+			settlementMap.put(key, item.get("quantity") != null ? Integer.parseInt(item.get("quantity").toString()) : 0);
+			amountMap.put(key, item.get("amount") != null ? new java.math.BigDecimal(item.get("amount").toString()) : java.math.BigDecimal.ZERO);
+			fbafeeMap.put(key, item.get("fbafee") != null ? new java.math.BigDecimal(item.get("fbafee").toString()) : java.math.BigDecimal.ZERO);
+			commissionMap.put(key, item.get("commission") != null ? new java.math.BigDecimal(item.get("commission").toString()) : java.math.BigDecimal.ZERO);
+		}
+		for (Map<String, Object> item : orderList) {
+			String key = item.get("postdate").toString();
+			labelSet.add(key);
+			orderMap.put(key, item.get("quantity") != null ? Integer.parseInt(item.get("quantity").toString()) : 0);
+		}
+		// 按日粒度时，填充完整日期轴
+		if ("day".equals(groupType)) {
+			String startTime = param.get("fromDate").toString();
+			String endTime = param.get("endDate").toString();
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy/MM/dd");
+			try {
+				Date date1 = sdf.parse(startTime.substring(0, 10));
+				Date date2 = sdf.parse(endTime.substring(0, 10));
+				int daysize = (int) ((date2.getTime() - date1.getTime()) / (1000 * 3600 * 24));
+				labelSet.clear();
+				Calendar c = Calendar.getInstance();
+				c.setTime(date1);
+				for (int i = 0; i <= daysize; i++, c.add(Calendar.DATE, 1)) {
+					labelSet.add(sdf2.format(c.getTime()));
+				}
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+		}
+		// 组装结果
+		List<String> labels = new ArrayList<String>(labelSet);
+		List<Object> datas = new ArrayList<Object>();
+		List<Object> amountDatas = new ArrayList<Object>();
+		List<Object> fbaDatas = new ArrayList<Object>();
+		List<Object> commissionDatas = new ArrayList<Object>();
+		List<Object> orderDatas = new ArrayList<Object>();
+		for (String label : labels) {
+			datas.add(settlementMap.getOrDefault(label, 0));
+			amountDatas.add(amountMap.getOrDefault(label, java.math.BigDecimal.ZERO));
+			fbaDatas.add(fbafeeMap.getOrDefault(label, java.math.BigDecimal.ZERO));
+			commissionDatas.add(commissionMap.getOrDefault(label, java.math.BigDecimal.ZERO));
+			orderDatas.add(orderMap.getOrDefault(label, 0));
+		}
+		Map<String, Object> maps = new HashMap<String, Object>();
+		maps.put("labels", labels);
+		maps.put("datas", datas);
+		maps.put("amountDatas", amountDatas);
+		maps.put("fbaDatas", fbaDatas);
+		maps.put("commissionDatas", commissionDatas);
+		maps.put("orderDatas", orderDatas);
+		return maps;
+	}
+
+	@Override
+	public Map<String, Object> dailyIncomeReport(Map<String, Object> param) {
+		String shopid = param.get("shopid") != null ? param.get("shopid").toString() : "";
+		String tocurrency = param.get("currency") != null ? param.get("currency").toString() : "market";
+		List<Map<String, Object>> list = amzSettlementReportSummaryMonthMapper.dailyIncomeReport(param);
+		List<String> labels = new ArrayList<String>();
+		List<Map<String, Object>> dailyDataList = new ArrayList<Map<String, Object>>();
+		String currency = null;
+		// 获取可展示的收入项字段列表
+		List<Map<String, Object>> incomeFields = new ArrayList<Map<String, Object>>();
+		if (list != null && list.size() > 0) {
+			Map<String, Object> firstRow = list.get(0);
+			for (Map.Entry<String, Object> entry : firstRow.entrySet()) {
+				String key = entry.getKey();
+				if (!"posted_date".equals(key) && !"currency".equals(key) && !"order_quantity".equals(key) && entry.getValue() instanceof BigDecimal) {
+					Map<String, Object> field = new HashMap<String, Object>();
+					field.put("key", key);
+					field.put("label", key);
+					incomeFields.add(field);
+				}
+			}
+		}
+		if (list != null) {
+			for (Map<String, Object> item : list) {
+				String postedDate = item.get("posted_date").toString();
+				labels.add(postedDate);
+				if (currency == null) {
+					currency = item.get("currency") != null ? item.get("currency").toString() : null;
+				}
+				Map<String, Object> dayData = new HashMap<String, Object>();
+				dayData.put("posted_date", postedDate);
+				Date postdate = null;
+				try {
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+					postdate = sdf.parse(postedDate);
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+				// 计算当天汇率
+				BigDecimal rate = BigDecimal.ONE;
+				if (currency != null && postdate != null) {
+					rate = exchangeRateHandlerService.changeCurrencyByLocal(postdate, currency, "CNY", BigDecimal.ONE);
+				}
+				dayData.put("exchangeRate", rate);
+				for (Map.Entry<String, Object> entry : item.entrySet()) {
+					String key = entry.getKey();
+					if ("posted_date".equals(key) || "currency".equals(key)) {
+						continue;
+					}
+					if (entry.getValue() instanceof BigDecimal) {
+						BigDecimal value = (BigDecimal) entry.getValue();
+						dayData.put(key, value);
+						// 计算RMB值
+						if (postdate != null && currency != null) {
+							BigDecimal rmb = exchangeRateHandlerService.changeCurrencyByLocal(postdate, currency, "CNY", value);
+							dayData.put(key + "_rmb", rmb);
+						}
+					}
+				}
+				dailyDataList.add(dayData);
+			}
+		}
+		// 查询交易报告订单数量（从t_amz_transaction_report）
+		List<Map<String, Object>> orderQtyList = amzSettlementReportSummaryMonthMapper.orderQuantityByDay(param);
+		if (orderQtyList != null) {
+			Map<String, BigDecimal> orderQtyMap = new HashMap<String, BigDecimal>();
+			for (Map<String, Object> row : orderQtyList) {
+				String dateKey = row.get("posted_date").toString();
+				BigDecimal qty = row.get("order_quantity") != null ? new BigDecimal(row.get("order_quantity").toString()) : BigDecimal.ZERO;
+				orderQtyMap.put(dateKey, qty);
+			}
+			for (Map<String, Object> dayData : dailyDataList) {
+				String dateKey = dayData.get("posted_date").toString();
+				dayData.put("order_quantity", orderQtyMap.getOrDefault(dateKey, BigDecimal.ZERO));
+			}
+		}
+		Map<String, Object> result = new HashMap<String, Object>();
+		result.put("labels", labels);
+		result.put("currency", currency);
+		result.put("dailyData", dailyDataList);
+		result.put("incomeFields", incomeFields);
+		return result;
+	}
+
+	@Override
+	public Map<String, Object> dailyIncomeReportByTransaction(Map<String, Object> param) {
+		List<Map<String, Object>> list = amzSettlementReportSummaryMonthMapper.monthReport(param);
+		List<String> labels = new ArrayList<String>();
+		List<Map<String, Object>> dailyDataList = new ArrayList<Map<String, Object>>();
+		String currency = null;
+		// 获取可展示的收入项字段列表
+		List<Map<String, Object>> incomeFields = new ArrayList<Map<String, Object>>();
+		if (list != null && list.size() > 0) {
+			Map<String, Object> firstRow = list.get(0);
+			for (Map.Entry<String, Object> entry : firstRow.entrySet()) {
+				String key = entry.getKey();
+				if (!"posted_date".equals(key) && !"currency".equals(key) && !"order_quantity".equals(key) && entry.getValue() instanceof BigDecimal) {
+					Map<String, Object> field = new HashMap<String, Object>();
+					field.put("key", key);
+					field.put("label", key);
+					incomeFields.add(field);
+				}
+			}
+		}
+		if (list != null) {
+			SimpleDateFormat outFmt = new SimpleDateFormat("yyyy/MM/dd");
+			for (Map<String, Object> item : list) {
+				// monthReport mapper返回DATE(m.date_time)，统一格式化为yyyy/MM/dd
+				Date postdate = GeneralUtil.getDate(item.get("posted_date"));
+				String postedDate = postdate != null ? outFmt.format(postdate) : item.get("posted_date").toString();
+				labels.add(postedDate);
+				if (currency == null) {
+					currency = item.get("currency") != null ? item.get("currency").toString() : null;
+				}
+				Map<String, Object> dayData = new HashMap<String, Object>();
+				dayData.put("posted_date", postedDate);
+				// 计算当天汇率
+				BigDecimal rate = BigDecimal.ONE;
+				if (currency != null && postdate != null) {
+					rate = exchangeRateHandlerService.changeCurrencyByLocal(postdate, currency, "CNY", BigDecimal.ONE);
+				}
+				dayData.put("exchangeRate", rate);
+				for (Map.Entry<String, Object> entry : item.entrySet()) {
+					String key = entry.getKey();
+					if ("posted_date".equals(key) || "currency".equals(key)) {
+						continue;
+					}
+					if (entry.getValue() instanceof BigDecimal) {
+						BigDecimal value = (BigDecimal) entry.getValue();
+						dayData.put(key, value);
+						// 计算RMB值
+						if (postdate != null && currency != null) {
+							BigDecimal rmb = exchangeRateHandlerService.changeCurrencyByLocal(postdate, currency, "CNY", value);
+							dayData.put(key + "_rmb", rmb);
+						}
+					}
+				}
+				dailyDataList.add(dayData);
+			}
+		}
+		Map<String, Object> result = new HashMap<String, Object>();
+		result.put("labels", labels);
+		result.put("currency", currency);
+		result.put("dailyData", dailyDataList);
+		result.put("incomeFields", incomeFields);
 		return result;
 	}
 
@@ -2384,8 +2614,8 @@ public class AmzSettlementReportServiceImpl extends ServiceImpl<AmzSettlementRep
 				"Product, delivery and gift wrap taxes refunded",
 				"Amazon obligated tax withheld",
 				"Failed transfers to bank account",
-				"Total Income Expenses Tax",
-				"Others"
+				"Others",
+				"Total Income Expenses Tax"
 		);
 	}
   

@@ -13,7 +13,7 @@
 				   <el-space>
 					<GroupSelect style="width:120px;" ref="groupRef"  @change="changeGroup" defaultValue="all" />
 				   <Warehouse  ref="warehouseRef" @changeware="changeWarehouse" />
-				   <Supplier  ref="supplierRef"   @change="changeSupplier"  />
+				   <Supplier  ref="supplierRef"   @change="changeSupplier" :initValue="initSupplier" />
 		           <el-select style="width:110px;"  v-if="activeName=='4'" v-model="arrivalType"  @change="handleQuery" placeholder="收货状态">
 						<el-option v-for="item in arrivalOptions" :label="item.label" :value="item.value" ></el-option>
 					</el-select>  
@@ -32,7 +32,7 @@
 				   	</el-select>
 				   	<Datepicker style="width: 240px;" longtime="ok" ref="datepickersRef" @changedate="changedate" />
 				   </div>
-				     <el-input  v-model="searchKeywords" placeholder="请输入" clearable @input="handleQuery"  style="min-width:240px;" >
+				     <el-input  v-model="searchKeywords" placeholder="请输入" clearable @clear="handleQuery" v-debounce-input="handleQuery"  style="min-width:240px;" >
 				        <template #prepend>
 				          <el-select v-model="searchtype" @change='searchTypeChange' placeholder="SKU"  style="width:90px">
 				            <el-option label="SKU" value="sku"></el-option>
@@ -89,7 +89,7 @@
 				  			</el-form>
 				         </el-popover>
 				      <el-button @click.stop="clearSearch">重置</el-button>
-				  		
+				 
 				    </el-space>
 				    </el-row>
 				     <!--功能区域 -->
@@ -147,17 +147,17 @@
 				  		  <setting-two theme="outline" size="16"  :strokeWidth="3"/>
 				  	   </el-button> -->
 					   </el-space>
-					   <el-button   class='ic-btn' :icon="Printer" @click="handlePrinterShow()" title='打印设置'>
-					   </el-button>
+				   <el-button   class='ic-btn' :icon="Printer" @click="handlePrinterShow()" title='打印设置' style="margin-left: 8px;">
+				   </el-button>
 				  		<Helper name="采购单" />
 				     </div>
 				  </el-row>
 			  </div>
 			  <div v-if="ftype=='单据'">
-			<Table  ref="tableRef"  @selectrow="getrows" @changepay="loadStatusNums"  :tableState = "activeName" />
-			</div>
+		<Table  ref="tableRef"  @selectrow="getrows" @changepay="loadStatusNums" @sort-change="handleSortChange"  :tableState = "activeName" />
+		</div>
 			<div  v-else>
-			<SkuTable  ref="skutableRef" @changepay="loadStatusNums"  @selectrow="getskurows"  :tableState = "activeName" />
+			<SkuTable  ref="skutableRef" @changepay="loadStatusNums"  @selectrow="getskurows" @sort-change="handleSortChange"  :tableState = "activeName" />
 			</div>
 		</div>
 		<UploadDialog ref="uploadDialogRef" @upload="handleUpload"></UploadDialog>
@@ -178,8 +178,8 @@
 		import Supplier from '@/components/header/supplier.vue';
 		import Datepicker from '@/components/header/datepicker.vue';
 		import UploadDialog from '@/components/Upload/uploadDialog.vue';
-		import {Search,ArrowDown,Printer} from '@element-plus/icons-vue'
-		import {useRouter } from 'vue-router'
+		import {Search,ArrowDown,Printer,SortUp,SortDown} from '@element-plus/icons-vue'
+		import {useRouter, useRoute } from 'vue-router'
 		import {MenuUnfold,Plus,SettingTwo,Help,Copy,MoreOne} from '@icon-park/vue-next';
 		import { ElMessage, ElMessageBox } from 'element-plus';
 		import FilterIcon from "@/components/icon/filtericon.vue";
@@ -195,6 +195,8 @@
  
 		const emitter = inject("emitter");
 		const router = useRouter();
+		const route = useRoute();
+		const initSupplier = route.query.supplierid || "";
 		const printipRef=ref();
 		const autoPaymentRef=ref();
 		const shipfeeRef=ref();
@@ -257,15 +259,16 @@
 				{label:'收货超期',value:'outdate',},
 			],
 			skurows:[],
-			tableRows:[],
-		})
+		tableRows:[],
+		sortOrder:'',
+	})
 		const{
-			ftype,
-			activeName,orderState,arrivalType,
-		    paymentType,dateOptions,dateType,queryParam,
-			isload,searchKeywords,searchtype,remarks,productType,passinware,nopass,
-			passnopay,passpay,arrivalOptions,paymentOptions,payarrivalType,audistatusType,skurows,tableRows,
-		}=toRefs(state);
+		ftype,
+		activeName,orderState,arrivalType,
+	    paymentType,dateOptions,dateType,queryParam,
+		isload,searchKeywords,searchtype,remarks,productType,passinware,nopass,
+		passnopay,passpay,arrivalOptions,paymentOptions,payarrivalType,audistatusType,skurows,tableRows,sortOrder,
+	}=toRefs(state);
 		function handleAdd(){
 			emitter.emit("removeCache", "添加采购单");
 			router.push({
@@ -330,13 +333,22 @@
 			state.queryParam.fromDate=mydata.start;
 			state.queryParam.toDate=mydata.end;
 		}
+		// 设置近半年的日期范围
+		function setHalfYearDate(){
+			const end = new Date();
+			const start = new Date();
+			end.setTime(end.getTime() - 3600 * 1000 * 24);
+			start.setTime(start.getTime() - 3600 * 1000 * 24 * 180);
+			state.queryParam.fromDate=start.format("yyyy-MM-dd");
+			state.queryParam.toDate=end.format("yyyy-MM-dd")+" 23:59:59";
+		}
 		function changedate(dates){
 			state.queryParam.fromDate=dates.start;
 			state.queryParam.toDate=dates.end;
 			if(state.isload==false){
 				handleQuery();
 			}else{
-				if(router.currentRoute.value.query.number){
+				if(route.query.number){
 					  resetDate();
 				}
 			}
@@ -589,6 +601,10 @@
 		function changeOwner(id){
 			state.queryParam.owner=id;
 		}
+		function handleSortChange(val){
+		state.queryParam.sortOrder=val;
+		handleQuery();
+	}
 		function clearSearch(){
 			warehouseRef.value.warehouseid="";
 			state.queryParam.warehouseid="";
@@ -598,6 +614,8 @@
 			state.searchKeywords="";
 			state.queryParam.search="";
 			state.queryParam.name="";
+		state.sortOrder="";
+		state.queryParam.sortOrder="";
 			if(state.ftype=="SKU"){
 				categoryRef.value.reset();
 				state.queryParam.categoryid="";
@@ -621,17 +639,36 @@
 		}
 		onMounted(()=>{
 			var timer=setTimeout(function(){
-				if(router.currentRoute.value.query.number){
+				if(route.query.number){
 						datepickersRef.value.reset(3);
 				}
 				clearTimeout(timer);
 			},200)
+			// 处理从供应商详情页面传递过来的参数
+			if(route.query.supplierid){
+				state.queryParam.supplierid = route.query.supplierid;
+			}
+			if(route.query.sku){
+				state.searchKeywords = route.query.sku;
+				state.searchtype = 'sku';
+			}
 			load();
+			// 如果有供应商或SKU参数，自动查询
+			if(route.query.supplierid || route.query.sku){
+				// 设置日期为近半年
+				if(datepickersRef.value){
+					datepickersRef.value.reset(2);
+				}
+				setHalfYearDate();
+				setTimeout(()=>{
+					handleQuery();
+				}, 300);
+			}
 		});
-		watch(() =>router.currentRoute.value.query,(newValue,oldValue)=> {
+		watch(() =>route.query,(newValue,oldValue)=> {
 		  if(newValue&&newValue['refresh']){
-			      state.searchKeywords=router.currentRoute.value.query.number;
-			      delete router.currentRoute.value.query.number;
+			      state.searchKeywords=route.query.number;
+			      delete route.query.number;
 						 setTimeout(()=>{
 							 if(state.searchKeywords){
 								 datepickersRef.value.reset(3);
@@ -642,6 +679,30 @@
 						 },100);
 					 }
 		  },{ immediate: true });
+
+		// 监听从供应商详情页面传递过来的参数
+		watch(() =>route.query,(newValue)=> {
+			if(newValue && newValue['supplierid']){
+				state.queryParam.supplierid = newValue['supplierid'];
+				if(supplierRef.value){
+					supplierRef.value.setSupplier(newValue['supplierid']);
+				}
+			}
+			if(newValue && newValue['sku']){
+				state.searchKeywords = newValue['sku'];
+				state.searchtype = 'sku';
+			}
+			if(newValue && (newValue['supplierid'] || newValue['sku'])){
+				// 设置日期为近半年
+				if(datepickersRef.value){
+					datepickersRef.value.reset(2);
+				}
+				setHalfYearDate();
+				setTimeout(()=>{
+					handleQuery();
+				}, 300);
+			}
+		},{ immediate: false });
 	</script>
 	
 	<style scoped="scoped">

@@ -48,6 +48,9 @@ public class PurchaseFormPayment extends ErpBaseEntity{
     @TableField(value= "payment_method")
     private Integer paymentMethod;
     
+    @TableField(value= "period_rollover_id")
+    private String periodRolloverId;
+    
     @TableField(exist=false)
     private String methodname;
     

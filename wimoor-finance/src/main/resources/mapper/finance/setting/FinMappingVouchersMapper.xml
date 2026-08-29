@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wimoor.finance.setting.mapper.FinMappingVouchersMapper">
+
+    <resultMap type="com.wimoor.finance.setting.domain.FinMappingVouchers" id="FinMappingVouchersResult">
+        <result property="id"    column="id"    />
+        <result property="groupid"    column="groupid"    />
+        <result property="vouchersId"    column="vourches_id"    />
+        <result property="datalog"    column="datalog"    />
+        <result property="voucherDate"    column="voucher_date"    />
+        <result property="createdTime"    column="created_time"    />
+        <result property="updatedTime"    column="updated_time"    />
+        <result property="modifyBy"    column="modify_by"    />
+        <result property="createBy"    column="create_by"    />
+    </resultMap>
+
+    <sql id="selectFinMappingVouchersVo">
+        select r.id, r.groupid, r.vourches_id,
+               r.datalog, r.voucher_date, r.created_time, r.updated_time,
+               r.modify_by, r.create_by
+        from fin_mapping_vouchers r
+    </sql>
+
+    <select id="selectFinMappingVouchersList" parameterType="com.wimoor.finance.setting.domain.FinMappingVouchers" resultMap="FinMappingVouchersResult">
+        <include refid="selectFinMappingVouchersVo"/>
+        <where>
+            <if test="groupid != null"> and r.groupid = #{groupid}</if>
+            <if test="vouchersId != null"> and r.vourches_id = #{vouchersId}</if>
+            <if test="voucherDate != null"> and r.voucher_date = #{voucherDate}</if>
+        </where>
+        order by r.id desc
+    </select>
+
+    <select id="selectFinMappingVouchersById" parameterType="Long" resultMap="FinMappingVouchersResult">
+        <include refid="selectFinMappingVouchersVo"/>
+        where r.id = #{id}
+    </select>
+
+    <insert id="insertFinMappingVouchers" parameterType="com.wimoor.finance.setting.domain.FinMappingVouchers" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_mapping_vouchers
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="groupid != null">groupid,</if>
+            <if test="vouchersId != null">vourches_id,</if>
+            <if test="datalog != null">datalog,</if>
+            <if test="voucherDate != null">voucher_date,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+            <if test="modifyBy != null">modify_by,</if>
+            <if test="createBy != null">create_by,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="groupid != null">#{groupid},</if>
+            <if test="vouchersId != null">#{vouchersId},</if>
+            <if test="datalog != null">#{datalog},</if>
+            <if test="voucherDate != null">#{voucherDate},</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+            <if test="modifyBy != null">#{modifyBy},</if>
+            <if test="createBy != null">#{createBy},</if>
+        </trim>
+    </insert>
+
+    <update id="updateFinMappingVouchers" parameterType="com.wimoor.finance.setting.domain.FinMappingVouchers">
+        update fin_mapping_vouchers
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="vouchersId != null">vourches_id = #{vouchersId},</if>
+            <if test="datalog != null">datalog = #{datalog},</if>
+            <if test="voucherDate != null">voucher_date = #{voucherDate},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime},</if>
+            <if test="modifyBy != null">modify_by = #{modifyBy},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinMappingVouchersById" parameterType="Long">
+        delete from fin_mapping_vouchers where id = #{id}
+    </delete>
+
+    <delete id="deleteFinMappingVouchersByIds" parameterType="String">
+        delete from fin_mapping_vouchers where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteByVoucherId">
+        delete from fin_mapping_vouchers where vourches_id = #{voucherId}
+    </delete>
+
+    <delete id="deleteByVoucherIds">
+        delete from fin_mapping_vouchers where vourches_id in
+        <foreach item="voucherId" collection="voucherIds" open="(" separator="," close=")">
+            #{voucherId}
+        </foreach>
+    </delete>
+</mapper>

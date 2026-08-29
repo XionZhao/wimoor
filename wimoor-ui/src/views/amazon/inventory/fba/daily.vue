@@ -5,7 +5,7 @@
 		  <el-space>
 			 <Group  @change="groupChange" defaultValue="" isproduct="ok"></Group>
 			 <Datepicker longtime="ok" ref="datepickers" @changedate="changedate" />
-		<el-input  v-model="queryParams.sku" @input="handleQuery" clearable placeholder="请输入SKU" style="width: 250px;" class="input-with-select" >
+		<el-input  v-model="queryParams.sku" v-debounce-input="handleQuery" clearable @clear="handleQuery" placeholder="请输入SKU" style="width: 250px;" class="input-with-select" >
 		   <template #append>
 		     <el-button @click="handleQuery" >
 		        <el-icon class="ic-cen font-medium">
@@ -61,7 +61,6 @@
 	import inventoryRptApi from "@/api/amazon/inventory/inventoryRptApi.js";
 	import {Search} from '@element-plus/icons-vue';
 	import Datepicker from '@/components/header/datepicker.vue';
-	
 	let globalTable=ref();
 	const dataFormRef = ref(ElForm);
 	let state = reactive({
@@ -115,7 +114,6 @@
 				 globalTable.value.loadTable(state.queryParams);
 			 });
 		 }
-		 
 		 function loadTableData(params){
 			 inventoryRptApi.getFBAInvDayDetail(params).then(res=>{
 				 state.tableData.records=res.data.records;

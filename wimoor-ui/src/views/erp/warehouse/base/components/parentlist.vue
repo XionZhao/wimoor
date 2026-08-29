@@ -14,7 +14,7 @@
             style="width: 120px;"
 				    clearable
 					@clear = "SearchShow=true"
-				    @input="handleQuery"
+				    v-debounce-input="handleQuery"
 				  />
 				  <el-button @click="handleAdd" link class="im-but-one " >
 				   <el-icon class="font-base"><Plus /></el-icon>

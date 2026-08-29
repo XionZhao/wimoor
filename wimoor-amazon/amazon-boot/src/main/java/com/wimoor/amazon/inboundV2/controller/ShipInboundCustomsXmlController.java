@@ -191,11 +191,17 @@ public class ShipInboundCustomsXmlController {
     }
 
     @PostMapping("/generateCustomsXml")
-    @Transactional(rollbackFor = Exception.class)
     public Result<String> generateShipmentCustomsXmlAction(@RequestBody ShipInboundCustomsXml xml){
         UserInfo userinfo = UserInfoContext.get();
         try {
+            // 冲突检查（只读操作，在事务外执行）
+            if(!Boolean.TRUE.equals(xml.getForce())){
+                shipCrossborderXmlSevice.checkConflict(xml);
+            }
+            // 实际生成（写操作，在事务内执行）
             return Result.success(shipCrossborderXmlSevice.downloadShipXmlFile(userinfo,xml));
+        } catch (BizException e) {
+            return Result.failed(e.getMessage());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

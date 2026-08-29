@@ -300,20 +300,20 @@ import materialApi from '@/api/erp/material/materialApi.js';
 						}
 					}
 					if(state.forms.assemblyforms.list && state.forms.assemblyforms.list.length>0){
-						var isasspass=true;
-						 state.forms.assemblyforms.list.forEach(function(item){
-							 if(item.subnumber<=0){
-								 isasspass=false;
-							 }
-						 });
-						 if(isasspass==false){
-						 	ElMessage.error('组装信息单位数量不能为0!');
-						 	return;
+					 var isasspass=true;
+					 state.forms.assemblyforms.list.forEach(function(item){
+						 if(item.subnumber<=0){
+							 isasspass=false;
 						 }
-						 datas.material.issfg="1";
-					}else{
-						datas.material.issfg="0";
-					}
+					 });
+					 if(isasspass==false){
+					 	ElMessage.error('组装信息单位数量不能为0!');
+					 	return;
+					 }
+					 datas.material.issfg="1";
+				}else{
+					datas.material.issfg="0";
+				}
 					if(iscopy=="ok"){
 						 datas.material.id="";
 						 datas.iscopy="ok";

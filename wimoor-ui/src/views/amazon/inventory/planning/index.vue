@@ -4,7 +4,7 @@
 		  <el-row>
 		    <el-space >
 		  <Group  @change="changeGroup"  ref="groupRef" />
-		   <el-input  v-model="searchKeywords" clearable @input="searchConfirm" placeholder="请输入" class="input-with-select" >
+		   <el-input  v-model="searchKeywords" clearable @clear="searchConfirm" v-debounce-input="searchConfirm" placeholder="请输入" class="input-with-select" >
 		      <template #prepend> 
 		        <el-select v-model="selectlabel"  placeholder="SKU" style="width: 110px">
 		          <el-option label="SKU" value="sku"></el-option>

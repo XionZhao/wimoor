@@ -146,6 +146,18 @@ public class ShipInboundCustomsXml implements Serializable {
     private String content;
 
     /**
+     * 电商企业名称下拉列表的所有公司（逗号分隔）
+     */
+    @TableField(value = "all_company")
+    private String allCompany;
+
+    /**
+     * 当前所选申报公司名称
+     */
+    @TableField(value = "apply_company")
+    private String applyCompany;
+
+    /**
      *
      */
     @TableField(exist = false)
@@ -163,5 +175,7 @@ public class ShipInboundCustomsXml implements Serializable {
     @TableField(exist = false)
     private String optType;
 
+    @TableField(exist = false)
+    private Boolean force;
 
 }

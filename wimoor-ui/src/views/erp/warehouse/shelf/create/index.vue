@@ -10,7 +10,7 @@
 				</div>
 				</div>
 				<div class='gird-body' style="height:calc(100vh - 110px);">
-				<ShelfTree ref="leftSearchTree"   @node-click="treeSeletecd"/>
+				<ShelfTree ref="leftSearchTree"   @node-click="debouncedTreeSeletecd"/>
 		       </div>
 	    </div>
 	</el-col> 
@@ -34,6 +34,7 @@ import ShelfDialog from "./components/shelf_dialog.vue";
 import {menuApi} from "@/api/sys/admin/menuApi.js";
 import Helper from '@/components/header/helper.vue';
 import {Help} from '@icon-park/vue-next';
+import { debounce } from '@/utils';
 
 export default {
   name: '库位列表',
@@ -74,13 +75,14 @@ export default {
 			}
 		  breadname.value = leftSearchTree.value.getAllTreeName(data);
 		}
+		const debouncedTreeSeletecd = debounce(treeSeletecd, 300);
 		function serachTree(){
 			leftSearchTree.value.filterNode(value,data)
 		}
 		return {
 			handleChange,nowNode,breadname,
 			props,value,reloadSearchTree,
-			leftSearchTree,treeSeletecd,showCreateDialog,cardClickToTree,
+			leftSearchTree,debouncedTreeSeletecd,showCreateDialog,cardClickToTree,
 			selfDialogRef,selfCardRef,modifyTree}
 	  },
 }

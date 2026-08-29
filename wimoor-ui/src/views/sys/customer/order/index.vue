@@ -421,7 +421,11 @@
 	
 	function handleEdit(row){
 		customerOrderApi.detail({"id":row.id}).then(res=>{
-			state.editForm=res.data;
+			const data = res.data;
+			if (data.paytime && typeof data.paytime === 'string') {
+				data.paytime = new Date(data.paytime.replace(/-/g, '/'));
+			}
+			state.editForm=data;
 			state.dialogFormVisible=true;
 		})
 		
@@ -430,15 +434,32 @@
 		state.editForm={};
 		state.dialogFormVisible=true;
 	}
+	function formatDateTime(date) {
+		if (!date) return null;
+		if (typeof date === 'string') return date;
+		const d = new Date(date);
+		const year = d.getFullYear();
+		const month = String(d.getMonth() + 1).padStart(2, '0');
+		const day = String(d.getDate()).padStart(2, '0');
+		const hours = String(d.getHours()).padStart(2, '0');
+		const minutes = String(d.getMinutes()).padStart(2, '0');
+		const seconds = String(d.getSeconds()).padStart(2, '0');
+		return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+	}
+	
 	function handleSubmit(){
+		const submitData = { ...state.editForm };
+		if (submitData.paytime) {
+			submitData.paytime = formatDateTime(submitData.paytime);
+		}
 		if(state.editForm&&state.editForm.id){
-			customerOrderApi.updateItem(state.editForm).then(res=>{
+			customerOrderApi.updateItem(submitData).then(res=>{
 				ElMessage.success("操作成功");
 				handleQuery();
 				state.dialogFormVisible = false;
 			})
 		}else{
-			customerOrderApi.save(state.editForm).then(res=>{
+			customerOrderApi.save(submitData).then(res=>{
 				ElMessage.success("操作成功");
 				handleQuery();
 				state.dialogFormVisible = false;

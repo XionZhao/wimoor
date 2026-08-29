@@ -13,6 +13,8 @@ public class PurchaseFinanceListDTO extends BasePageQuery{
 	
 	String supplierid;
 	
+	String groupid;
+	
 	String search;
 	
 	String searchtype;

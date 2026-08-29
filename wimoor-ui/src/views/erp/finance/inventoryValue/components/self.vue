@@ -14,7 +14,7 @@
 	        placeholder="请选择"
 	      /></el-space>
 	
-	<el-input  v-model="queryParams.sku" :clearable="true" placeholder="请输入本地SKU" @input="handleQuery" class="input-with-select" >
+	<el-input  v-model="queryParams.sku" :clearable="true" @clear="handleQuery" placeholder="请输入本地SKU" v-debounce-input="handleQuery" class="input-with-select" >
 	   <template #append>
 	     <el-button @click="handleQuery">
 	        <el-icon style="font-size: 16px;align-itmes:center">

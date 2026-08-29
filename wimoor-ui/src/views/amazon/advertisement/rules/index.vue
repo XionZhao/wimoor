@@ -19,7 +19,7 @@
 			<el-row>	<div>
 			<el-button type="primary" @click="handeAdd">新建</el-button>
 			<el-space>
-				<el-input style="margin-left:15px;"  v-model="queryParams.search" @input="handleQuery" placeholder="请输入规则名称"></el-input>
+				<el-input style="margin-left:15px;"  v-model="queryParams.search" v-debounce-input="handleQuery" placeholder="请输入规则名称"></el-input>
 			</el-space>
 		</div></el-row>
 		</div>

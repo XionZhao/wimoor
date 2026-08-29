@@ -25,11 +25,12 @@ function getData(data){
 function paymentForm(data){
 	return request.post('/erp/api/v1/purchase_finance_form/paymentForm',data);
 }
-
-
+function saveManual(data){
+	return request.post('/erp/api/v1/purchase_finance_form/saveManual',data);
+}
 
  
 
 export default{
-	list,getdetail,approve,updatePay,updateRemark,approveReturn,getData,paymentForm,
+	list,getdetail,approve,updatePay,updateRemark,approveReturn,getData,paymentForm,saveManual,
 }

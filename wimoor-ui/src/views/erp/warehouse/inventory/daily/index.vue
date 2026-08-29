@@ -14,7 +14,7 @@
 			  	  clearable
 			      />
 			 <Datepicker longtime="ok" ref="datepickers" @changedate="changedate" :days="1" />
-		<el-input  v-model="queryParams.sku" @input="handleQuery" clearable placeholder="请输入SKU" style="width: 250px;" class="input-with-select" >
+		<el-input  v-model="queryParams.sku" v-debounce-input="handleQuery" clearable @clear="handleQuery" placeholder="请输入SKU" style="width: 250px;" class="input-with-select" >
 		   <template #append>
 		     <el-button @click="handleQuery" >
 		        <el-icon class="ic-cen font-medium">

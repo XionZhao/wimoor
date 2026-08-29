@@ -53,9 +53,48 @@ function listAll(){
 	return request.get('/erp/api/v1/customer/listAll');
 }
 
+// 收款账户相关接口
+function getAccountList(data){
+	return request.get('/erp/api/v1/customer/account/list',{params:data});
+}
+function saveAccount(data){
+	return request.post('/erp/api/v1/customer/account/save',data);
+}
+function setDefaultAccount(data){
+	return request.get('/erp/api/v1/customer/account/setDefault',{params:data});
+}
+function toggleAccountStatus(data){
+	return request.get('/erp/api/v1/customer/account/toggleStatus',{params:data});
+}
+function deleteAccount(data){
+	return request.get('/erp/api/v1/customer/account/delete',{params:data});
+}
+function downloadAccountList(data){
+	return request({url:"/erp/api/v1/customer/account/downloadAccountList",
+				                    responseType:"blob",
+									params:data,
+									method:'get'}).then(res => {
+											downloadhandler.downloadSuccess(res,"accountList.xlsx")
+									}).catch(e=>{
+											downloadhandler.downloadFail(e);
+									}); 
+}
+function uploadAccountFile(FormData){
+	return request({'method':'POST',
+	                 'url':"/erp/api/v1/customer/account/uploadAccountFile",
+				    'data':FormData,
+					'headers':{'Content-Type':"multipart/form-data"},
+				
+	});
+	
+}
 
-
+// 采购产品汇总
+function summaryProduct(data){
+	return request.get('/erp/api/v1/customer/summaryProduct',{params:data});
+}
 
 export default{
-	 getData,saveData,downloadCustomerList,list,getCustomer,deletecust,uploadCustomerFile,getSupplierByMid,listAll
+	 getData,saveData,downloadCustomerList,list,getCustomer,deletecust,uploadCustomerFile,getSupplierByMid,listAll,
+	 getAccountList,saveAccount,setDefaultAccount,toggleAccountStatus,deleteAccount,downloadAccountList,uploadAccountFile,summaryProduct
 }

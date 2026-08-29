@@ -4,7 +4,7 @@
 		  <el-row>
 		    <el-space >
 		  <Warehouse @changeware="getWarehouse" defaultValue="only" :isform="true" :isparent="true" />
-		 <el-input  v-model="queryParam.search" @input="handleQuery" clearable placeholder="请输入SKU" style="width: 250px;" class="input-with-select" >
+		 <el-input  v-model="queryParam.search" v-debounce-input="handleQuery" clearable @clear="handleQuery" placeholder="请输入SKU" style="width: 250px;" class="input-with-select" >
 		    <template #append>
 		      <el-button @click="handleQuery" >
 		         <el-icon class="ic-cen font-medium">
@@ -194,7 +194,6 @@ export default {
 	function handleQuery(){
 		globalTable.value.loadTable(state.queryParam);
 	}
-	 
 	function loadTableData(params){
 		inventoryRptApi.findUnsalableReport(params).then((res)=>{
 			state.isload=false;

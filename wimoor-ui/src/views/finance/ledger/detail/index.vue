@@ -166,6 +166,7 @@ const data = reactive({
   },
   queryParams: {
     subjectId: null,
+    subjectCode: null,
     voucherId: null,
     entryId: null,
     periodRange: [],

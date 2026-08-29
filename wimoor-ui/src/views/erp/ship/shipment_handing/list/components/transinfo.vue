@@ -253,6 +253,49 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- WTO 物流信息显示 -->
+		<div v-if="systemType=='WTO'">
+			<el-col :span="24">
+				<el-card style="margin-bottom:10px;margin-top:-30px;">
+					<el-descriptions :column="3" border>
+						<el-descriptions-item label="发货人运单号">{{wtoData.trackNumber?.data?.shipperHawbCode}}</el-descriptions-item>
+						<el-descriptions-item label="物流运单号">{{wtoData.trackNumber?.data?.logisticsHawbCode}}</el-descriptions-item>
+						<el-descriptions-item label="目的国家">{{wtoData.track?.data?.destinationCountry}}</el-descriptions-item>
+					</el-descriptions>
+				</el-card>
+			</el-col>
+			
+			<el-row :gutter="20" style="margin-bottom:10px">
+				<el-col :span="12">
+					<el-card>
+						<div class="box-title">箱号信息</div>
+						<el-table :data="wtoData.trackNumber?.data?.boxs" border style="margin-top:10px;" height="600">
+							<el-table-column prop="boxNo" label="箱号" />
+							<el-table-column prop="logisticsNo" label="物流单号" />
+							<el-table-column prop="trackNo" label="跟踪号" />
+						</el-table>
+					</el-card>
+				</el-col>
+				<el-col :span="12">
+					<el-card>
+						<div class="box-title">物流轨迹</div>
+						<el-scrollbar height="600px">
+							<el-timeline style="max-width: 600px;margin-top:20px;padding-left:15px;">
+								<el-timeline-item
+									v-for="(track, index) in wtoData.track?.data?.tracks"
+									:key="index"
+									:timestamp="track.trackTime"
+								>
+									{{track.trackContent}}
+									<span v-if="track.trackArea" style="color:#999;margin-left:10px;">[{{track.trackArea}}]</span>
+								</el-timeline-item>
+							</el-timeline>
+						</el-scrollbar>
+					</el-card>
+				</el-col>
+			</el-row>
+		</div>
 		</div>
 		<template #footer  >
 			<span class="dialog-footer">
@@ -275,6 +318,7 @@
 			let shipment=ref({});
 			let loading=ref(false);
 			let zhTrans=ref({});
+			let wtoData=ref({});
 			let systemType=ref("ZH");
 			function loadZmApiDetail(data){
 					if(data&&data.message&&data.message=="请求成功"){
@@ -310,11 +354,17 @@
 								 loading.value=false;
 				   }
 		      }
+		function loadWtoApiDetail(data){
+				if(data){
+					wtoData.value=data;
+				}
+		}
 		function loadTransDetialInfo(companyid,shipmentid,ordernum){
 								var html="";
 								loading.value=true;
 								shipment.value="";
 								zmData.value="";
+								wtoData.value={};
 								transportationApi.shipTransDetial({"companyid": companyid,"shipmentid":shipmentid,"ordernum":ordernum}).then(res=>{
 									loading.value=false;
 									if(res && res.data.ftype=="ZH"){
@@ -325,11 +375,15 @@
 										systemType.value=res.data.ftype;
 										loadZmApiDetail(res.data);
 									}
+									if(res && res.data.ftype=="WTO"){
+										systemType.value=res.data.ftype;
+										loadWtoApiDetail(res.data);
+									}
 								})
 							    dialogTransVisible.value=true;
 		}
 	  return {dialogTransVisible,zmData,loading,
-	         shipment,zhTrans,loadTransDetialInfo,systemType,dateFormat
+	         shipment,zhTrans,wtoData,loadTransDetialInfo,systemType,dateFormat
 			}
 	    }
 	}

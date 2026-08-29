@@ -88,6 +88,8 @@ public class AmzAuthApiTimelimitServiceImpl extends ServiceImpl<AmzAuthApiTimeli
 		if(oldone==null) {
 			return save(entity);
 		}else {
+			// 使用数据库中已有的id，避免BaseEntity.getId()生成UUID导致类型不匹配
+			entity.setId(oldone.getId());
 			reult=this.baseMapper.update(entity, query)>0;
 			entity.setSavetime(new Date());
 			String key=entity.getAmazonauthid()+"-"+entity.getApiname();

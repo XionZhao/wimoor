@@ -20,8 +20,11 @@ function list(data){
  									}); 
  }
  function findDetialByCondition(data){
- 	return request.post('/erp/api/v1/fin/journal/findDetialByCondition',data);
- }
+	return request.post('/erp/api/v1/fin/journal/findDetialByCondition',data);
+}
+function findDetailList(data){
+	return request.post('/erp/api/v1/fin/journal/findDetailList',data);
+}
  function outinsum(data){
  	return request.post('/erp/api/v1/fin/journal/outinsum',data);
  }
@@ -40,5 +43,5 @@ function list(data){
  
  
  export default{
-    list,downExcelDate,findDetialByCondition,outinsum,getLineData,getPieData,save,cancel
+    list,downExcelDate,findDetialByCondition,findDetailList,outinsum,getLineData,getPieData,save,cancel
  }

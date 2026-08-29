@@ -1,0 +1,528 @@
+{
+    "module":  "ERP库存管理",
+    "description":  "ERP库存查询、出入库明细、调拨单、海外仓调拨、盘点、换货单、库存记录、库存报表与汇总",
+    "service":  "wimoor-erp",
+    "tools":  [
+                  {
+                      "name":  "inv_list",
+                      "description":  "查询ERP库存列表，支持按SKU、仓库、产品名称等条件筛选，返回各仓库的库存数量、可用库存、待入库、待出库等信息",
+                      "menu_id":  50,
+                      "endpoint":  "/erp/api/v1/inventory/getWarehouse",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                 "type":  "string",
+                                                 "description":  "搜索关键词，支持按SKU或产品名称搜索"
+                                             },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID，不传则返回所有仓库的库存汇总"
+                                                     },
+                                     "category":  {
+                                                      "type":  "string",
+                                                      "description":  "产品分类ID"
+                                                  },
+                                     "ftypes":  {
+                                                   "type":  "string",
+                                                   "description":  "产品类型：''(全部)、'0'(成品)、'1'(半成品)、'2'(配件)"
+                                               },
+                                     "groupid":  {
+                                                     "type":  "string",
+                                                     "description":  "店铺分组ID"
+                                                 },
+                                     "supplierid":  {
+                                                        "type":  "string",
+                                                        "description":  "供应商ID"
+                                                    },
+                                     "islike":  {
+                                                    "type":  "boolean",
+                                                    "description":  "是否模糊搜索，默认true"
+                                                },
+                                     "notlike":  {
+                                                    "type":  "boolean",
+                                                    "description":  "是否精确查询，默认false"
+                                                },
+                                     "hasinv":  {
+                                                    "type":  "boolean",
+                                                    "description":  "是否只查看有库存产品，默认false"
+                                                },
+                                     "itemsku":  {
+                                                    "type":  "string",
+                                                    "description":  "子产品SKU编码"
+                                                },
+                                     "conssku":  {
+                                                    "type":  "string",
+                                                    "description":  "辅料SKU编码"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "default_params":  {
+                                             "islike":  true
+                                         },
+                      "response_fields":  {
+                                              "sku":  "产品SKU编码",
+                                              "name":  "产品名称",
+                                              "warehouse":  "仓库名称",
+                                              "warehousename":  "仓库名称",
+                                              "warehouseid":  "仓库ID",
+                                              "materialid":  "产品物料ID",
+                                              "fulfillable":  "可用库存数量",
+                                              "inbound":  "待入库数量",
+                                              "outbound":  "待出库数量",
+                                              "price":  "产品单价",
+                                              "issfg":  "产品类型标识",
+                                              "supplier":  "供应商名称",
+                                              "allinbound":  "待入库汇总（首页第一条记录）",
+                                              "allfulfillable":  "可用库存汇总（首页第一条记录）",
+                                              "alloutbound":  "待出库汇总（首页第一条记录）"
+                                          }
+                  },
+                  {
+                      "name":  "inv_in_list",
+                      "description":  "查询指定产品在指定仓库的入库明细记录，包括采购入库、调拨入库、退货入库等",
+                      "menu_id":  50,
+                      "endpoint":  "/erp/api/v1/inventory/findInboundDetail",
+                      "method":  "GET",
+                      "params":  {
+                                     "mid":  {
+                                                 "type":  "string",
+                                                 "description":  "产品物料ID"
+                                             },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     }
+                                 },
+                      "required":  [
+                                       "mid",
+                                       "warehouseid"
+                                   ],
+                      "response_fields":  {
+                                              "name":  "单据类型名称",
+                                              "status":  "入库状态标识（格式：inbound_类型）",
+                                              "quantity":  "入库数量",
+                                              "warehouseid":  "仓库ID",
+                                              "materialid":  "产品物料ID"
+                                          }
+                  },
+                  {
+                      "name":  "inv_out_list",
+                      "description":  "查询指定产品在指定仓库的出库明细记录，包括发货出库、调拨出库、组装出库等",
+                      "menu_id":  50,
+                      "endpoint":  "/erp/api/v1/inventory/findOutboundDetail",
+                      "method":  "GET",
+                      "params":  {
+                                     "mid":  {
+                                                 "type":  "string",
+                                                 "description":  "产品物料ID"
+                                             },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     }
+                                 },
+                      "required":  [
+                                       "mid",
+                                       "warehouseid"
+                                   ],
+                      "response_fields":  {
+                                              "name":  "单据类型名称",
+                                              "status":  "出库状态标识（格式：outbound_类型）",
+                                              "quantity":  "出库数量",
+                                              "warehouseid":  "仓库ID",
+                                              "materialid":  "产品物料ID"
+                                          }
+                  },
+                  {
+                      "name":  "inv_dispatch_list",
+                      "description":  "查询国内调库单列表，支持按审核状态、日期范围、关键词等条件筛选",
+                      "menu_id":  50,
+                      "endpoint":  "/erp/api/v1/inventory/dispatchform/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持单据编号或SKU"
+                                                },
+                                     "auditstatus":  {
+                                                         "type":  "string",
+                                                         "description":  "审核状态：weichuli(未处理)、yichuli(已处理)"
+                                                     },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "调库单ID",
+                                              "number":  "调库单编号",
+                                              "creator":  "创建人",
+                                              "auditor":  "审核人",
+                                              "auditstatus":  "审核状态",
+                                              "remark":  "备注",
+                                              "opttime":  "最后操作时间",
+                                              "wfname":  "调出仓库名称",
+                                              "wtname":  "调入仓库名称",
+                                              "createdate":  "创建时间",
+                                              "audittime":  "审核时间",
+                                              "ftype":  "调库类型"
+                                          }
+                  },
+                  {
+                      "name":  "inv_dispatch_overseas",
+                      "description":  "查询海外仓调拨单列表，支持按审核状态、日期范围、关键词等条件筛选",
+                      "menu_id":  50,
+                      "endpoint":  "/erp/api/v1/inventory/dispatch/oversea/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持单据编号或SKU"
+                                                },
+                                     "auditstatus":  {
+                                                         "type":  "string",
+                                                         "description":  "审核状态：weichuli(未处理)、yichuli(已处理)"
+                                                     },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "调拨单ID",
+                                              "number":  "调拨单编号",
+                                              "creator":  "创建人",
+                                              "auditstatus":  "审核状态",
+                                              "remark":  "备注",
+                                              "opttime":  "最后操作时间",
+                                              "wfname":  "调出仓库名称",
+                                              "groupid":  "店铺分组ID",
+                                              "country":  "目标国家编码",
+                                              "wtname":  "调入仓库名称",
+                                              "skunum":  "SKU数量",
+                                              "company":  "物流公司名称",
+                                              "transtypename":  "运输方式名称",
+                                              "createdate":  "创建时间",
+                                              "arrivalTime":  "预计到达时间",
+                                              "amount":  "商品总数量",
+                                              "channame":  "物流渠道名称",
+                                              "check_inv":  "库存检查标识"
+                                          }
+                  },
+                  {
+                      "name":  "inv_stocktaking_list",
+                      "description":  "查询库存盘点单列表，支持按仓库、状态、日期范围等条件筛选",
+                      "menu_id":  50,
+                      "endpoint":  "/erp/api/v1/inventory/stockTaking/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词"
+                                                },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "isworking":  {
+                                                    "type":  "string",
+                                                    "description":  "盘点状态：''(全部)、'1'(进行中)、'0'(已完成)"
+                                                },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "盘点单ID",
+                                              "number":  "盘点单编号",
+                                              "isworking":  "是否正在盘点",
+                                              "remark":  "备注",
+                                              "createdate":  "创建时间",
+                                              "warehouseids":  "仓库ID列表（逗号分隔）",
+                                              "skunum":  "盘点SKU数量",
+                                              "amount":  "盘点总数量",
+                                              "overamount":  "盘盈数量",
+                                              "lossamount":  "盘亏数量",
+                                              "amountprice":  "盘点总金额",
+                                              "overamountprice":  "盘盈金额",
+                                              "lossamountprice":  "盘亏金额",
+                                              "shelfids":  "货架ID列表（逗号分隔）",
+                                              "shelfskunum":  "货架盘点SKU数量",
+                                              "amountshelf":  "货架盘点总数量",
+                                              "overamountshelf":  "货架盘盈数量",
+                                              "lossamountshelf":  "货架盘亏数量",
+                                              "amountshelfprice":  "货架盘点总金额",
+                                              "overamountshelfprice":  "货架盘盈金额",
+                                              "lossamountshelfprice":  "货架盘亏金额"
+                                          }
+                  },
+                  {
+                      "name":  "inv_change_list",
+                      "description":  "查询产品库存互调（换货）单列表，支持按状态、日期范围等条件筛选",
+                      "menu_id":  50,
+                      "endpoint":  "/erp/api/v1/inventory/changeform/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持单据编号或SKU"
+                                                },
+                                     "auditstatus":  {
+                                                         "type":  "string",
+                                                         "description":  "审核状态"
+                                                     },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "id":  "换货单ID",
+                                              "number":  "换货单编号",
+                                              "creator":  "创建人",
+                                              "remark":  "备注",
+                                              "opttime":  "最后操作时间",
+                                              "createdate":  "创建时间",
+                                              "warehouse":  "操作仓库名称",
+                                              "amount":  "换货数量",
+                                              "sku_to":  "调入SKU",
+                                              "sku_from":  "调出SKU"
+                                          }
+                  },
+                  {
+                      "name":  "inv_record_list",
+                      "description":  "查询库存出入库记录列表，支持按单据类型、日期范围、SKU等条件筛选",
+                      "menu_id":  50,
+                      "endpoint":  "/erp/api/v1/inventoryRecord/list",
+                      "method":  "POST",
+                      "params":  {
+                                     "search":  {
+                                                    "type":  "string",
+                                                    "description":  "搜索关键词，支持SKU或单据编号"
+                                                },
+                                     "formtype":  {
+                                                      "type":  "array",
+                                                      "description":  "单据类型数组：purchase(采购)、assembly(组装)、dispatch(调拨)、stocktaking(盘点)等"
+                                                  },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "operator":  {
+                                                      "type":  "string",
+                                                      "description":  "操作人"
+                                                  },
+                                     "searchtype":  {
+                                                        "type":  "string",
+                                                        "description":  "搜索类型"
+                                                    },
+                                     "fromDate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "toDate":  {
+                                                    "type":  "string",
+                                                    "description":  "结束日期，格式：yyyy-MM-dd"
+                                                },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "number":  "单据编号",
+                                              "startinbound":  "期初待入库数量",
+                                              "inbound":  "待入库变动量",
+                                              "endinbound":  "期末待入库数量",
+                                              "startfulfillable":  "期初可用库存",
+                                              "fulfillable":  "可用库存变动量",
+                                              "endfulfillable":  "期末可用库存",
+                                              "startoutbound":  "期初待出库数量",
+                                              "outbound":  "待出库变动量",
+                                              "endoutbound":  "期末待出库数量",
+                                              "typename":  "单据类型名称",
+                                              "sku":  "产品SKU",
+                                              "name":  "产品名称",
+                                              "operator":  "操作人",
+                                              "opttime":  "操作时间",
+                                              "warehousename":  "操作仓库名称",
+                                              "operate":  "操作行为"
+                                          }
+                  },
+                  {
+                      "name":  "inv_rpt_list",
+                      "description":  "查询库存日报表数据，展示指定日期范围内的库存变化明细",
+                      "menu_id":  50,
+                      "endpoint":  "/erp/api/v1/inventory/report/getInvDayDetail",
+                      "method":  "POST",
+                      "params":  {
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "搜索关键词，支持SKU或产品名称"
+                                             },
+                                     "warehouse":  {
+                                                       "type":  "string",
+                                                       "description":  "仓库ID"
+                                                   },
+                                     "fromdate":  {
+                                                      "type":  "string",
+                                                      "description":  "开始日期，格式：yyyy-MM-dd"
+                                                  },
+                                     "enddate":  {
+                                                     "type":  "string",
+                                                     "description":  "结束日期，格式：yyyy-MM-dd"
+                                                 },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "产品SKU",
+                                              "mname":  "产品名称",
+                                              "image":  "产品图片",
+                                              "warehouse":  "仓库名称",
+                                              "2024-01-01":  "该日期可用库存数量（字段名动态为日期）",
+                                              "summary":  "汇总数据（首页第一条记录，包含各日期汇总）"
+                                          }
+                  },
+                  {
+                      "name":  "inv_summary",
+                      "description":  "查询库存月度汇总报表，展示各产品在指定月份的库存汇总数据",
+                      "menu_id":  50,
+                      "endpoint":  "/erp/api/v1/inventory/report/getAllInventorySummaryMonth",
+                      "method":  "POST",
+                      "params":  {
+                                     "sku":  {
+                                                 "type":  "string",
+                                                 "description":  "搜索关键词，支持SKU或产品名称"
+                                             },
+                                     "warehouseid":  {
+                                                         "type":  "string",
+                                                         "description":  "仓库ID"
+                                                     },
+                                     "monthDate":  {
+                                                       "type":  "string",
+                                                       "description":  "月份，格式：yyyy-MM"
+                                                   },
+                                     "currentpage":  {
+                                                         "type":  "integer",
+                                                         "description":  "页码，默认1"
+                                                     },
+                                     "pagesize":  {
+                                                      "type":  "integer",
+                                                      "description":  "每页数量，默认20"
+                                                  }
+                                 },
+                      "required":  [
+
+                                   ],
+                      "response_fields":  {
+                                              "sku":  "产品SKU",
+                                              "name":  "产品名称",
+                                              "warehousename":  "仓库名称",
+                                              "month":  "月份",
+                                              "startqty":  "月初库存",
+                                              "endqty":  "月末库存",
+                                              "purchase":  "采购数量",
+                                              "otherin":  "其他入库数量",
+                                              "otherout":  "其他出库数量",
+                                              "shipment":  "发货数量",
+                                              "dispatch":  "调拨数量",
+                                              "assembly":  "组装数量",
+                                              "stock":  "盘点差异",
+                                              "diff":  "库存差异",
+                                              "period":  "周转个数",
+                                              "turndays":  "周转天数",
+                                              "price":  "产品单价",
+                                              "image":  "产品图片",
+                                              "ownername":  "产品负责人"
+                                          }
+                  }
+              ]
+}

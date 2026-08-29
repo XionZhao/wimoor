@@ -4,7 +4,7 @@
   	<el-dialog v-model="dialog.visible" class="materialDialog" :title="queryParams.title"  width="80%" top="6vh" :before-close="handleClose">
   		<div class="con-header">
   			<el-row>
-  				<el-input v-model="queryParams.search" @input="loadData" placeholder="搜索产品SKU">
+  				<el-input v-model="queryParams.search" v-debounce-input="loadData" placeholder="搜索产品SKU">
   					<template #suffix>
   						<el-icon :size="16">
   							<Search />
@@ -137,6 +137,8 @@
 	import GlobalTable from "@/components/Table/GlobalTable/index.vue";
 	import NullTransform from"@/utils/null-transform";
 	import inventoryApi from '@/api/erp/inventory/inventoryApi.js';
+
+
 	const state=reactive({
 		tableData:{records: [],total: 0},
 		ids:[],
@@ -170,7 +172,7 @@
 			   state.queryParams.searchtype="sku";
 			   globalTableRef.value.loadTable(state.queryParams);
 		} else{
-			setTimeout(function() {   globalTableRef.value.loadTable(state.queryParams);}, 100); 
+			setTimeout(function() {   globalTableRef.value.loadTable(state.queryParams);}, 100);
 		}
 	}
 	function getWisePriceList(row){

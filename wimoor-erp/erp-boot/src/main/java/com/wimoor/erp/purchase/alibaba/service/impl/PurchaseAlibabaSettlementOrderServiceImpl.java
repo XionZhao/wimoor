@@ -16,6 +16,7 @@ import java.math.BigInteger;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -125,6 +126,9 @@ public class PurchaseAlibabaSettlementOrderServiceImpl extends ServiceImpl<Purch
 		return haserror;
 	}
 
-
+	@Override
+	public Map<String, Object> getOrderSummary(Map<String, Object> param) {
+		return this.baseMapper.getOrderSummary(param);
+	}
 	
 }

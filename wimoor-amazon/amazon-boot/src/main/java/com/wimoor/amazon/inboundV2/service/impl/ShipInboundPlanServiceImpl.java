@@ -281,7 +281,7 @@ public class ShipInboundPlanServiceImpl extends ServiceImpl<ShipInboundPlanV2Map
 					for(ShipInboundShipment shipment:shipments) {
 						if(StrUtil.isNotBlank(shipment.getShipmentConfirmationId())){
 							ShipInboundTrans trans = this.shipInboundTransService.lambdaQuery().eq(ShipInboundTrans::getShipmentid, shipment.getShipmentConfirmationId()).one();
-							if(trans!=null&&trans.getSingleprice()!=null){
+							if(trans!=null&&trans.getSingleprice()!=null && trans.getTransweight()!=null){
 								shipfee=shipfee.add(trans.getSingleprice().multiply(trans.getTransweight()).add(trans.getOtherfee()!=null?trans.getOtherfee():BigDecimal.ZERO));
 							}
 						}

@@ -107,6 +107,69 @@ function addCallback(data) {
   });
 }
 
+// ========== 聊天记录相关接口 ==========
+
+// 获取群组列表
+function getChatGroups(appId) {
+  return request({
+    url: "/admin/api/v1/feishu/chat/groups",
+    method: "get",
+    params: { appId }
+  });
+}
+
+// 获取群组详情
+function getChatGroup(chatId) {
+  return request({
+    url: `/admin/api/v1/feishu/chat/group/${chatId}`,
+    method: "get"
+  });
+}
+
+// 获取群成员列表
+function getChatMembers(chatId) {
+  return request({
+    url: "/admin/api/v1/feishu/chat/members",
+    method: "get",
+    params: { chatId }
+  });
+}
+
+// 分页查询消息列表
+function getChatMessages(params) {
+  return request({
+    url: "/admin/api/v1/feishu/chat/messages",
+    method: "get",
+    params
+  });
+}
+
+// 分页查询文件列表
+function getChatFiles(params) {
+  return request({
+    url: "/admin/api/v1/feishu/chat/files",
+    method: "get",
+    params
+  });
+}
+
+// 获取消息关联的文件
+function getMessageFiles(messageId) {
+  return request({
+    url: `/admin/api/v1/feishu/chat/files/${messageId}`,
+    method: "get"
+  });
+}
+
+// 下载文件
+function downloadChatFile(fileId) {
+  return request({
+    url: `/admin/api/v1/feishu/chat/file/download/${fileId}`,
+    method: "get",
+    responseType: "blob"
+  });
+}
+
 export default{
     getBindInfo,
     update,
@@ -121,4 +184,11 @@ export default{
     updateCallback,
     updateTable,
     getTableInfo,
+    getChatGroups,
+    getChatGroup,
+    getChatMembers,
+    getChatMessages,
+    getChatFiles,
+    getMessageFiles,
+    downloadChatFile,
 }
